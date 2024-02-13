@@ -1,8 +1,8 @@
 
 # ![](./docs/public/logo-xs.png) vue-metamorph
 
-![NPM License](https://img.shields.io/npm/l/vue-metamorph) ![NPM Version](https://img.shields.io/npm/v/vue-metamorph)
- ![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/UnrefinedBrain/vue-metamorph/ci.yml) ![NPM Type Definitions](https://img.shields.io/npm/types/vue-metamorph)
+[![NPM License](https://img.shields.io/npm/l/vue-metamorph)](https://github.com/UnrefinedBrain/vue-metamorph/blob/master/LICENSE) [![NPM Version](https://img.shields.io/npm/v/vue-metamorph)](https://npmjs.com/package/vue-metamorph)
+ [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/UnrefinedBrain/vue-metamorph/ci.yml)](https://github.com/UnrefinedBrain/vue-metamorph/actions) ![NPM Type Definitions](https://img.shields.io/npm/types/vue-metamorph)
 
 
 
