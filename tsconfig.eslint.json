@@ -1,0 +1,11 @@
+{
+  "extends": ["./tsconfig.json"],
+  "include": [
+    "src",
+    ".eslintrc.cjs",
+    "docs/.vitepress/config.ts",
+    "docs/.vitepress/theme/index.ts",
+    "tsup.config.ts",
+    "scripts"
+  ]
+}
