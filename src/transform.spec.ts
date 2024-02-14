@@ -4,6 +4,7 @@ import { transform } from './transform';
 const example = `
 <template>
   <div>
+    <custom />
     <span v-if="hello">
       <em>Hi there</em>
     </span>
@@ -38,7 +39,9 @@ describe('transform', () => {
         script,
         template,
         _filename,
-        { traverseScriptAST, traverseTemplateAST, templateBuilders },
+        {
+          traverseScriptAST, traverseTemplateAST, templateBuilders, astHelpers,
+        },
       ) {
         if (!template) {
           return 0;
@@ -87,6 +90,17 @@ describe('transform', () => {
           },
         });
 
+        astHelpers.findAll(template, {
+          type: 'VElement',
+          name: 'custom',
+        })
+          .forEach((element) => {
+            if (element.children.length === 0 && element.startTag.selfClosing) {
+              element.startTag.selfClosing = false;
+              count++;
+            }
+          });
+
         return count;
       },
     }]);
@@ -96,6 +110,7 @@ describe('transform', () => {
         "code": "
       <template>
         <poop hi>
+          <custom></custom>
           <span v-if="hello">
             <em>Hi there</em>
           </span>
@@ -123,14 +138,10 @@ describe('transform', () => {
         "stats": [
           [
             "test",
-            2,
+            3,
           ],
         ],
       }
     `);
-  });
-
-  it('test', () => {
-
   });
 });

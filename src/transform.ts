@@ -105,6 +105,11 @@ function transformVueFile(
         // we want the path to the node, not the path to the changed property
         path.pop();
 
+        // special case: the VStartTag doesn't actually render a full tag
+        if (path.at(-1) === 'startTag') {
+          path.pop();
+        }
+
         if (path.length <= 3 && p.kind !== 'E') {
           // adding/removing children from the root node should cause a re-print of the root
           rootNodeChanged = true;
