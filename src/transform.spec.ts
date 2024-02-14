@@ -7,7 +7,10 @@ const example = `
     <custom />
     <span v-if="hello">
       <em>Hi there</em>
-      {{ value | someFilter }}
+      {{ value | someFilter | otherFilter }}
+      <div v-for="(item, index) in someArray">
+        {{ item | myFilter(arg1) }}
+      </div>
     </span>
   </div>
 </template>
@@ -55,7 +58,7 @@ describe('transform', () => {
             visitProperty(path) {
               if (path.node.value.type === 'Literal'
               && typeof path.node.value.value === 'string') {
-                path.node.value.value = 'poopers';
+                path.node.value.value = 'transformed string';
               }
               return this.traverse(path);
             },
@@ -76,7 +79,7 @@ describe('transform', () => {
             }
             if (node.type === 'VElement' && node.rawName === 'div') {
               count++;
-              node.rawName = 'poop';
+              node.rawName = 'strong';
 
               node.startTag.attributes.push(
                 templateBuilders.vAttribute(
@@ -110,13 +113,16 @@ describe('transform', () => {
       {
         "code": "
       <template>
-        <poop hi>
+        <strong hi>
           <custom></custom>
           <span v-if="hello">
             <em>Hi there</em>
-            {{ value | someFilter }}
+            {{ value | someFilter | otherFilter }}
+            <strong v-for="(item, index) in someArray" hi>
+              {{ item | myFilter(arg1) }}
+            </strong>
           </span>
-        </poop>
+        </strong>
       </template>
 
       <script lang="ts" setup>
@@ -127,7 +133,7 @@ describe('transform', () => {
       };
 
       export default defineComponent({
-        name: 'poopers',
+        name: 'transformed string',
       });
       </script>
 
@@ -140,7 +146,7 @@ describe('transform', () => {
         "stats": [
           [
             "test",
-            3,
+            4,
           ],
         ],
       }

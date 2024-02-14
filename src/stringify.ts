@@ -163,6 +163,12 @@ export function stringifyVFilterSequenceExpression(node: AST.VFilterSequenceExpr
 
   for (const filter of node.filters) {
     str += ` | ${stringifyWithRecast(filter.callee)}`;
+
+    if (filter.arguments.length) {
+      str += '(';
+      str += filter.arguments.map(stringifyWithRecast).join(', ');
+      str += ')';
+    }
   }
 
   return str;

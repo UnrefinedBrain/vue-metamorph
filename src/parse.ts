@@ -70,6 +70,16 @@ const tsParser = (() => ({
       },
     });
 
+    res.tokens?.forEach((tok) => {
+      tok.range = [tok.start, tok.end];
+    });
+
+    // @ts-expect-error Needed by vue-eslint-parser
+    res.program.tokens = res.tokens;
+
+    // @ts-expect-error Needed by vue-eslint-parser
+    res.program.comments = res.comments;
+
     return {
       ast: res.program,
     };
@@ -82,7 +92,9 @@ const tsParser = (() => ({
  * @returns SFC AST and Script AST
  */
 export function parseVue(code: string) {
-  const vueAst = vueParser.parse(code, { parser: tsParser });
+  const vueAst = vueParser.parse(code, {
+    parser: tsParser,
+  });
 
   // hack: make the source locations line up properly
   const blankLines = '\n'.repeat(vueAst.loc.start.line - 1);

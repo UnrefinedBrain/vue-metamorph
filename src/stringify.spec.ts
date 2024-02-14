@@ -224,3 +224,17 @@ describe('VElement', () => {
     expect(stringify(node)).toBe('<Foo><span>Hello</span></Foo>');
   });
 });
+
+describe('VFilterSequenceExpression', () => {
+  it('should print filter args', () => {
+    const filter = builders.vFilterSequenceExpression(
+      b.identifier('myValue'),
+      [
+        builders.vFilter(b.identifier('myFilter'), [b.identifier('arg1'), b.identifier('arg2')]),
+        builders.vFilter(b.identifier('myOtherFilter'), []),
+      ],
+    );
+
+    expect(stringify(filter)).toBe('myValue | myFilter(arg1, arg2) | myOtherFilter');
+  });
+});

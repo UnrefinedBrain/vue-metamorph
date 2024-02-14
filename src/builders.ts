@@ -280,3 +280,41 @@ export function vOnExpression(
     body,
   };
 }
+
+/**
+ * Creates a new VFilterSequenceExpression node
+ * @param expression - The expression to filter
+ * @param filters - VFilter nodes
+ * @public
+ */
+export function vFilterSequenceExpression(
+  expression: AST.VFilterSequenceExpression['expression'],
+  filters: AST.VFilterSequenceExpression['filters'],
+): AST.VFilterSequenceExpression {
+  return {
+    type: 'VFilterSequenceExpression',
+    // @ts-expect-error Parent is not known yet
+    parent: undefined,
+    expression,
+    filters,
+  };
+}
+
+/**
+ * Creates a new VFilter node
+ * @param callee - Identifier node
+ * @param args - Filter arguments, if any
+ * @public
+ */
+export function vFilter(
+  callee: AST.VFilter['callee'],
+  args: AST.VFilter['arguments'],
+): AST.VFilter {
+  return {
+    type: 'VFilter',
+    arguments: args,
+    callee,
+    // @ts-expect-error Parent is not known yet
+    parent: undefined,
+  };
+}
