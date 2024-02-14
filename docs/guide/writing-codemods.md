@@ -65,7 +65,7 @@ Codemods can choose which files to operate on using the `filename` parameter. Fo
 
 ```ts
 const codemod = {
-  mutate(scriptAST, templateAST, filename) {
+  transform(scriptAST, templateAST, filename) {
     if (!/\.spec\.[jt]s/g.test(filename)) {
       return;
     }
