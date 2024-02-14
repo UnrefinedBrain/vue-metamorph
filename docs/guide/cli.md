@@ -11,7 +11,7 @@ vue-metamorph provides a CLI codemod runner to faciliate running codemods agains
 
 ## API
 
-```ts
+```ts twoslash
 import { createVueMetamorphCli } from 'vue-metamorph';
 
 const { run, abort } = createVueMetamorphCli({
@@ -39,6 +39,6 @@ const { run, abort } = createVueMetamorphCli({
 run();
 
 // call abort() to gracefully stop the runner
-process.on('SIGTERM', abort);
+// process.on('SIGTERM', abort);
 
 ```

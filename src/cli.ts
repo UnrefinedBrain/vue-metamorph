@@ -23,7 +23,7 @@ export type ErrorReport = {
 };
 
 /**
- * Function signature for the onProgress function passed to createvue-metamorphCli
+ * Function signature for the onProgress function passed to createVueMetamorphCli
  * @public
  */
 export type ProgressCallback = (args: {
