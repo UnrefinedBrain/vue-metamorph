@@ -12,9 +12,9 @@ vue-metamorph provides a CLI codemod runner to faciliate running codemods agains
 ## API
 
 ```ts
-import { createvue-metamorphCli } from 'vue-metamorph';
+import { createVueMetamorphCli } from 'vue-metamorph';
 
-const { run, abort } = createvue-metamorphCli({
+const { run, abort } = createVueMetamorphCli({
   silent: true, // suppress vue-metamorph's default output by setting silent:true
 
   onProgress({
