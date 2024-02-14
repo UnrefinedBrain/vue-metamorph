@@ -7,6 +7,7 @@ const example = `
     <custom />
     <span v-if="hello">
       <em>Hi there</em>
+      {{ value | someFilter }}
     </span>
   </div>
 </template>
@@ -113,6 +114,7 @@ describe('transform', () => {
           <custom></custom>
           <span v-if="hello">
             <em>Hi there</em>
+            {{ value | someFilter }}
           </span>
         </poop>
       </template>

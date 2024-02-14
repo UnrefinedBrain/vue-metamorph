@@ -127,7 +127,14 @@ export function stringifyVElement(node: AST.VElement): string {
 
   if (!node.startTag.selfClosing && !voidElements[node.rawName]) {
     for (const child of node.children) {
+      if (child.type === 'VExpressionContainer') {
+        str += '{{ ';
+      }
       str += stringify(child);
+
+      if (child.type === 'VExpressionContainer') {
+        str += ' }}';
+      }
     }
 
     str += `</${node.rawName}>`;
