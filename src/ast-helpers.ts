@@ -112,7 +112,7 @@ export function createNamedImport(
   const decl = findImportDeclaration(ast, moduleSpecifier);
   const newSpecifier = builders.importSpecifier(
     builders.identifier(importName),
-    importName !== localName ? builders.identifier(localName) : undefined,
+    importName !== localName ? builders.identifier(localName) : null,
   );
 
   if (!decl) {
