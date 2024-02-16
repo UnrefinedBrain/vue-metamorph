@@ -5,8 +5,8 @@
     "lib": [
       "ESNext",
     ],
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
     "noEmit": true,
     "noImplicitReturns": true,
     "noUncheckedIndexedAccess": true,
