@@ -8,8 +8,8 @@ describe('createDefaultImport', () => {
     type: 'codemod',
     name: '',
     transform(scriptAST) {
-      if (scriptAST) {
-        astHelpers.createDefaultImport(scriptAST, 'vue', 'Vue');
+      if (scriptAST[0]) {
+        astHelpers.createDefaultImport(scriptAST[0], 'vue', 'Vue');
       }
 
       return 1;

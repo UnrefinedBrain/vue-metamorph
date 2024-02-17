@@ -14,7 +14,9 @@ const example = `
     </span>
   </div>
 </template>
-
+<script setup>
+const someRef = ref('my string');
+</script>
 <script lang="ts">
 import { defineComponent } from 'vue';
 
@@ -40,7 +42,7 @@ describe('transform', () => {
       name: 'test',
       type: 'codemod',
       transform(
-        script,
+        scripts,
         template,
         _filename,
         {
@@ -53,7 +55,7 @@ describe('transform', () => {
 
         let count = 0;
 
-        if (script) {
+        for (const script of scripts) {
           traverseScriptAST(script, {
             visitProperty(path) {
               if (path.node.value.type === 'Literal'
@@ -124,7 +126,9 @@ describe('transform', () => {
           </span>
         </strong>
       </template>
-
+      <script setup setup>
+      const someRef = ref('my string');
+      </script>
       <script lang="ts" setup>
       import { defineComponent } from 'vue';
 
@@ -146,7 +150,7 @@ describe('transform', () => {
         "stats": [
           [
             "test",
-            4,
+            5,
           ],
         ],
       }

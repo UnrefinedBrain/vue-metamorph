@@ -11,25 +11,25 @@ Do not mutate the AST in manual migrations! vue-metamorph passes the same object
 :::
 
 
-```ts
+```ts twoslash
 import { ManualMigrationPlugin } from 'vue-metamorph';
 
 const migrateVueEmitter: ManualMigrationPlugin = {
   type: 'manual',
   name: 'Migrate vue event emitter',
   find(
-    scriptAST,
+    scriptASTs,
     templateAST,
     filename,
     report,
     { traverseScriptAST }
   ) {
-    if (!scriptAST) {
-      // if this is a Vue SFC with no <script> tag, scriptAST will be null
+    if (!scriptASTs[0]) {
+      // if this is a Vue SFC with no <script> tag, scriptASTs will be empty
       return;
     }
 
-    traverseScriptAST(scriptAST, {
+    traverseScriptAST(scriptASTs[0], {
       visitCallExpression(path) {
         // find calls to $on(), $off(), $once() functions
         if (path.node.callee.type === 'MemberExpression'

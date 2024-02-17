@@ -22,7 +22,7 @@
   "license": "MIT",
   "files": [
     "dist",
-    "script/scaffold.cjs",
+    "script/scaffold.js",
     "template"
   ],
   "type": "module",

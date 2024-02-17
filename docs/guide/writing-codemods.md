@@ -10,22 +10,23 @@ In a `.js` or `.ts` file, the template AST will always be null.
 
 A simple codemod that changes all string literals to `'Hello, world!'` would look like:
 
-```ts
+```ts twoslash
 import type { CodemodPlugin } from 'vue-metamorph';
 
 const changeStringLiterals: CodemodPlugin = {
   type: 'codemod',
   name: 'change string literals to hello, world',
 
-  transform(scriptAST, templateAST, filename, { traverseScriptAST, traverseTemplateAST }) {
+  transform(scriptASTs, templateAST, filename, { traverseScriptAST, traverseTemplateAST }) {
     // codemod plugins self-report the number of transforms it made
     // this is only used to print the stats in CLI output
     let transformCount = 0;
 
-    if (scriptAST) {
+    // scriptASTs contains ASTs of each <script> in a SFC
+    if (scriptASTs[0]) {
       // traverseScriptAST is an alias for the ast-types 'visit' function
       // see: https://github.com/benjamn/ast-types#ast-traversal
-      traverseScriptAST(scriptAST, {
+      traverseScriptAST(scriptASTs[0], {
         visitLiteral(path) {
           if (typeof path.node.value === 'string') {
             // mutate the node
@@ -65,7 +66,7 @@ Codemods can choose which files to operate on using the `filename` parameter. Fo
 
 ```ts
 const codemod = {
-  transform(scriptAST, templateAST, filename) {
+  transform(scriptASTs, templateAST, filename) {
     if (!/\.spec\.[jt]s/g.test(filename)) {
       return;
     }

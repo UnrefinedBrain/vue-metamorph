@@ -50,13 +50,13 @@ function transformVueFile(
   const stats: [string, number][] = [];
 
   const ms = new MagicString(workingCode);
-  const { scriptAst, vueAst } = parseVue(workingCode);
+  const { scriptAsts, vueAst } = parseVue(workingCode);
   const templateAst = vueAst.templateBody?.parent as VDocumentFragment;
   const originalTemplate = cloneDeep(templateAst);
 
   for (const codemod of codemods) {
     const count = codemod.transform(
-      scriptAst,
+      scriptAsts,
 
       templateAst ?? null,
       filename,
@@ -69,13 +69,14 @@ function transformVueFile(
   if (templateAst && originalTemplate) {
     setParents(templateAst);
 
+    let i = 0;
     AST.traverseNodes(templateAst as never, {
       enterNode(node) {
         if (node.type === 'VElement'
           && node.name === 'script'
           && node.parent === templateAst
           && node.children[0]?.type === 'VText') {
-          node.children[0].value = `\n${recast.print(scriptAst, recastOptions).code}\n`;
+          node.children[0].value = `\n${recast.print(scriptAsts[i++]!, recastOptions).code}\n`;
         }
       },
       leaveNode() {
@@ -159,9 +160,6 @@ function transformVueFile(
         }
       }
     }
-  } else if (scriptAst && vueAst.range[0] !== vueAst.range[1]) {
-    const newScript = recast.print(scriptAst, recastOptions).code;
-    ms.update(vueAst.range[0], vueAst.range[1], `${newScript}\n`);
   }
 
   return {
@@ -179,7 +177,7 @@ function transformTypescriptFile(
   const stats: [string, number][] = [];
 
   for (const codemod of codemods) {
-    const count = codemod.transform(ast, null, filename, util);
+    const count = codemod.transform([ast], null, filename, util);
     stats.push([codemod.name, count]);
   }
 

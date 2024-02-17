@@ -23,15 +23,15 @@ export type ManualMigrationPlugin = {
   name: string;
   /**
    * Find nodes that need manual migration
-   * @param scriptAST - If this is a .vue file, the AST of the \<script\> block.
-   * If this is a JS/TS module, the AST of the module
+   * @param scriptAST - If this is a .vue file, the AST of the \<script\> blocks.
+   * If this is a JS/TS module, the 0th element is the AST of the module
    * @param sfcAST - If this is a .vue file, the AST of the SFC. Otherwise, null
    * @param filename - The absolute path of the file being worked on
    * @param report - Function to report a node that needs to be migrated
    * @param utils - Utility functions
    */
   find(
-    scriptAST: namedTypes.Program | null,
+    scriptAST: namedTypes.Program[],
     sfcAST: AST.VDocumentFragment | null,
     filename: string,
     report: ReportFunction,
@@ -49,15 +49,15 @@ export type CodemodPlugin = {
 
   /**
    * Mutate the AST to make changes
-   * @param scriptAST - If this is a .vue file, the AST of the `<script>` block.
-   * If this is a JS/TS module, the AST of the module
+   * @param scriptASTs - If this is a .vue file, the AST of the `<script>` blocks.
+   * If this is a JS/TS module, the 0th element is the AST of the module
    * @param sfcAST - If this is a .vue file, the AST of the SFC. Otherwise, null
    * @param filename - The absolute path of the file being worked on
    * @param utils - Utility functions
    * @returns Number of transforms applied. Used for stats
    */
   transform(
-    scriptAST: namedTypes.Program | null,
+    scriptASTs: namedTypes.Program[],
     sfcAST: AST.VDocumentFragment | null,
     filename: string,
     utils: typeof util,

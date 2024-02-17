@@ -142,15 +142,15 @@ export function findManualMigrations(
 ): ManualMigrationReport[] {
   const reports: ManualMigrationReport[] = [];
 
-  let script: namedTypes.Program | null = null;
+  let scripts: namedTypes.Program[] = [];
   let template: AST.VDocumentFragment | null = null;
 
   if (filename.endsWith('.vue')) {
-    const { scriptAst, vueAst } = parseVue(code);
-    script = scriptAst;
+    const { scriptAsts, vueAst } = parseVue(code);
+    scripts = scriptAsts;
     template = vueAst.templateBody?.parent as AST.VDocumentFragment ?? null;
   } else {
-    script = parseTs(code);
+    scripts = [parseTs(code)];
   }
 
   for (const plugin of plugins) {
@@ -183,7 +183,7 @@ export function findManualMigrations(
       throw new Error(`Node type ${node.type} is missing location information`);
     };
 
-    plugin.find(script, template, filename, report, util);
+    plugin.find(scripts, template, filename, report, util);
   }
 
   return reports;

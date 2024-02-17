@@ -121,8 +121,8 @@ export default {
       name: 'test',
       type: 'manual',
       find(scriptAST, templateAST, _filename, report, { astHelpers }) {
-        if (scriptAST) {
-          const onCall = astHelpers.findFirst(scriptAST, {
+        if (scriptAST[0]) {
+          const onCall = astHelpers.findFirst(scriptAST[0], {
             type: 'CallExpression',
             callee: {
               type: 'MemberExpression',

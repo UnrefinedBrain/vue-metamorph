@@ -3,6 +3,8 @@ import * as recast from 'recast';
 import { namedTypes, visit } from 'ast-types';
 
 import * as babelParser from '@babel/parser';
+import { findAll } from './ast-helpers';
+import { VDocumentFragment } from './ast';
 
 const babelOptions = (): babelParser.ParserOptions => ({
   sourceType: 'module',
@@ -94,18 +96,30 @@ const tsParser = (() => ({
 export function parseVue(code: string) {
   const vueAst = vueParser.parse(code, {
     parser: tsParser,
+    sourceType: 'module',
   });
 
-  // hack: make the source locations line up properly
-  const blankLines = '\n'.repeat(vueAst.loc.start.line - 1);
+  const scripts = findAll(vueAst.templateBody!.parent as VDocumentFragment, {
+    type: 'VElement',
+    name: 'script',
+  }) as vueParser.AST.VElement[];
 
-  const scriptAst = recast.parse(blankLines + code.slice(vueAst.range[0], vueAst.range[1]), {
-    parser: tsParser,
-  }).program as namedTypes.Program;
+  const scriptAsts = scripts.map((el) => {
+    // hack: make the source locations line up properly
+    const blankLines = '\n'.repeat(el.loc.start.line - 1);
+    const start = el.children[0]?.range[0];
+    const end = el.children[0]?.range[1];
+
+    const ast = recast.parse(blankLines + code.slice(start, end), {
+      parser: tsParser,
+    }).program as namedTypes.Program;
+
+    return ast;
+  });
 
   return {
     vueAst,
-    scriptAst,
+    scriptAsts,
   };
 }
 

@@ -3,11 +3,11 @@ import { CodemodPlugin } from 'vue-metamorph';
 export const helloWorldCodemod: CodemodPlugin = {
   type: 'codemod',
   name: 'hello-world',
-  transform(scriptAST, _templateAST, _filename, { traverseScriptAST, astHelpers }) {
+  transform(scriptASTs, _templateAST, _filename, { traverseScriptAST, astHelpers }) {
     let transformCount = 0;
 
-    if (scriptAST) {
-      traverseScriptAST(scriptAST, {
+    if (scriptASTs[0]) {
+      traverseScriptAST(scriptASTs[0], {
         visitLiteral(path) {
           if (typeof path.node.value === 'string') {
             path.node.value = 'Hello, world!';
@@ -20,7 +20,7 @@ export const helloWorldCodemod: CodemodPlugin = {
 
       // or, using the findAll helper
       astHelpers
-        .findAll(scriptAST, { type: 'Literal' })
+        .findAll(scriptASTs[0], { type: 'Literal' })
         .forEach((literal) => {
           if (typeof literal.value === 'string') {
             literal.value = 'Hello, world!';
