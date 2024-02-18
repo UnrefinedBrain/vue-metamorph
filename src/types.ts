@@ -23,7 +23,7 @@ export type ManualMigrationPlugin = {
   name: string;
   /**
    * Find nodes that need manual migration
-   * @param scriptAST - If this is a .vue file, the AST of the \<script\> blocks.
+   * @param scriptASTs - If this is a .vue file, the AST of the \<script\> blocks.
    * If this is a JS/TS module, the 0th element is the AST of the module
    * @param sfcAST - If this is a .vue file, the AST of the SFC. Otherwise, null
    * @param filename - The absolute path of the file being worked on
@@ -31,7 +31,7 @@ export type ManualMigrationPlugin = {
    * @param utils - Utility functions
    */
   find(
-    scriptAST: namedTypes.Program[],
+    scriptASTs: namedTypes.Program[],
     sfcAST: AST.VDocumentFragment | null,
     filename: string,
     report: ReportFunction,
