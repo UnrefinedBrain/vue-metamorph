@@ -94,6 +94,12 @@ const tsParser = (() => ({
  * @returns SFC AST and Script AST
  */
 export function parseVue(code: string) {
+  if (!code.includes('<template')) {
+    // hack: if no <template> is present, templateBody will be null
+    // and we cannot access the VDocumentFragment
+    code += '\n<template></template>';
+  }
+
   const vueAst = vueParser.parse(code, {
     parser: tsParser,
     sourceType: 'module',
