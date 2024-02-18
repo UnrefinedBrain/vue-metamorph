@@ -111,6 +111,11 @@ function transformVueFile(
           path.pop();
         }
 
+        // special case: VDirectiveKey.key's range includes the 'v-' prefix
+        if (path.at(-2) === 'key') {
+          path.pop();
+        }
+
         if (path.length <= 3 && p.kind !== 'E') {
           // adding/removing children from the root node should cause a re-print of the root
           rootNodeChanged = true;
