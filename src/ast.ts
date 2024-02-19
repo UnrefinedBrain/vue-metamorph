@@ -30,10 +30,16 @@ import { AST } from 'vue-eslint-parser';
  * SOFTWARE.
  */
 
+/**
+ * @public
+ */
 export interface HasParent {
   parent?: Node | null;
 }
 
+/**
+ * @public
+ */
 export const NS = Object.freeze({
   HTML: 'http://www.w3.org/1999/xhtml' as const,
   MathML: 'http://www.w3.org/1998/Math/MathML' as const,
@@ -44,8 +50,9 @@ export const NS = Object.freeze({
 });
 
 /**
-* Type of namespaces.
-*/
+ * Type of namespaces.
+ * @public
+ */
 export type Namespace =
   | typeof NS.HTML
   | typeof NS.MathML
@@ -55,8 +62,9 @@ export type Namespace =
   | typeof NS.XMLNS;
 
 /**
-* The union type for all nodes.
-*/
+ * The union type for all nodes.
+ * @public
+ */
 export type Node =
   | Exclude<namedTypes.ASTNode & HasParent, namedTypes.Program | namedTypes.File>
   | VNode
@@ -69,6 +77,7 @@ export type Node =
 
 /**
  * The node of `v-for` directives.
+ * @public
  */
 export interface VForExpression extends HasParent {
   type: 'VForExpression';
@@ -78,8 +87,9 @@ export interface VForExpression extends HasParent {
 }
 
 /**
-* The node of `v-on` directives.
-*/
+ * The node of `v-on` directives.
+ * @public
+ */
 export interface VOnExpression extends HasParent {
   type: 'VOnExpression';
   parent: VExpressionContainer;
@@ -87,8 +97,9 @@ export interface VOnExpression extends HasParent {
 }
 
 /**
-* The node of `slot-scope` directives.
-*/
+ * The node of `slot-scope` directives.
+ * @public
+ */
 export interface VSlotScopeExpression extends HasParent {
   type: 'VSlotScopeExpression';
   parent: VExpressionContainer;
@@ -96,8 +107,9 @@ export interface VSlotScopeExpression extends HasParent {
 }
 
 /**
-* The node of a filter sequence which is separated by `|`.
-*/
+ * The node of a filter sequence which is separated by `|`.
+ * @public
+ */
 export interface VFilterSequenceExpression extends HasParent {
   type: 'VFilterSequenceExpression';
   parent: VExpressionContainer;
@@ -106,8 +118,9 @@ export interface VFilterSequenceExpression extends HasParent {
 }
 
 /**
-* The node of a filter sequence which is separated by `|`.
-*/
+ * The node of a filter sequence which is separated by `|`.
+ * @public
+ */
 export interface VFilter extends HasParent {
   type: 'VFilter';
   parent: VFilterSequenceExpression;
@@ -116,8 +129,9 @@ export interface VFilter extends HasParent {
 }
 
 /**
-* The union type of any nodes.
-*/
+ * The union type of any nodes.
+ * @public
+ */
 export type VNode =
   | VAttribute
   | VDirective
@@ -132,8 +146,9 @@ export type VNode =
   | VText;
 
 /**
-* Text nodes.
-*/
+ * Text nodes.
+ * @public
+ */
 export interface VText extends HasParent {
   type: 'VText';
   parent: VDocumentFragment | VElement;
@@ -141,9 +156,10 @@ export interface VText extends HasParent {
 }
 
 /**
-* The node of JavaScript expression in text.
-* e.g. `{{ name }}`
-*/
+ * The node of JavaScript expression in text.
+ * e.g. `{{ name }}`
+ * @public
+ */
 export interface VExpressionContainer extends HasParent {
   type: 'VExpressionContainer';
   parent: VDocumentFragment | VElement | VDirective | VDirectiveKey;
@@ -158,8 +174,9 @@ export interface VExpressionContainer extends HasParent {
 }
 
 /**
-* Attribute name nodes.
-*/
+ * Attribute name nodes.
+ * @public
+ */
 export interface VIdentifier extends HasParent {
   type: 'VIdentifier';
   parent: VAttribute | VDirectiveKey;
@@ -168,8 +185,9 @@ export interface VIdentifier extends HasParent {
 }
 
 /**
-* Attribute name nodes.
-*/
+ * Attribute name nodes.
+ * @public
+ */
 export interface VDirectiveKey extends HasParent {
   type: 'VDirectiveKey';
   parent: VDirective;
@@ -179,8 +197,9 @@ export interface VDirectiveKey extends HasParent {
 }
 
 /**
-* Attribute value nodes.
-*/
+ * Attribute value nodes.
+ * @public
+ */
 export interface VLiteral extends HasParent {
   type: 'VLiteral';
   parent: VAttribute;
@@ -188,8 +207,9 @@ export interface VLiteral extends HasParent {
 }
 
 /**
-* Static attribute nodes.
-*/
+ * Static attribute nodes.
+ * @public
+ */
 export interface VAttribute extends HasParent {
   type: 'VAttribute';
   parent: VStartTag;
@@ -199,8 +219,9 @@ export interface VAttribute extends HasParent {
 }
 
 /**
-* Directive nodes.
-*/
+ * Directive nodes.
+ * @public
+ */
 export interface VDirective extends HasParent {
   type: 'VAttribute';
   parent: VStartTag;
@@ -210,8 +231,9 @@ export interface VDirective extends HasParent {
 }
 
 /**
-* Start tag nodes.
-*/
+ * Start tag nodes.
+ * @public
+ */
 export interface VStartTag extends HasParent {
   type: 'VStartTag';
   parent: VElement;
@@ -220,16 +242,18 @@ export interface VStartTag extends HasParent {
 }
 
 /**
-* End tag nodes.
-*/
+ * End tag nodes.
+ * @public
+ */
 export interface VEndTag extends HasParent {
   type: 'VEndTag';
   parent: VElement;
 }
 
 /**
-* Element nodes.
-*/
+ * Element nodes.
+ * @public
+ */
 export interface VElement extends HasParent {
   type: 'VElement';
   parent: VDocumentFragment | VElement;
@@ -243,8 +267,9 @@ export interface VElement extends HasParent {
 }
 
 /**
-* Root nodes.
-*/
+ * Root nodes.
+ * @public
+ */
 export interface VDocumentFragment extends HasParent {
   type: 'VDocumentFragment';
   parent: null;
@@ -252,8 +277,9 @@ export interface VDocumentFragment extends HasParent {
 }
 
 /**
-* Style element nodes.
-*/
+ * Style element nodes.
+ * @public
+ */
 export interface VStyleElement extends VElement {
   type: 'VElement';
   name: 'style';
@@ -261,6 +287,9 @@ export interface VStyleElement extends VElement {
   children: (VText | VExpressionContainer)[];
 }
 
+/**
+ * @public
+ */
 export const traverseNodes = (node: Node, visitor: {
   enterNode?(node: Node, parent: Node | null): void;
   leaveNode?(node: Node, parent: Node | null): void;

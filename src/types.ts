@@ -13,7 +13,7 @@ export const util = {
 
 export type VueProgram = namedTypes.Program & {
   /**
-   * Whether this Program represents the contents of a <script setup>
+   * Whether this Program represents the contents of a \<script setup\>
    *
    * In a JS/TS file, this will always be false.
    */

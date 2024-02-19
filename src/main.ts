@@ -1,5 +1,6 @@
 import * as Kinds from 'ast-types/gen/kinds';
 import * as templateBuilders from './builders';
+import * as AST from './ast';
 
 export {
   /**
@@ -42,3 +43,7 @@ export type {
   CodemodPlugin,
   ManualMigrationPlugin,
 } from './types.js';
+
+export type {
+  AST,
+};
