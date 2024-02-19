@@ -278,11 +278,12 @@ export function findVueComponentOptions(
 
       // Vue.extend({ ... })
       // Vue.component({ ... })
+      // Vue.mixin({ ... })
       if (path.node.callee.type === 'MemberExpression'
         && path.node.callee.object.type === 'Identifier'
         && path.node.callee.property.type === 'Identifier'
         && path.node.callee.object.name === 'Vue'
-        && ['extend', 'component'].includes(path.node.callee.property.name)
+        && ['extend', 'component', 'mixin'].includes(path.node.callee.property.name)
         && path.node.arguments[0]?.type === 'ObjectExpression') {
         objects.push(path.node.arguments[0]);
       }
