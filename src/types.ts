@@ -11,6 +11,15 @@ export const util = {
   astHelpers,
 };
 
+export type VueProgram = namedTypes.Program & {
+  /**
+   * Whether this Program represents the contents of a <script setup>
+   *
+   * In a JS/TS file, this will always be false.
+   */
+  isScriptSetup: boolean;
+};
+
 export type ReportFunction = (node: AST.Node, message: string) => void;
 
 /**
@@ -31,7 +40,7 @@ export type ManualMigrationPlugin = {
    * @param utils - Utility functions
    */
   find(
-    scriptASTs: namedTypes.Program[],
+    scriptASTs: VueProgram[],
     sfcAST: AST.VDocumentFragment | null,
     filename: string,
     report: ReportFunction,
@@ -57,7 +66,7 @@ export type CodemodPlugin = {
    * @returns Number of transforms applied. Used for stats
    */
   transform(
-    scriptASTs: namedTypes.Program[],
+    scriptASTs: VueProgram[],
     sfcAST: AST.VDocumentFragment | null,
     filename: string,
     utils: typeof util,

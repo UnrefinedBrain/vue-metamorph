@@ -1,10 +1,11 @@
 import * as vueParser from 'vue-eslint-parser';
 import * as recast from 'recast';
-import { namedTypes, visit } from 'ast-types';
+import { visit } from 'ast-types';
 
 import * as babelParser from '@babel/parser';
 import { findAll } from './ast-helpers';
 import { VDocumentFragment } from './ast';
+import { VueProgram } from './types';
 
 const babelOptions = (): babelParser.ParserOptions => ({
   sourceType: 'module',
@@ -118,7 +119,9 @@ export function parseVue(code: string) {
 
     const ast = recast.parse(blankLines + code.slice(start, end), {
       parser: tsParser,
-    }).program as namedTypes.Program;
+    }).program as VueProgram;
+
+    ast.isScriptSetup = el.startTag.attributes.some((attr) => !attr.directive && attr.key.rawName === 'setup');
 
     return ast;
   });
@@ -137,7 +140,9 @@ export function parseVue(code: string) {
 export function parseTs(code: string) {
   const ast = recast.parse(code, {
     parser: tsParser,
-  }).program as namedTypes.Program;
+  }).program as VueProgram;
+
+  ast.isScriptSetup = false;
 
   return ast;
 }

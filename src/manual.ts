@@ -1,7 +1,8 @@
-import { namedTypes } from 'ast-types';
 import * as AST from './ast';
 import { parseTs, parseVue } from './parse';
-import { ManualMigrationPlugin, ReportFunction, util } from './types';
+import {
+  ManualMigrationPlugin, ReportFunction, VueProgram, util,
+} from './types';
 
 type SampleArgs = {
   /**
@@ -142,7 +143,7 @@ export function findManualMigrations(
 ): ManualMigrationReport[] {
   const reports: ManualMigrationReport[] = [];
 
-  let scripts: namedTypes.Program[] = [];
+  let scripts: VueProgram[] = [];
   let template: AST.VDocumentFragment | null = null;
 
   if (filename.endsWith('.vue')) {
