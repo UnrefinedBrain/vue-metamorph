@@ -10,4 +10,4 @@ updates:
         dependency-type: "development"
 
     schedule:
-      interval: "weekly"
+      interval: "daily"
