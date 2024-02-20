@@ -195,7 +195,7 @@ function transformTypescriptFile(
 /**
  * Runs codemods against source code
  * @param code - Source code
- * @param filename - The file name
+ * @param filename - The file name, used to determine whether to parse as JS/TS, or as a .vue SFC
  * @param plugins - List of codemod plugins
  * @returns New source code
  * @public
