@@ -22,11 +22,13 @@ const changeStringLiterals: CodemodPlugin = {
     // this is only used to print the stats in CLI output
     let transformCount = 0;
 
-    // scriptASTs contains ASTs of each <script> in a SFC
-    if (scriptASTs[0]) {
+    // scriptASTs is an array of Program ASTs
+    // in a js/ts file, this array will only have one item
+    // in a vue file, this array will have one item for each <script> block
+    for (const scriptAST of scriptASTs) {
       // traverseScriptAST is an alias for the ast-types 'visit' function
       // see: https://github.com/benjamn/ast-types#ast-traversal
-      traverseScriptAST(scriptASTs[0], {
+      traverseScriptAST(scriptAST, {
         visitLiteral(path) {
           if (typeof path.node.value === 'string') {
             // mutate the node
