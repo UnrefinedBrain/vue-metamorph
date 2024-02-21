@@ -1,5 +1,5 @@
 import { defineConfig } from 'vitepress';
-import { transformerTwoslash } from 'vitepress-plugin-twoslash';
+import { transformerTwoslash } from '@shikijs/vitepress-twoslash';
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
