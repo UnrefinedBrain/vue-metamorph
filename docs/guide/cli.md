@@ -39,6 +39,6 @@ const { run, abort } = createVueMetamorphCli({
 run();
 
 // call abort() to gracefully stop the runner
-// process.on('SIGTERM', abort);
+// process.on('SIGINT', abort);
 
 ```
