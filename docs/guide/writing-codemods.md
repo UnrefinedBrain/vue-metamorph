@@ -42,6 +42,8 @@ const changeStringLiterals: CodemodPlugin = {
     }
 
     if (templateAST) {
+      // traverseTemplateAST is an alias for the vue-eslint-parser 'AST.traverseNodes' function
+      // see: https://github.com/vuejs/vue-eslint-parser/blob/master/src/ast/traverse.ts#L118
       traverseTemplateAST(templateAST, {
         enterNode(node) {
           if (node.type === 'Literal' && typeof node.value === 'string') {
