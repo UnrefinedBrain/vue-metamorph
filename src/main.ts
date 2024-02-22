@@ -19,6 +19,7 @@ export {
 export {
   namedTypes,
   builders as scriptBuilders,
+  visit as traverseScriptAST,
 } from 'ast-types';
 
 export {
