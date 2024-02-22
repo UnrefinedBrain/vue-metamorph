@@ -43,6 +43,7 @@ export type {
   Plugin,
   CodemodPlugin,
   ManualMigrationPlugin,
+  VueProgram,
 } from './types.js';
 
 export type {
