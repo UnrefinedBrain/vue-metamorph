@@ -48,10 +48,10 @@ dependencies:
 devDependencies:
   '@microsoft/api-documenter':
     specifier: ^7.23.23
-    version: 7.23.25(@types/node@20.11.19)
+    version: 7.23.28(@types/node@20.11.19)
   '@microsoft/api-extractor':
     specifier: ^7.40.1
-    version: 7.40.3(@types/node@20.11.19)
+    version: 7.40.5(@types/node@20.11.19)
   '@shikijs/vitepress-twoslash':
     specifier: ^1.1.6
     version: 1.1.6(typescript@5.3.3)
@@ -87,7 +87,7 @@ devDependencies:
     version: 5.12.0
   tsup:
     specifier: ^8.0.2
-    version: 8.0.2(@microsoft/api-extractor@7.40.3)(typescript@5.3.3)
+    version: 8.0.2(@microsoft/api-extractor@7.40.5)(typescript@5.3.3)
   typescript:
     specifier: ^5.3.3
     version: 5.3.3
@@ -825,13 +825,13 @@ packages:
       '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
 
-  /@microsoft/api-documenter@7.23.25(@types/node@20.11.19):
-    resolution: {integrity: sha512-zb7wm2l5n+DDkU1P9D9px9dpbzB8WWWFRmIyJweCVjyAX12dNeoqHS9kr4LiOfJcDjpdRJT2zPU0vNqMpkSLWA==}
+  /@microsoft/api-documenter@7.23.28(@types/node@20.11.19):
+    resolution: {integrity: sha512-vIAP9/jUWtA2Uczvcju6KR0le5UVKJY95XGdK1SuJz3pHvY/4aq8XgmVDaqGqQ8lM7z+XsKgepO/GrkXgu1Nhw==}
     hasBin: true
     dependencies:
-      '@microsoft/api-extractor-model': 7.28.11(@types/node@20.11.19)
+      '@microsoft/api-extractor-model': 7.28.12(@types/node@20.11.19)
       '@microsoft/tsdoc': 0.14.2
-      '@rushstack/node-core-library': 4.0.0(@types/node@20.11.19)
+      '@rushstack/node-core-library': 4.0.1(@types/node@20.11.19)
       '@rushstack/ts-command-line': 4.17.2
       colors: 1.2.5
       js-yaml: 3.13.1
@@ -840,24 +840,24 @@ packages:
       - '@types/node'
     dev: true
 
-  /@microsoft/api-extractor-model@7.28.11(@types/node@20.11.19):
-    resolution: {integrity: sha512-iyYqSH4gI3dFj4GLTTvi4Usgd5bILc9bbB5m2xul5tJ0JQ9G9lc1rY67rSD6O0hU62E1WRHOai9GUUVXMgCTdA==}
+  /@microsoft/api-extractor-model@7.28.12(@types/node@20.11.19):
+    resolution: {integrity: sha512-h/gR7+VVp3KO/++YXodpIUKEznTznyawNugwTQka1RwchLwjPEFXmpT1UZ3Cnu8kt3CsNERw9ZUFajBHwUxW7w==}
     dependencies:
       '@microsoft/tsdoc': 0.14.2
       '@microsoft/tsdoc-config': 0.16.2
-      '@rushstack/node-core-library': 4.0.0(@types/node@20.11.19)
+      '@rushstack/node-core-library': 4.0.1(@types/node@20.11.19)
     transitivePeerDependencies:
       - '@types/node'
     dev: true
 
-  /@microsoft/api-extractor@7.40.3(@types/node@20.11.19):
-    resolution: {integrity: sha512-mh1BTKFxowAcArjUG3ryKN7seUEQt5BawAWCEtVq7nJYT2w2lBRGBmMBy93fnrWUxnvatXdtWgNi++Dl5R+7sQ==}
+  /@microsoft/api-extractor@7.40.5(@types/node@20.11.19):
+    resolution: {integrity: sha512-lcYS2slqA7Lil3BrWiaMBK95WmGXvZx12pDeYo6g9BWrtEok+ghmvgSO0SxoX2vgoOUquNDov1nwv6EZa6d3zQ==}
     hasBin: true
     dependencies:
-      '@microsoft/api-extractor-model': 7.28.11(@types/node@20.11.19)
+      '@microsoft/api-extractor-model': 7.28.12(@types/node@20.11.19)
       '@microsoft/tsdoc': 0.14.2
       '@microsoft/tsdoc-config': 0.16.2
-      '@rushstack/node-core-library': 4.0.0(@types/node@20.11.19)
+      '@rushstack/node-core-library': 4.0.1(@types/node@20.11.19)
       '@rushstack/rig-package': 0.5.2
       '@rushstack/ts-command-line': 4.17.2
       colors: 1.2.5
@@ -1115,8 +1115,8 @@ packages:
     dev: true
     optional: true
 
-  /@rushstack/node-core-library@4.0.0(@types/node@20.11.19):
-    resolution: {integrity: sha512-4ocU3K2NtpILEWG6LjSMRSwrb0CjvYOioVTzqvIOj6vc5yD0BcscfpVp5dkHGLZxnqdmkBrTKvyg6AmqhWnw1w==}
+  /@rushstack/node-core-library@4.0.1(@types/node@20.11.19):
+    resolution: {integrity: sha512-wBGR9S/o/Q/7qVghqdfyocLz/Xc+VpjBTYzA8dAPNqHVSZNiEOWB37GPQWAUpHPWD1m8X7GUio8YMh8oe+uV0w==}
     peerDependencies:
       '@types/node': '*'
     peerDependenciesMeta:
@@ -1124,7 +1124,6 @@ packages:
         optional: true
     dependencies:
       '@types/node': 20.11.19
-      colors: 1.2.5
       fs-extra: 7.0.1
       import-lazy: 4.0.0
       jju: 1.4.0
@@ -1880,7 +1879,7 @@ packages:
       es-errors: 1.3.0
       get-intrinsic: 1.2.4
       is-array-buffer: 3.0.4
-      is-shared-array-buffer: 1.0.2
+      is-shared-array-buffer: 1.0.3
     dev: true
 
   /assert@2.1.0:
@@ -2295,7 +2294,7 @@ packages:
       call-bind: 1.0.7
       es-define-property: 1.0.0
       es-errors: 1.3.0
-      es-set-tostringtag: 2.0.2
+      es-set-tostringtag: 2.0.3
       es-to-primitive: 1.2.1
       function.prototype.name: 1.1.6
       get-intrinsic: 1.2.4
@@ -2311,7 +2310,7 @@ packages:
       is-callable: 1.2.7
       is-negative-zero: 2.0.3
       is-regex: 1.1.4
-      is-shared-array-buffer: 1.0.2
+      is-shared-array-buffer: 1.0.3
       is-string: 1.0.7
       is-typed-array: 1.1.13
       is-weakref: 1.0.2
@@ -2325,9 +2324,9 @@ packages:
       string.prototype.trimend: 1.0.7
       string.prototype.trimstart: 1.0.7
       typed-array-buffer: 1.0.2
-      typed-array-byte-length: 1.0.0
-      typed-array-byte-offset: 1.0.1
-      typed-array-length: 1.0.4
+      typed-array-byte-length: 1.0.1
+      typed-array-byte-offset: 1.0.2
+      typed-array-length: 1.0.5
       unbox-primitive: 1.0.2
       which-typed-array: 1.1.14
     dev: true
@@ -2354,6 +2353,15 @@ packages:
     dependencies:
       get-intrinsic: 1.2.2
       has-tostringtag: 1.0.0
+      hasown: 2.0.1
+    dev: true
+
+  /es-set-tostringtag@2.0.3:
+    resolution: {integrity: sha512-3T8uNMC3OQTHkFUsFq8r/BwAXLHvU/9O9mE0fBc/MY5iq/8H7ncvO947LmYA6ldWw9Uh8Yhf25zu6n7nML5QWQ==}
+    engines: {node: '>= 0.4'}
+    dependencies:
+      get-intrinsic: 1.2.4
+      has-tostringtag: 1.0.2
       hasown: 2.0.1
     dev: true
 
@@ -3196,6 +3204,13 @@ packages:
     resolution: {integrity: sha512-sqN2UDu1/0y6uvXyStCOzyhAjCSlHceFoMKJW8W9EU9cvic/QdsZ0kEU93HEy3IUEFZIiH/3w+AH/UQbPHNdhA==}
     dependencies:
       call-bind: 1.0.5
+    dev: true
+
+  /is-shared-array-buffer@1.0.3:
+    resolution: {integrity: sha512-nA2hv5XIhLR3uVzDDfCIknerhx8XUKnstuOERPNNIinXG7v9u+ohXF67vxm4TPTEPU6lm61ZkwP3c9PCB97rhg==}
+    engines: {node: '>= 0.4'}
+    dependencies:
+      call-bind: 1.0.7
     dev: true
 
   /is-stream@2.0.1:
@@ -4662,7 +4677,7 @@ packages:
     resolution: {integrity: sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==}
     dev: false
 
-  /tsup@8.0.2(@microsoft/api-extractor@7.40.3)(typescript@5.3.3):
+  /tsup@8.0.2(@microsoft/api-extractor@7.40.5)(typescript@5.3.3):
     resolution: {integrity: sha512-NY8xtQXdH7hDUAZwcQdY/Vzlw9johQsaqf7iwZ6g1DOUlFYQ5/AtVAjTvihhEyeRlGo4dLRVHtrRaL35M1daqQ==}
     engines: {node: '>=18'}
     hasBin: true
@@ -4681,7 +4696,7 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@microsoft/api-extractor': 7.40.3(@types/node@20.11.19)
+      '@microsoft/api-extractor': 7.40.5(@types/node@20.11.19)
       bundle-require: 4.0.2(esbuild@0.19.9)
       cac: 6.7.14
       chokidar: 3.6.0
@@ -4774,6 +4789,17 @@ packages:
       is-typed-array: 1.1.12
     dev: true
 
+  /typed-array-byte-length@1.0.1:
+    resolution: {integrity: sha512-3iMJ9q0ao7WE9tWcaYKIptkNBuOIcZCCT0d4MRvuuH88fEoEH62IuQe0OtraD3ebQEoTRk8XCBoknUNc1Y67pw==}
+    engines: {node: '>= 0.4'}
+    dependencies:
+      call-bind: 1.0.7
+      for-each: 0.3.3
+      gopd: 1.0.1
+      has-proto: 1.0.3
+      is-typed-array: 1.1.13
+    dev: true
+
   /typed-array-byte-offset@1.0.0:
     resolution: {integrity: sha512-RD97prjEt9EL8YgAgpOkf3O4IF9lhJFr9g0htQkm0rchFp/Vx7LW5Q8fSXXub7BXAODyUQohRMyOc3faCPd0hg==}
     engines: {node: '>= 0.4'}
@@ -4785,8 +4811,8 @@ packages:
       is-typed-array: 1.1.12
     dev: true
 
-  /typed-array-byte-offset@1.0.1:
-    resolution: {integrity: sha512-tcqKMrTRXjqvHN9S3553NPCaGL0VPgFI92lXszmrE8DMhiDPLBYLlvo8Uu4WZAAX/aGqp/T1sbA4ph8EWjDF9Q==}
+  /typed-array-byte-offset@1.0.2:
+    resolution: {integrity: sha512-Ous0vodHa56FviZucS2E63zkgtgrACj7omjwd/8lTEMEPFFyjfixMZ1ZXenpgCFBBt4EC1J2XsyVS2gkG0eTFA==}
     engines: {node: '>= 0.4'}
     dependencies:
       available-typed-arrays: 1.0.7
@@ -4803,6 +4829,18 @@ packages:
       call-bind: 1.0.5
       for-each: 0.3.3
       is-typed-array: 1.1.12
+    dev: true
+
+  /typed-array-length@1.0.5:
+    resolution: {integrity: sha512-yMi0PlwuznKHxKmcpoOdeLwxBoVPkqZxd7q2FgMkmD3bNwvF5VW0+UlUQ1k1vmktTu4Yu13Q0RIxEP8+B+wloA==}
+    engines: {node: '>= 0.4'}
+    dependencies:
+      call-bind: 1.0.7
+      for-each: 0.3.3
+      gopd: 1.0.1
+      has-proto: 1.0.3
+      is-typed-array: 1.1.13
+      possible-typed-array-names: 1.0.0
     dev: true
 
   /typescript@5.3.3:
