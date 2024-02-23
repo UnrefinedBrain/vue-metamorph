@@ -249,7 +249,8 @@ export function createNamespaceImport(
 }
 
 /**
- * Finds the Options API objects passed to Vue.extend(), Vue.component(), Vue.mixin(), defineComponent()
+ * Finds the Options API objects passed to Vue.extend(), Vue.component(),
+ * Vue.mixin(), or defineComponent().
  * @param ast - The script AST
  * @param isSfc - If true, treat the default export as an options api object
  */
