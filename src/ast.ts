@@ -165,6 +165,7 @@ export interface VExpressionContainer extends HasParent {
   parent: VDocumentFragment | VElement | VDirective | VDirectiveKey;
   expression:
   | ExpressionKind
+  | PatternKind
   | VFilterSequenceExpression
   | VForExpression
   | VOnExpression

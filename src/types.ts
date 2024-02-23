@@ -11,6 +11,10 @@ export const util = {
   astHelpers,
 };
 
+/**
+ * ESTree Program type, with an additional property `isScriptSetup` that denotes whether the program
+ * represents the contents of a <script setup> block in a Vue SFC
+ */
 export type VueProgram = namedTypes.Program & {
   /**
    * Whether this Program represents the contents of a \<script setup\>
