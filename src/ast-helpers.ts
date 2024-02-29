@@ -250,7 +250,7 @@ export function createNamespaceImport(
 
 /**
  * Finds the Options API objects passed to Vue.extend(), Vue.component(),
- * Vue.mixin(), or defineComponent().
+ * Vue.mixin(), defineComponent(), or new Vue()
  * @param ast - The script AST
  * @param isSfc - If true, treat the default export as an options api object
  */
@@ -285,6 +285,16 @@ export function findVueComponentOptions(
         && path.node.callee.property.type === 'Identifier'
         && path.node.callee.object.name === 'Vue'
         && ['extend', 'component', 'mixin'].includes(path.node.callee.property.name)
+        && path.node.arguments[0]?.type === 'ObjectExpression') {
+        objects.push(path.node.arguments[0]);
+      }
+
+      this.traverse(path);
+    },
+
+    visitNewExpression(path) {
+      if (path.node.callee.type === 'Identifier'
+        && path.node.callee.name === 'Vue'
         && path.node.arguments[0]?.type === 'ObjectExpression') {
         objects.push(path.node.arguments[0]);
       }

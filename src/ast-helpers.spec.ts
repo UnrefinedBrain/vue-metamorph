@@ -62,15 +62,3 @@ describe('createDefaultImport', () => {
     `);
   });
 });
-
-describe.skip('createNamedImport', () => {
-
-});
-
-describe.skip('createNamespaceImport', () => {
-
-});
-
-describe.skip('findVueComponentOptions', () => {
-
-});
