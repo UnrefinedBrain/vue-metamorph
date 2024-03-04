@@ -77,7 +77,7 @@ jobs:
       - run: pnpm install
       - run: pnpm lint
 
-  build-template:
+  template:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
