@@ -12,8 +12,9 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/UnrefinedBrain/vue-metamorph.git"
+    "url": "https://github.com/UnrefinedBrain/vue-metamorph.git"
   },
+  "bugs": "https://github.com/UnrefinedBrain/vue-metamorph/issues",
   "author": {
     "name": "UnrefinedBrain",
     "email": "github@unrefinedbrain.dev",
@@ -28,10 +29,10 @@
   "type": "module",
   "main": "dist/main.js",
   "types": "dist/vue-metamorph.d.ts",
+  "typings": "dist/vue-metamorph.d.ts",
   "exports": {
     ".": {
       "import": "./dist/main.js",
-      "require": "./dist/main.cjs",
       "types": "./dist/vue-metamorph.d.ts"
     }
   },
