@@ -133,11 +133,11 @@ export function createNamedImport(
         continue;
       }
 
-      if (!specifier.name || specifier.name.type !== 'Identifier') {
+      if (specifier.imported.type !== 'Identifier') {
         continue;
       }
 
-      if (specifier.name.name === importName
+      if (specifier.imported.name === importName
         && (localName === importName || specifier.local?.name === localName)) {
         found = true;
       }

@@ -62,3 +62,63 @@ describe('createDefaultImport', () => {
     `);
   });
 });
+
+describe('createNamedImport', () => {
+  const codemod: CodemodPlugin = {
+    type: 'codemod',
+    name: '',
+    transform(scriptAST) {
+      if (scriptAST[0]) {
+        astHelpers.createNamedImport(scriptAST[0], 'vue', 'defineComponent');
+      }
+
+      return 1;
+    },
+  };
+
+  it('should insert a named import when no existing import exists', () => {
+    const input = 'const a = 1 + 1;';
+
+    expect(transform(input, 'file.js', [codemod]).code).toMatchInlineSnapshot(`
+      "import { defineComponent } from 'vue';
+      const a = 1 + 1;
+      "
+    `);
+  });
+
+  it('should insert a named import for an existing import with no specifiers', () => {
+    const input = `
+    import 'vue';
+    const a = 1 + 1;`;
+
+    expect(transform(input, 'file.js', [codemod]).code).toMatchInlineSnapshot(`
+      "import { defineComponent } from 'vue';
+      const a = 1 + 1;
+      "
+    `);
+  });
+
+  it('should insert a named import for an existing import with specifiers', () => {
+    const input = `
+    import Vue from 'vue';
+    const a = 1 + 1;`;
+
+    expect(transform(input, 'file.js', [codemod]).code).toMatchInlineSnapshot(`
+      "import Vue, { defineComponent } from 'vue';
+      const a = 1 + 1;
+      "
+    `);
+  });
+
+  it('should do nothing if an existing named import exists', () => {
+    const input = `
+    import { defineComponent } from 'vue';
+    const a = 1 + 1;`;
+
+    expect(transform(input, 'file.js', [codemod]).code).toMatchInlineSnapshot(`
+      "import { defineComponent } from 'vue';
+      const a = 1 + 1;
+      "
+    `);
+  });
+});
