@@ -76,3 +76,24 @@ jobs:
 
       - run: pnpm install
       - run: pnpm lint
+
+  template:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - uses: pnpm/action-setup@v2
+        with:
+          version: ^8.14.1
+          run_install: false
+
+      - run: pnpm install
+      - run: pnpm build
+      - run: |
+          sed -i 's|"vue-metamorph": ".*"|"vue-metamorph": "file:.."|' template/package.json
+          cd template
+          pnpm install
+          pnpm build
+          pnpm lint
