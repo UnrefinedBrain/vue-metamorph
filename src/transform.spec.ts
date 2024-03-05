@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { transform } from './transform';
+import { CodemodPlugin } from './types';
 
 const example = `
 <template>
@@ -37,7 +38,7 @@ export default defineComponent({
 `;
 
 describe('transform', () => {
-  it('should ', () => {
+  it('should work with the test file', () => {
     const res = transform(example, 'file.vue', [{
       name: 'test',
       type: 'codemod',
@@ -154,6 +155,40 @@ describe('transform', () => {
           ],
         ],
       }
+    `);
+  });
+
+  it('should transform jsx', () => {
+    const input = 'const btn = () => <button>Hello</button>';
+    const codemod: CodemodPlugin = {
+      type: 'codemod',
+      name: 'test',
+      transform(scriptASTs, _sfcAST, _filename, utils) {
+        let count = 0;
+        for (const scriptAST of scriptASTs) {
+          utils.astHelpers.findAll(scriptAST, {
+            type: 'JSXElement',
+          })
+            .forEach((el) => {
+              if (el.openingElement.name.type === 'JSXIdentifier') {
+                el.openingElement.name.name = 'div';
+              }
+
+              if (el.closingElement?.name.type === 'JSXIdentifier') {
+                el.closingElement.name.name = 'div';
+              }
+
+              count++;
+            });
+        }
+
+        return count;
+      },
+    };
+
+    expect(transform(input, 'file.jsx', [codemod]).code).toMatchInlineSnapshot(`
+      "const btn = () => <div>Hello</div>
+      "
     `);
   });
 });

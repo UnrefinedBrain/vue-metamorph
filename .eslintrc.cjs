@@ -31,6 +31,7 @@ module.exports = {
     'no-await-in-loop': 0,
     'no-continue': 0,
     '@typescript-eslint/semi': 2,
+    '@typescript-eslint/no-loop-func': 0,
     '@typescript-eslint/member-delimiter-style': [2, {
       multiline: {
         delimiter: 'semi',
