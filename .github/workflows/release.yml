@@ -42,7 +42,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
-            VERSION=$(cat package.json | jq .version)
+            VERSION=v$(cat package.json | jq --raw-output .version)
             gh api \
               --method POST \
               -H "Accept: application/vnd.github+json" \
