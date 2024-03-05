@@ -39,7 +39,7 @@ jobs:
           git config user.email 'unrefinedbrain@users.noreply.github.com'
 
           npm version ${{ inputs.release_type }}
-          git push --follow-tags --force
+          git push --follow-tags origin master
       - name: Create release
         run: |
             VERSION=$(cat package.json | jq .version)
