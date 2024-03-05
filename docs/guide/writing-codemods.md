@@ -137,5 +137,4 @@ it('should remove all v-ifs', () => {
 
   expect(transform(source, 'file.vue', [myCodemod]).code).toBe(expected);
 });
-;
 ```
