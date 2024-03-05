@@ -33,6 +33,7 @@ jobs:
         run: pnpm install
       - name: Bump version
         run: |
+          git remote get-url origin
           git remote set-url origin https://${{ secrets.RELEASE_PAT }}@github.com/UnrefinedBrain/vue-metamorph
           git config user.name 'vue-metamorph release bot'
           git config user.email 'unrefinedbrain@users.noreply.github.com'
