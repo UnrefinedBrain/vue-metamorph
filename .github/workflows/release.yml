@@ -32,15 +32,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install
       - name: Bump version
-        env:
-          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
+          git remote set-url origin https://${{ secrets.RELEASE_PAT }}@github.com/UnrefinedBrain/vue-metamorph
           git config user.name 'vue-metamorph release bot'
           git config user.email 'unrefinedbrain@users.noreply.github.com'
 
           npm version ${{ inputs.release_type }}
           git push --follow-tags origin master
       - name: Create release
+        env:
+          GITHUB_TOKEN: ${{ secrets.RELEASE_PAT }}
         run: |
             VERSION=$(cat package.json | jq .version)
             gh api \
