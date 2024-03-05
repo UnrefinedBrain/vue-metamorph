@@ -107,7 +107,7 @@ Make sure to choose the correct parser:
 | JavaScript | `@babel/parser` |
 | TypeScript |` @babel/parser` |
 
-When using `@babel/parser` with AST Explorer, enable [this list](https://github.com/UnrefinedBrain/vue-metamorph/blob/master/src/parse.ts#L17-L56) of plugins to get an accurate representation of the AST you'll be working with.
+When using `@babel/parser` with AST Explorer, enable [this list](https://github.com/UnrefinedBrain/vue-metamorph/blob/master/src/parse.ts#L17-L57) of plugins to get an accurate representation of the AST you'll be working with.
 
 ## Testing
 

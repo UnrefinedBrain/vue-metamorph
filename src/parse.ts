@@ -32,6 +32,7 @@ const babelOptions = (): babelParser.ParserOptions => ({
     'functionSent',
     'importAssertions',
     'importMeta',
+    'jsx',
     'nullishCoalescingOperator',
     'numericSeparator',
     'objectRestSpread',
