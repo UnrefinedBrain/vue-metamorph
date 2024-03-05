@@ -48,7 +48,7 @@ dependencies:
 devDependencies:
   '@microsoft/api-documenter':
     specifier: ^7.23.23
-    version: 7.23.36(@types/node@20.11.24)
+    version: 7.23.37(@types/node@20.11.24)
   '@microsoft/api-extractor':
     specifier: ^7.40.1
     version: 7.42.3(@types/node@20.11.24)
@@ -825,8 +825,8 @@ packages:
       '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
 
-  /@microsoft/api-documenter@7.23.36(@types/node@20.11.24):
-    resolution: {integrity: sha512-DD4SkP0EKFmXJprt/WB4XykK2KdKSk5FjXeOvJ3D4cKFw0R5Da7TKfvsDKAASE1COB8FgQO3sftoPDHu9OD3lw==}
+  /@microsoft/api-documenter@7.23.37(@types/node@20.11.24):
+    resolution: {integrity: sha512-8StaLn4tLGllcgXCNGnqQRLFcWT9JILv5dHm2rYDdMWDQulInNKJnc2P9rpcI5mrO+cKcIRl75kdq4QrI9zunw==}
     hasBin: true
     dependencies:
       '@microsoft/api-extractor-model': 7.28.13(@types/node@20.11.24)
