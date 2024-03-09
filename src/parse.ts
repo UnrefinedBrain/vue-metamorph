@@ -7,7 +7,7 @@ import { findAll } from './ast-helpers';
 import { VDocumentFragment } from './ast';
 import { VueProgram } from './types';
 
-const babelOptions = (): babelParser.ParserOptions => ({
+const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
   sourceType: 'module',
   strictMode: false,
   allowImportExportEverywhere: true,
@@ -32,7 +32,6 @@ const babelOptions = (): babelParser.ParserOptions => ({
     'functionSent',
     'importAssertions',
     'importMeta',
-    'jsx',
     'nullishCoalescingOperator',
     'numericSeparator',
     'objectRestSpread',
@@ -54,12 +53,15 @@ const babelOptions = (): babelParser.ParserOptions => ({
     'topLevelAwait',
     'typescript',
     'v8intrinsic',
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    ...isJsx ? ['jsx'] as any[] : [],
   ],
 });
-const tsParser = (() => ({
-  parse: (code: string) => babelParser.parse(code, babelOptions()),
+const tsParser = (isJsx: boolean) => ({
+  parse: (code: string) => babelParser.parse(code, babelOptions(isJsx)),
   parseForESLint: (code: string) => {
-    const res = babelParser.parse(code, babelOptions());
+    const res = babelParser.parse(code, babelOptions(isJsx));
 
     // needed to avoid vue-eslint-parser error
     visit(res.program, {
@@ -88,7 +90,7 @@ const tsParser = (() => ({
       ast: res.program,
     };
   },
-}))();
+});
 
 /**
  * Parse Vue code
@@ -103,7 +105,7 @@ export function parseVue(code: string) {
   }
 
   const vueAst = vueParser.parse(code, {
-    parser: tsParser,
+    parser: tsParser(true),
     sourceType: 'module',
   });
 
@@ -118,8 +120,10 @@ export function parseVue(code: string) {
     const start = el.children[0]?.range[0];
     const end = el.children[0]?.range[1];
 
+    const isJsx = el.startTag.attributes.some((attr) => !attr.directive && attr.key.rawName === 'lang' && attr.value && ['jsx', 'tsx'].includes(attr.value.value));
+
     const ast = recast.parse(blankLines + code.slice(start, end), {
-      parser: tsParser,
+      parser: tsParser(isJsx),
     }).program as VueProgram;
 
     ast.isScriptSetup = el.startTag.attributes.some((attr) => !attr.directive && attr.key.rawName === 'setup');
@@ -138,9 +142,9 @@ export function parseVue(code: string) {
  * @param code Source code
  * @returns AST
  */
-export function parseTs(code: string) {
+export function parseTs(code: string, isJsx: boolean) {
   const ast = recast.parse(code, {
-    parser: tsParser,
+    parser: tsParser(isJsx),
   }).program as VueProgram;
 
   ast.isScriptSetup = false;
