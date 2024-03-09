@@ -179,7 +179,7 @@ function transformTypescriptFile(
   filename: string,
   codemods: CodemodPlugin[],
 ): TransformResult {
-  const ast = parseTs(code);
+  const ast = parseTs(code, /\.[jt]sx$/.test(filename));
   const stats: [string, number][] = [];
 
   for (const codemod of codemods) {

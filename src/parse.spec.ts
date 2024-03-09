@@ -4,13 +4,13 @@ import { findFirst } from './ast-helpers';
 
 describe('parseTs', () => {
   it('should always set the isScriptSetup property to false', () => {
-    const ast = parseTs('const a = 1 + 1');
+    const ast = parseTs('const a = 1 + 1', false);
 
     expect(ast.isScriptSetup).toBe(false);
   });
 
   it('should parse jsx', () => {
-    const ast = parseTs('const btn = () => <button>Hello</button>');
+    const ast = parseTs('const btn = () => <button>Hello</button>', true);
     expect(findFirst(ast, { type: 'JSXElement' })).not.toBeNull();
   });
 });
