@@ -151,7 +151,7 @@ export function findManualMigrations(
     scripts = scriptAsts;
     template = vueAst.templateBody?.parent as AST.VDocumentFragment ?? null;
   } else {
-    scripts = [parseTs(code)];
+    scripts = [parseTs(code, /\.[jt]sx$/.test(filename))];
   }
 
   for (const plugin of plugins) {
