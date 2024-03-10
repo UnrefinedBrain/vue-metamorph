@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -euo pipefail
+
 # type check / generate dts files
 tsc
 rm dist/*.spec.d.ts*
