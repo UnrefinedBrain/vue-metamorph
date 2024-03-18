@@ -264,6 +264,7 @@ console.log('')`,
                 },
               },
             }).forEach(() => {
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
               report({} as any, 'no console statements');
             });
           },
