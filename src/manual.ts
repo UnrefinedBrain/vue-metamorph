@@ -149,7 +149,7 @@ export function findManualMigrations(
   if (filename.endsWith('.vue')) {
     const { scriptAsts, vueAst } = parseVue(code);
     scripts = scriptAsts;
-    template = vueAst.templateBody?.parent as AST.VDocumentFragment ?? null;
+    template = vueAst.templateBody!.parent as AST.VDocumentFragment;
   } else {
     scripts = [parseTs(code, /\.[jt]sx$/.test(filename))];
   }

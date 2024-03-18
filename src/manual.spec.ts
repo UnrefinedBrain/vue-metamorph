@@ -102,7 +102,7 @@ export default {
 });
 
 describe('find', () => {
-  it('', () => {
+  it('should find manual migrations in vue files', () => {
     const res = findManualMigrations(`<template>
   <div>
     Hello
@@ -191,5 +191,87 @@ export default {
         },
       ]
     `);
+  });
+
+  it('should find manual migrations in ts files', () => {
+    const res = findManualMigrations(
+      `import something from 'somewhere';
+console.log('')`,
+      'file.js',
+      [{
+        name: 'console-logs',
+        type: 'manual',
+        find(scriptASTs, sfcAST, filename, report, utils) {
+          expect(sfcAST).toBeNull();
+          expect(filename).toBe('file.js');
+          expect(scriptASTs.length).toBe(1);
+
+          utils.astHelpers.findAll(scriptASTs[0]!, {
+            type: 'CallExpression',
+            callee: {
+              type: 'MemberExpression',
+              object: {
+                type: 'Identifier',
+                name: 'console',
+              },
+            },
+          }).forEach((node) => {
+            report(node.callee, 'no console statements');
+          });
+        },
+      }],
+    );
+
+    expect(res).toMatchInlineSnapshot(`
+      [
+        {
+          "columnEnd": 11,
+          "columnStart": 1,
+          "file": "file.js",
+          "lineEnd": 2,
+          "lineStart": 2,
+          "message": "no console statements",
+          "pluginName": "console-logs",
+          "snippet": "1 | import something from 'somewhere';
+      2 | console.log('')
+        | ^^^^^^^^^^^",
+        },
+      ]
+    `);
+  });
+
+  it('should throw an error if report() is called with an invalid node type', () => {
+    try {
+      findManualMigrations(
+        `import something from 'somewhere';
+console.log('')`,
+        'file.js',
+        [{
+          name: 'console-logs',
+          type: 'manual',
+          find(scriptASTs, sfcAST, filename, report, utils) {
+            expect(sfcAST).toBeNull();
+            expect(filename).toBe('file.js');
+            expect(scriptASTs.length).toBe(1);
+
+            utils.astHelpers.findAll(scriptASTs[0]!, {
+              type: 'CallExpression',
+              callee: {
+                type: 'MemberExpression',
+                object: {
+                  type: 'Identifier',
+                  name: 'console',
+                },
+              },
+            }).forEach(() => {
+              report({} as any, 'no console statements');
+            });
+          },
+        }],
+      );
+      expect.fail('should have thrown');
+    } catch {
+      // empty
+    }
   });
 });
