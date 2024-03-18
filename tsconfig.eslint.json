@@ -6,6 +6,7 @@
     "docs/.vitepress/config.ts",
     "docs/.vitepress/theme/index.ts",
     "tsup.config.ts",
-    "scripts"
+    "scripts",
+    "vitest.config.ts"
   ]
 }
