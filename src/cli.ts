@@ -4,7 +4,7 @@ import { promises as fs } from 'fs';
 import type { CodemodPlugin, ManualMigrationPlugin, Plugin } from './types';
 import { transform } from './transform';
 import { ManualMigrationReport, findManualMigrations } from './manual';
-import { defaultCliProgressHandler } from './default-cli-progress-handler';
+import { createDefaultCliProgressHandler } from './default-cli-progress-handler';
 
 /**
  * An error that was encountered during parsing or plugin execution
@@ -102,6 +102,7 @@ type ProgramOptions = {
  */
 export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
   const program = new Command();
+  const defaultCliProgressHandler = createDefaultCliProgressHandler(console);
 
   program
     .requiredOption('--files <glob>', 'Run transforms against these files', '**/src/**/*');
