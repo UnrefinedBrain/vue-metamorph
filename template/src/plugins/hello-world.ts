@@ -6,8 +6,8 @@ export const helloWorldCodemod: CodemodPlugin = {
   transform(scriptASTs, _templateAST, _filename, { traverseScriptAST, astHelpers }) {
     let transformCount = 0;
 
-    if (scriptASTs[0]) {
-      traverseScriptAST(scriptASTs[0], {
+    for (const scriptAST of scriptASTs) {
+      traverseScriptAST(scriptAST, {
         visitLiteral(path) {
           if (typeof path.node.value === 'string') {
             path.node.value = 'Hello, world!';
@@ -20,7 +20,7 @@ export const helloWorldCodemod: CodemodPlugin = {
 
       // or, using the findAll helper
       astHelpers
-        .findAll(scriptASTs[0], { type: 'Literal' })
+        .findAll(scriptAST, { type: 'Literal' })
         .forEach((literal) => {
           if (typeof literal.value === 'string') {
             literal.value = 'Hello, world!';
