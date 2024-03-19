@@ -90,6 +90,12 @@ export interface CreateVueMetamorphCliOptions {
    * List of codemods / manual migrations to run against matching files
    */
   plugins: (Plugin | Plugin[])[];
+
+  /**
+   * Add additional commander options to access with opts()
+   * @param program - Commander Command
+   */
+  additionalCliOptions?: (program: Pick<Command, 'option' | 'requiredOption'>) => void;
 }
 
 type ProgramOptions = {
@@ -106,6 +112,8 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
 
   program
     .requiredOption('--files <glob>', 'Run transforms against these files', '**/src/**/*');
+
+  options.additionalCliOptions?.(program);
 
   let aborted = false;
 
@@ -168,7 +176,7 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
       try {
         const code = (await fs.readFile(file)).toString('utf-8');
 
-        const newCode = transform(code, file, codemodPlugins);
+        const newCode = transform(code, file, codemodPlugins, opts);
 
         let writeFile = false;
 
@@ -181,7 +189,7 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
           }
         }
         manualMigrationReports.push(
-          ...findManualMigrations(newCode.code, file, manualMigrationPlugins),
+          ...findManualMigrations(newCode.code, file, manualMigrationPlugins, opts),
         );
 
         if (writeFile) {
@@ -244,5 +252,10 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
      * Stops progress of the runner
      */
     abort,
+
+    /**
+     * Commander arguments
+     */
+    opts: () => program.opts(),
   };
 }
