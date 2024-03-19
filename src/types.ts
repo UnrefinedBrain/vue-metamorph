@@ -51,6 +51,8 @@ export type ManualMigrationPlugin = {
     filename: string,
     report: ReportFunction,
     utils: typeof util,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    opts: Record<string, any>
   ): void;
 };
 
@@ -76,6 +78,8 @@ export type CodemodPlugin = {
     sfcAST: AST.VDocumentFragment | null,
     filename: string,
     utils: typeof util,
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    opts: Record<string, any>
   ): number;
 };
 

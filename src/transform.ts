@@ -45,6 +45,8 @@ function transformVueFile(
   code: string,
   filename: string,
   codemods: CodemodPlugin[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  opts: Record<string, any>,
 ): TransformResult {
   const workingCode = code;
   const stats: [string, number][] = [];
@@ -57,10 +59,10 @@ function transformVueFile(
   for (const codemod of codemods) {
     const count = codemod.transform(
       scriptAsts,
-
       templateAst ?? null,
       filename,
       util,
+      opts,
     );
 
     stats.push([codemod.name, count]);
@@ -178,12 +180,14 @@ function transformTypescriptFile(
   code: string,
   filename: string,
   codemods: CodemodPlugin[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  opts: Record<string, any>,
 ): TransformResult {
   const ast = parseTs(code, /\.[jt]sx$/.test(filename));
   const stats: [string, number][] = [];
 
   for (const codemod of codemods) {
-    const count = codemod.transform([ast], null, filename, util);
+    const count = codemod.transform([ast], null, filename, util, opts);
     stats.push([codemod.name, count]);
   }
 
@@ -198,6 +202,7 @@ function transformTypescriptFile(
  * @param code - Source code
  * @param filename - The file name, used to determine whether to parse as JS/TS, or as a .vue SFC
  * @param plugins - List of codemod plugins
+ * @param opts - CLI Options
  * @returns New source code
  * @public
  */
@@ -205,8 +210,10 @@ export function transform(
   code: string,
   filename: string,
   plugins: CodemodPlugin[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  opts: Record<string, any> = {},
 ) {
   return filename.endsWith('.vue')
-    ? transformVueFile(code, filename, plugins)
-    : transformTypescriptFile(code, filename, plugins);
+    ? transformVueFile(code, filename, plugins, opts)
+    : transformTypescriptFile(code, filename, plugins, opts);
 }

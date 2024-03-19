@@ -133,6 +133,7 @@ export type ManualMigrationReport = {
  * @param code - Source code
  * @param filename - The file name
  * @param plugins - Manual migration plugins
+ * @param opts - CLI Options
  * @returns List of reports
  * @public
  */
@@ -140,6 +141,8 @@ export function findManualMigrations(
   code: string,
   filename: string,
   plugins: ManualMigrationPlugin[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  opts: Record<string, any> = {},
 ): ManualMigrationReport[] {
   const reports: ManualMigrationReport[] = [];
 
@@ -184,7 +187,7 @@ export function findManualMigrations(
       throw new Error(`Node type ${node.type} is missing location information`);
     };
 
-    plugin.find(scripts, template, filename, report, util);
+    plugin.find(scripts, template, filename, report, util, opts);
   }
 
   return reports;
