@@ -256,6 +256,9 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
     /**
      * Commander arguments
      */
-    opts: () => program.opts(),
+    opts: (argv = process.argv) => {
+      program.parseOptions(argv);
+      return program.opts();
+    },
   };
 }
