@@ -24,24 +24,21 @@ const migrateVueEmitter: ManualMigrationPlugin = {
     report,
     { traverseScriptAST }
   ) {
-    if (!scriptASTs[0]) {
-      // if this is a Vue SFC with no <script> tag, scriptASTs will be empty
-      return;
-    }
+    for (const scriptAST of scriptASTs) {
+      traverseScriptAST(scriptAST, {
+        visitCallExpression(path) {
+          // find calls to $on(), $off(), $once() functions
+          if (path.node.callee.type === 'MemberExpression'
+            && path.node.callee.property.type === 'Identifier'
+            && ['$on', '$off', '$once'].includes(path.node.callee.property.name)) {
 
-    traverseScriptAST(scriptASTs[0], {
-      visitCallExpression(path) {
-        // find calls to $on(), $off(), $once() functions
-        if (path.node.callee.type === 'MemberExpression'
-          && path.node.callee.property.type === 'Identifier'
-          && ['$on', '$off', '$once'].includes(path.node.callee.property.name)) {
-
-          // To show a manual migration result for a node, call `report()` and pass the node and a message
-          report(path.node.callee, 'Migrate the event emitter methods');
+            // To show a manual migration result for a node, call `report()` and pass the node and a message
+            report(path.node.callee, 'Migrate the event emitter methods');
+          }
+          this.traverse(path);
         }
-        this.traverse(path);
-      }
-    });
+      });
+    }
   }
 }
 
