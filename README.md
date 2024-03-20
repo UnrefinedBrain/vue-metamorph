@@ -12,7 +12,7 @@ vue-metamorph is a codemod framework for JavaScript, TypeScript, and Vue files. 
 
 ## 📖 Documentation / Installation
 
-[Link to Docs](https://unrefinedbrain.github.io/vue-metamorph)
+[Link to Docs](https://vue-metamorph.dev)
 
 ## 🆕 Changelog
 
