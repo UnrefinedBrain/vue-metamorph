@@ -6,7 +6,7 @@ export default defineConfig({
   title: 'vue-metamorph',
   description: 'Codemod framework for Vue projects',
 
-  base: '/vue-metamorph/',
+  base: '/',
 
   lastUpdated: true,
   cleanUrls: true,
@@ -22,7 +22,7 @@ export default defineConfig({
     ['link', {
       rel: 'icon',
       type: 'image/x-icon',
-      href: '/vue-metamorph/favicon.ico',
+      href: '/favicon.ico',
     }],
   ],
 
