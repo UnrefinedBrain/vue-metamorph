@@ -84,11 +84,11 @@ const codemod = {
 
 ## Code Comment Preservation
 
-Recast does a fairly decent job of preserving code comments in JavaScript and TypeScript, but at this time, HTML comments inside of modified `<template>` nodes will not be re-printed.
+Recast does a fairly decent job of preserving code comments in JavaScript and TypeScript, but at this time, HTML comments inside of modified `<template>` nodes will not be re-printed. Comments inside unchanged `<template>` nodes will not be affected.
 
 ## Code Formatting
 
-The code printed by vue-metamorph will not be formatted perfectly. vue-metamorph's focus is on printing syntactically correct code. It's recommended to use a code formatter such as eslint, prettier, or similar to fix this formatting in accordance with your project's code style conventions.
+The code printed by vue-metamorph will not be formatted perfectly. vue-metamorph's aim is only to print syntactically correct code. It's recommended to use a code formatter such as eslint, prettier, or similar to fix this formatting in accordance with your project's code style conventions.
 
 ## What about CSS?
 
@@ -107,7 +107,7 @@ Make sure to choose the correct parser:
 | JavaScript | `@babel/parser` |
 | TypeScript |` @babel/parser` |
 
-When using `@babel/parser` with AST Explorer, enable [this list](https://github.com/UnrefinedBrain/vue-metamorph/blob/master/src/parse.ts#L17-L57) of plugins to get an accurate representation of the AST you'll be working with.
+When using `@babel/parser` with AST Explorer, enable [this list](https://github.com/UnrefinedBrain/vue-metamorph/blob/master/src/parse.ts#L17-L59) of plugins to get an accurate representation of the AST you'll be working with.
 
 ## Testing
 
