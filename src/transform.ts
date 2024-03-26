@@ -78,7 +78,12 @@ function transformVueFile(
           && node.name === 'script'
           && node.parent === templateAst
           && node.children[0]?.type === 'VText') {
-          node.children[0].value = `\n${recast.print(scriptAsts[i]!, recastOptions).code.replace(new RegExp(`^\\n{${scriptAsts[i]!.loc!.start.line - 1}}`, 'g'), '\n\n')}\n`;
+          let code = recast
+          .print(scriptAsts[i]!, recastOptions)
+          .code
+          .replace(/\/\* METAMORPH_START \*\/\n+/g, '\n');
+
+          node.children[0].value = `${code.startsWith('\n') ? '' : '\n'}${code}\n`;
           i++;
         }
       },

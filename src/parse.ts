@@ -122,7 +122,7 @@ export function parseVue(code: string) {
 
     const isJsx = el.startTag.attributes.some((attr) => !attr.directive && attr.key.rawName === 'lang' && attr.value && ['jsx', 'tsx'].includes(attr.value.value));
 
-    const ast = recast.parse(blankLines + code.slice(start, end), {
+    const ast = recast.parse('/* METAMORPH_START */' + blankLines + code.slice(start, end), {
       parser: tsParser(isJsx),
     }).program as VueProgram;
 
