@@ -232,5 +232,5 @@ export default {
       </template>
       "
     `);
-  })
+  });
 });
