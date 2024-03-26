@@ -37,80 +37,82 @@ export default defineComponent({
 </style>
 `;
 
+const stringLiteralPlugin: CodemodPlugin = {
+  name: 'test',
+  type: 'codemod',
+  transform(
+    scripts,
+    template,
+    _filename,
+    {
+      traverseScriptAST, traverseTemplateAST, templateBuilders, astHelpers,
+    },
+  ) {
+    if (!template) {
+      return 0;
+    }
+
+    let count = 0;
+
+    for (const script of scripts) {
+      traverseScriptAST(script, {
+        visitProperty(path) {
+          if (path.node.value.type === 'Literal'
+          && typeof path.node.value.value === 'string') {
+            path.node.value.value = 'transformed string';
+          }
+          return this.traverse(path);
+        },
+      });
+    }
+
+    traverseTemplateAST(template, {
+      enterNode(node) {
+        if (node.type === 'VElement' && node.rawName === 'script') {
+          node.startTag.attributes.push(
+            templateBuilders.vAttribute(
+              templateBuilders.vIdentifier('setup'),
+              null,
+            ),
+          );
+
+          count++;
+        }
+        if (node.type === 'VElement' && node.rawName === 'div') {
+          count++;
+          node.rawName = 'strong';
+
+          node.startTag.attributes.push(
+            templateBuilders.vAttribute(
+              templateBuilders.vIdentifier('hi'),
+              null,
+            ),
+          );
+        }
+      },
+      leaveNode() {
+        // empty
+      },
+    });
+
+    astHelpers.findAll(template, {
+      type: 'VElement',
+      name: 'custom',
+    })
+      .forEach((element) => {
+        if (element.children.length === 0 && element.startTag.selfClosing) {
+          element.startTag.selfClosing = false;
+          count++;
+        }
+      });
+
+    return count;
+  },
+};
+
 describe('transform', () => {
   it('should work with the test file', () => {
-    const res = transform(example, 'file.vue', [{
-      name: 'test',
-      type: 'codemod',
-      transform(
-        scripts,
-        template,
-        _filename,
-        {
-          traverseScriptAST, traverseTemplateAST, templateBuilders, astHelpers,
-        },
-      ) {
-        if (!template) {
-          return 0;
-        }
-
-        let count = 0;
-
-        for (const script of scripts) {
-          traverseScriptAST(script, {
-            visitProperty(path) {
-              if (path.node.value.type === 'Literal'
-              && typeof path.node.value.value === 'string') {
-                path.node.value.value = 'transformed string';
-              }
-              return this.traverse(path);
-            },
-          });
-        }
-
-        traverseTemplateAST(template, {
-          enterNode(node) {
-            if (node.type === 'VElement' && node.rawName === 'script') {
-              node.startTag.attributes.push(
-                templateBuilders.vAttribute(
-                  templateBuilders.vIdentifier('setup'),
-                  null,
-                ),
-              );
-
-              count++;
-            }
-            if (node.type === 'VElement' && node.rawName === 'div') {
-              count++;
-              node.rawName = 'strong';
-
-              node.startTag.attributes.push(
-                templateBuilders.vAttribute(
-                  templateBuilders.vIdentifier('hi'),
-                  null,
-                ),
-              );
-            }
-          },
-          leaveNode() {
-            // empty
-          },
-        });
-
-        astHelpers.findAll(template, {
-          type: 'VElement',
-          name: 'custom',
-        })
-          .forEach((element) => {
-            if (element.children.length === 0 && element.startTag.selfClosing) {
-              element.startTag.selfClosing = false;
-              count++;
-            }
-          });
-
-        return count;
-      },
-    }]);
+    const res = transform(example, 'file.vue', [stringLiteralPlugin]);
 
     expect(res).toMatchInlineSnapshot(`
       {
@@ -191,4 +193,44 @@ describe('transform', () => {
       "
     `);
   });
+
+  it('should not mess up formatting when the <script> is first', () => {
+    const i = `<script>
+export default {
+  name: 'MyComponent',
+  methods: {
+    foo() {
+      return 5;
+    },
+  },
+};
+</script>
+
+<template>
+  <div>
+    Hi
+  </div>
+</template>
+`;
+
+    expect(transform(i, 'file.vue', [stringLiteralPlugin]).code).toMatchInlineSnapshot(`
+      "<script setup>
+      export default {
+        name: 'transformed string',
+        methods: {
+          foo() {
+            return 5;
+          },
+        },
+      };
+      </script>
+
+      <template>
+        <strong hi>
+          Hi
+        </strong>
+      </template>
+      "
+    `);
+  })
 });
