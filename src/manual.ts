@@ -190,17 +190,15 @@ export function findManualMigrations(
       }
 
       if ('positionInside' in node) {
-        const endIndex = node.toString().length;
-        const startLoc = node.positionInside(0);
-        const endLoc = node.positionInside(endIndex);
-
+        const { line: lineStart, column: columnStart } = node.source!.start!;
+        const { line: lineEnd, column: columnEnd } = node.source!.end!;
         const snippet = sample({
           code,
           extraLines: 3,
-          lineStart: startLoc.line,
-          lineEnd: endLoc.line,
-          columnStart: startLoc.column,
-          columnEnd: endLoc.column - 1,
+          lineStart,
+          lineEnd,
+          columnStart,
+          columnEnd: columnEnd - 1,
         });
 
         reports.push({
@@ -208,10 +206,10 @@ export function findManualMigrations(
           file: filename,
           snippet,
           pluginName: plugin.name,
-          lineStart: startLoc.line,
-          lineEnd: endLoc.line,
-          columnStart: startLoc.column,
-          columnEnd: endLoc.column - 1,
+          lineStart,
+          lineEnd,
+          columnStart,
+          columnEnd: columnEnd - 1,
         });
 
         return;
