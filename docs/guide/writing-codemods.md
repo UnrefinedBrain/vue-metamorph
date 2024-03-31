@@ -90,9 +90,11 @@ Recast does a fairly decent job of preserving code comments in JavaScript and Ty
 
 The code printed by vue-metamorph will not be formatted perfectly. vue-metamorph's aim is only to print syntactically correct code. It's recommended to use a code formatter such as eslint, prettier, or similar to fix this formatting in accordance with your project's code style conventions.
 
-## What about CSS?
+## CSS
 
-CSS is not supported at this time.
+CSS codemods are supported as of vue-metamorph v3.1.0. Supported syntaxes include css, sass, scss, and less.
+
+Each codemod plugin will be passed an array of [PostCSS Root](https://postcss.org/api/#root) objects. Use the PostCSS API to make changes to the stylesheets.
 
 ## AST Explorer
 
@@ -104,8 +106,15 @@ Make sure to choose the correct parser:
 | - | - |
 | Vue SFC `<template>` block | `vue-eslint-parser` / `@babel/parser` |
 | Vue SFC `<script>` block | `@babel/parser` |
+| Vue SFC `<style>` | `postcss` |
+| Vue SFC `<style lang="scss">` | `postcss` (parser=scss) |
+| Vue SFC `<style lang="sass">` | `postcss` (parser=sass) |
+| Vue SFC `<style lang="less">` | `postcss` (parser=less) |
 | JavaScript | `@babel/parser` |
-| TypeScript |` @babel/parser` |
+| TypeScript | `@babel/parser` |
+| LESS | `postcss` (parser=less) |
+| SASS | `postcss` (parser=sass) |
+| SCSS | `postcss` (parser=scss) |
 
 When using `@babel/parser` with AST Explorer, enable [this list](https://github.com/UnrefinedBrain/vue-metamorph/blob/master/src/parse.ts#L17-L59) of plugins to get an accurate representation of the AST you'll be working with.
 

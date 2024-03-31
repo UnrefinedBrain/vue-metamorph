@@ -30,8 +30,9 @@ export default defineComponent({
 });
 </script>
 
-<style>
+<style lang="less">
 .className {
+  $variable: 1234;
   color: red;
 }
 </style>
@@ -43,8 +44,12 @@ const stringLiteralPlugin: CodemodPlugin = {
   transform({
     scriptASTs,
     sfcAST,
+    styleASTs,
     utils: {
-      traverseScriptAST, traverseTemplateAST, builders, astHelpers,
+      traverseScriptAST,
+      traverseTemplateAST,
+      builders,
+      astHelpers,
     },
   }) {
     if (!sfcAST) {
@@ -52,6 +57,13 @@ const stringLiteralPlugin: CodemodPlugin = {
     }
 
     let count = 0;
+
+    for (const style of styleASTs) {
+      style.walkDecls('color', (decl) => {
+        decl.important = true;
+        decl.after('\n  background-color: black');
+      });
+    }
 
     for (const script of scriptASTs) {
       traverseScriptAST(script, {
@@ -143,9 +155,11 @@ describe('transform', () => {
       });
       </script>
 
-      <style>
+      <style lang="less">
       .className {
-        color: red;
+        $variable: 1234;
+        color: red !important;
+        background-color: black;
       }
       </style>
       ",

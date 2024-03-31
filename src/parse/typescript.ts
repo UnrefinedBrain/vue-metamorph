@@ -1,10 +1,8 @@
-
 import { visit } from 'ast-types';
 import * as babelParser from '@babel/parser';
-import { File } from '@babel/types';
+import { type File } from '@babel/types';
 import * as recast from 'recast';
 import { VueProgram } from '../types';
-
 
 const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
   sourceType: 'module',
@@ -91,7 +89,6 @@ export const tsParser = (isJsx: boolean) => ({
     };
   },
 });
-
 
 /**
  * Parse JS or TS code

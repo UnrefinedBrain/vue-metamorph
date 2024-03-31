@@ -1,8 +1,10 @@
+import postcss from 'postcss';
 import * as AST from './ast';
 import { parseTs, parseVue } from './parse';
 import {
   ManualMigrationPlugin, ReportFunction, VueProgram, utils,
 } from './types';
+import { parseCss } from './parse/css';
 
 type SampleArgs = {
   /**
@@ -148,20 +150,29 @@ export function findManualMigrations(
 
   let scripts: VueProgram[] = [];
   let template: AST.VDocumentFragment | null = null;
+  let styles: postcss.Root[] = [];
 
   if (filename.endsWith('.vue')) {
-    const { scriptASTs: scriptAsts, sfcAST: vueAst } = parseVue(code);
+    const { scriptASTs: scriptAsts, sfcAST: vueAst, styleASTs } = parseVue(code);
     scripts = scriptAsts;
     template = vueAst.templateBody!.parent as AST.VDocumentFragment;
+    styles = styleASTs;
+  } else if (filename.endsWith('.css')) {
+    styles = [parseCss(code, 'css')];
+  } else if (filename.endsWith('.less')) {
+    styles = [parseCss(code, 'less')];
+  } else if (filename.endsWith('.sass')) {
+    styles = [parseCss(code, 'sass')];
+  } else if (filename.endsWith('.scss')) {
+    styles = [parseCss(code, 'scss')];
   } else {
     scripts = [parseTs(code, /\.[jt]sx$/.test(filename))];
   }
 
   for (const plugin of plugins) {
     const report: ReportFunction = (node, message) => {
-      let snippet = '';
       if ('loc' in node && node.loc) {
-        snippet = sample({
+        const snippet = sample({
           code,
           extraLines: 3,
           lineStart: node.loc.start.line,
@@ -184,12 +195,41 @@ export function findManualMigrations(
         return;
       }
 
+      if ('positionInside' in node) {
+        const endIndex = node.toString().length;
+        const startLoc = node.positionInside(0);
+        const endLoc = node.positionInside(endIndex);
+
+        const snippet = sample({
+          code,
+          extraLines: 3,
+          lineStart: startLoc.line,
+          lineEnd: endLoc.line,
+          columnStart: startLoc.column,
+          columnEnd: endLoc.column - 1,
+        });
+
+        reports.push({
+          message,
+          file: filename,
+          snippet,
+          pluginName: plugin.name,
+          lineStart: startLoc.line,
+          lineEnd: endLoc.line,
+          columnStart: startLoc.column,
+          columnEnd: endLoc.column - 1,
+        });
+
+        return;
+      }
+
       throw new Error(`Node type ${node.type} is missing location information`);
     };
 
     plugin.find({
       scriptASTs: scripts,
       sfcAST: template,
+      styleASTs: styles,
       filename,
       report,
       utils,

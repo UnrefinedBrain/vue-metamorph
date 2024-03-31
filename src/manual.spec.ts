@@ -117,11 +117,21 @@ export default {
     }
   }
 };
-</script>`, 'file.vue', [{
+</script>
+
+<style>
+.foo {
+  color: red;
+}
+</style>`, 'file.vue', [{
       name: 'test',
       type: 'manual',
       find({
-        scriptASTs, sfcAST, report, utils: { astHelpers },
+        scriptASTs,
+        sfcAST,
+        styleASTs,
+        report,
+        utils: { astHelpers },
       }) {
         if (scriptASTs[0]) {
           const onCall = astHelpers.findFirst(scriptASTs[0], {
@@ -149,6 +159,12 @@ export default {
           if (div) {
             report(div, 'boop');
           }
+        }
+
+        for (const style of styleASTs) {
+          style.walkDecls('color', (decl) => {
+            report(decl, 'Do not use color');
+          });
         }
       },
     }]);
@@ -190,6 +206,22 @@ export default {
       5 | </template>
       6 | 
       7 | <script>",
+        },
+        {
+          "columnEnd": 12,
+          "columnStart": 3,
+          "file": "file.vue",
+          "lineEnd": 19,
+          "lineStart": 19,
+          "message": "Do not use color",
+          "pluginName": "test",
+          "snippet": "16 | 
+      17 | <style>
+      18 | .foo {
+      19 |   color: red;
+         |   ^^^^^^^^^^
+      20 | }
+      21 | </style>",
         },
       ]
     `);

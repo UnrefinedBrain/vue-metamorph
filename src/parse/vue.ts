@@ -1,9 +1,10 @@
 import * as vueParser from 'vue-eslint-parser';
+import * as recast from 'recast';
 import { VueProgram } from '../types';
 import { findAll } from '../ast-helpers';
 import { VDocumentFragment } from '../ast';
 import { tsParser } from './typescript';
-import * as recast from 'recast';
+import { parseCss } from './css';
 
 /**
  * Parse Vue code
@@ -27,6 +28,11 @@ export function parseVue(code: string) {
     name: 'script',
   }) as vueParser.AST.VElement[];
 
+  const styles = findAll(sfcAST.templateBody!.parent as VDocumentFragment, {
+    type: 'VElement',
+    name: 'style',
+  }) as vueParser.AST.VElement[];
+
   const scriptASTs = scripts.map((el) => {
     // hack: make the source locations line up properly
     const blankLines = '\n'.repeat(el.loc.start.line - 1);
@@ -44,9 +50,20 @@ export function parseVue(code: string) {
     return ast;
   });
 
+  const styleASTs = styles.map((el) => {
+    // hack: make the source locations line up properly
+    const blankLines = '\n'.repeat(el.loc.start.line - 1);
+    const start = el.children[0]?.range[0];
+    const end = el.children[0]?.range[1];
+
+    const lang = el.startTag.attributes.find((attr): attr is vueParser.AST.VAttribute => !attr.directive && attr.key.rawName === 'lang')?.value?.value ?? 'css';
+
+    return parseCss(`/* METAMORPH_START */${blankLines}${code.slice(start, end)}`, lang);
+  });
+
   return {
     sfcAST,
     scriptASTs,
+    styleASTs,
   };
 }
-
