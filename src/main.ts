@@ -1,5 +1,6 @@
 import * as Kinds from 'ast-types/gen/kinds';
 import { builders as scriptBuilders } from 'ast-types';
+import postcss from 'postcss';
 import * as templateBuilders from './builders';
 import * as AST from './ast';
 
@@ -14,6 +15,7 @@ const builders = {
 
 export {
   builders,
+  postcss,
 };
 
 export {
