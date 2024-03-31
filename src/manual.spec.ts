@@ -313,4 +313,54 @@ console.log('')`,
       // empty
     }
   });
+
+  it('edge case 1', () => {
+    const code = 'export default someCall();\nexport default someCall(\n1,\n2,\n3);';
+
+    const ree = findManualMigrations(code, 'file.ts', [{
+      type: 'manual',
+      name: '',
+      find({ scriptASTs, report, utils: { astHelpers } }) {
+        for (const scriptAST of scriptASTs) {
+          astHelpers.findAll(scriptAST, { type: 'CallExpression' }).forEach((node) => report(node, 'aa'));
+        }
+      },
+    }]);
+    expect(ree).toMatchInlineSnapshot(`
+      [
+        {
+          "columnEnd": 25,
+          "columnStart": 16,
+          "file": "file.ts",
+          "lineEnd": 1,
+          "lineStart": 1,
+          "message": "aa",
+          "pluginName": "",
+          "snippet": "1 | export default someCall();
+        |                ^^^^^^^^^^
+      2 | export default someCall(
+      3 | 1,
+      4 | 2,",
+        },
+        {
+          "columnEnd": 2,
+          "columnStart": 16,
+          "file": "file.ts",
+          "lineEnd": 5,
+          "lineStart": 2,
+          "message": "aa",
+          "pluginName": "",
+          "snippet": "1 | export default someCall();
+      2 | export default someCall(
+        |                ^^^^^^^^^
+      3 | 1,
+        | ^^
+      4 | 2,
+        | ^^
+      5 | 3);
+        | ^^",
+        },
+      ]
+    `);
+  });
 });

@@ -165,26 +165,60 @@ export function findManualMigrations(
 
   for (const plugin of plugins) {
     const report: ReportFunction = (node, message) => {
-      if ('loc' in node && node.loc) {
-        const snippet = sample({
-          code,
-          extraLines: 3,
-          lineStart: node.loc.start.line,
-          lineEnd: node.loc.end.line,
-          columnStart: node.loc.start.column + 1,
-          columnEnd: node.loc.end.column,
-        });
+      if ('loc' in node) {
+        if (node.loc) {
+          const snippet = sample({
+            code,
+            extraLines: 3,
+            lineStart: node.loc.start.line,
+            lineEnd: node.loc.end.line,
+            columnStart: node.loc.start.column + 1,
+            columnEnd: node.loc.end.column,
+          });
 
-        reports.push({
-          message,
-          file: filename,
-          snippet,
-          pluginName: plugin.name,
-          lineStart: node.loc.start.line,
-          lineEnd: node.loc.end.line,
-          columnStart: node.loc.start.column + 1,
-          columnEnd: node.loc.end.column,
-        });
+          reports.push({
+            message,
+            file: filename,
+            snippet,
+            pluginName: plugin.name,
+            lineStart: node.loc.start.line,
+            lineEnd: node.loc.end.line,
+            columnStart: node.loc.start.column + 1,
+            columnEnd: node.loc.end.column,
+          });
+        } else if ('range' in node && Array.isArray(node.range)) {
+          // parser didn't attach loc info for some reason, we'll have to compute it
+          const [start, end] = node.range;
+
+          const before = code.slice(0, start);
+          const middle = code.slice(start, end);
+
+          const lineStart = (before.match(/\n/g)?.length ?? 0) + 1;
+          const columnStart = start - before.lastIndexOf('\n');
+
+          const lineEnd = lineStart + (middle.match(/\n/g)?.length ?? 0);
+          const columnEnd = end - code.slice(0, end).lastIndexOf('\n') - 1;
+
+          const snippet = sample({
+            code,
+            extraLines: 3,
+            lineStart,
+            lineEnd,
+            columnStart,
+            columnEnd,
+          });
+
+          reports.push({
+            message,
+            file: filename,
+            snippet,
+            pluginName: plugin.name,
+            lineStart,
+            lineEnd,
+            columnStart,
+            columnEnd,
+          });
+        }
 
         return;
       }

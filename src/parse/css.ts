@@ -18,6 +18,6 @@ export const getCssDialectForFilename = (filename: string) => {
     case filename.endsWith('.css'): return 'css';
     default: return null;
   }
-}
+};
 
 export const parseCss = (code: string, dialect: string): postcss.Root => (syntaxMap[dialect] ?? postcss).parse(code);

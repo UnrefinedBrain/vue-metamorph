@@ -11,6 +11,7 @@ const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
   allowReturnOutsideFunction: true,
   startLine: 1,
   tokens: true,
+  ranges: true,
   plugins: [
     'asyncGenerators',
     'bigInt',
