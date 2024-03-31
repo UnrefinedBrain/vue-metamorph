@@ -1,5 +1,6 @@
 import * as vueParser from 'vue-eslint-parser';
 import * as recast from 'recast';
+import htmlParser from 'node-html-parser';
 import { VueProgram } from '../types';
 import { findAll } from '../ast-helpers';
 import { VDocumentFragment } from '../ast';
@@ -12,7 +13,7 @@ import { parseCss } from './css';
  * @returns SFC AST and Script AST
  */
 export function parseVue(code: string) {
-  if (!code.includes('<template')) {
+  if (!htmlParser.parse(code).querySelector('template')) {
     // hack: if no <template> is present, templateBody will be null
     // and we cannot access the VDocumentFragment
     code += '\n<template></template>';

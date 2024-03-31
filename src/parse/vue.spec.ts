@@ -33,4 +33,9 @@ describe('parseVue', () => {
     const ast = parseVue('<script setup lang="jsx">\nconst btn = () => <button>Hello</button>\n</script>');
     expect(findFirst(ast.scriptASTs[0]!, { type: 'JSXElement' })).not.toBeNull();
   });
+
+  it('edge case', () => {
+    const ast = parseVue('<script>/* <template> tags are overrated */ export default {} </script>');
+    expect(ast.sfcAST).toBeDefined();
+  });
 });

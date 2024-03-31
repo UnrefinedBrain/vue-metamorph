@@ -77,6 +77,7 @@
     "glob": "^10.3.10",
     "lodash-es": "^4.17.21",
     "magic-string": "^0.30.8",
+    "node-html-parser": "^6.1.13",
     "postcss": "^8.4.38",
     "postcss-less": "^6.0.0",
     "postcss-sass": "^0.5.0",
