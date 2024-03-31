@@ -104,14 +104,15 @@ Make sure to choose the correct parser:
 
 | Source Type | Parser |
 | - | - |
-| Vue SFC `<template>` block | `vue-eslint-parser` / `@babel/parser` |
-| Vue SFC `<script>` block | `@babel/parser` |
+| Vue SFC `<template>` | `vue-eslint-parser` / `@babel/parser` |
+| Vue SFC `<script>` | `@babel/parser` |
 | Vue SFC `<style>` | `postcss` |
 | Vue SFC `<style lang="scss">` | `postcss` (parser=scss) |
 | Vue SFC `<style lang="sass">` | `postcss` (parser=sass) |
 | Vue SFC `<style lang="less">` | `postcss` (parser=less) |
 | JavaScript | `@babel/parser` |
 | TypeScript | `@babel/parser` |
+| CSS | `postcss` |
 | LESS | `postcss` (parser=less) |
 | SASS | `postcss` (parser=sass) |
 | SCSS | `postcss` (parser=scss) |
