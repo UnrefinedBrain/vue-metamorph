@@ -8,8 +8,6 @@ const syntaxMap: Record<string, typeof postcssScss> = {
   scss: postcssScss,
   less: postcssLess,
   sass: postcssSass,
-}
-
-export const parseCss = (code: string, dialect: string): postcss.Root => {
-  return (syntaxMap[dialect] ?? postcss).parse(code);
 };
+
+export const parseCss = (code: string, dialect: string): postcss.Root => (syntaxMap[dialect] ?? postcss).parse(code);
