@@ -117,11 +117,21 @@ export default {
     }
   }
 };
-</script>`, 'file.vue', [{
+</script>
+
+<style>
+.foo {
+  color: red;
+}
+</style>`, 'file.vue', [{
       name: 'test',
       type: 'manual',
       find({
-        scriptASTs, sfcAST, report, utils: { astHelpers },
+        scriptASTs,
+        sfcAST,
+        styleASTs,
+        report,
+        utils: { astHelpers },
       }) {
         if (scriptASTs[0]) {
           const onCall = astHelpers.findFirst(scriptASTs[0], {
@@ -149,6 +159,12 @@ export default {
           if (div) {
             report(div, 'boop');
           }
+        }
+
+        for (const style of styleASTs) {
+          style.walkDecls('color', (decl) => {
+            report(decl, 'Do not use color');
+          });
         }
       },
     }]);
@@ -190,6 +206,22 @@ export default {
       5 | </template>
       6 | 
       7 | <script>",
+        },
+        {
+          "columnEnd": 12,
+          "columnStart": 3,
+          "file": "file.vue",
+          "lineEnd": 19,
+          "lineStart": 19,
+          "message": "Do not use color",
+          "pluginName": "test",
+          "snippet": "16 | 
+      17 | <style>
+      18 | .foo {
+      19 |   color: red;
+         |   ^^^^^^^^^^
+      20 | }
+      21 | </style>",
         },
       ]
     `);
@@ -280,5 +312,55 @@ console.log('')`,
     } catch {
       // empty
     }
+  });
+
+  it('edge case 1', () => {
+    const code = 'export default someCall();\nexport default someCall(\n1,\n2,\n3);';
+
+    const ree = findManualMigrations(code, 'file.ts', [{
+      type: 'manual',
+      name: '',
+      find({ scriptASTs, report, utils: { astHelpers } }) {
+        for (const scriptAST of scriptASTs) {
+          astHelpers.findAll(scriptAST, { type: 'CallExpression' }).forEach((node) => report(node, 'aa'));
+        }
+      },
+    }]);
+    expect(ree).toMatchInlineSnapshot(`
+      [
+        {
+          "columnEnd": 25,
+          "columnStart": 16,
+          "file": "file.ts",
+          "lineEnd": 1,
+          "lineStart": 1,
+          "message": "aa",
+          "pluginName": "",
+          "snippet": "1 | export default someCall();
+        |                ^^^^^^^^^^
+      2 | export default someCall(
+      3 | 1,
+      4 | 2,",
+        },
+        {
+          "columnEnd": 2,
+          "columnStart": 16,
+          "file": "file.ts",
+          "lineEnd": 5,
+          "lineStart": 2,
+          "message": "aa",
+          "pluginName": "",
+          "snippet": "1 | export default someCall();
+      2 | export default someCall(
+        |                ^^^^^^^^^
+      3 | 1,
+        | ^^
+      4 | 2,
+        | ^^
+      5 | 3);
+        | ^^",
+        },
+      ]
+    `);
   });
 });

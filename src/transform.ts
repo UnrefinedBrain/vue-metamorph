@@ -10,6 +10,7 @@ import { setParents } from './builders';
 import { stringify } from './stringify';
 import { parseTs, parseVue } from './parse';
 import { VDocumentFragment } from './ast';
+import { getCssDialectForFilename, parseCss } from './parse/css';
 
 const recastOptions: recast.Options = {
   tabWidth: 2,
@@ -52,7 +53,7 @@ function transformVueFile(
   const stats: [string, number][] = [];
 
   const ms = new MagicString(workingCode);
-  const { scriptASTs, sfcAST } = parseVue(workingCode);
+  const { scriptASTs, sfcAST, styleASTs } = parseVue(workingCode);
   const templateAst = sfcAST.templateBody?.parent as VDocumentFragment;
   const originalTemplate = cloneDeep(templateAst);
 
@@ -60,6 +61,7 @@ function transformVueFile(
     const count = codemod.transform({
       scriptASTs,
       sfcAST: templateAst ?? null,
+      styleASTs,
       filename,
       utils,
       opts,
@@ -71,7 +73,8 @@ function transformVueFile(
   if (templateAst && originalTemplate) {
     setParents(templateAst);
 
-    let i = 0;
+    let scriptIndex = 0;
+    let styleIndex = 0;
     AST.traverseNodes(templateAst as never, {
       enterNode(node) {
         if (node.type === 'VElement'
@@ -79,12 +82,24 @@ function transformVueFile(
           && node.parent === templateAst
           && node.children[0]?.type === 'VText') {
           const newCode = recast
-            .print(scriptASTs[i]!, recastOptions)
+            .print(scriptASTs[scriptIndex]!, recastOptions)
             .code
             .replace(/\/\* METAMORPH_START \*\/\n+/g, '\n');
 
           node.children[0].value = `${newCode.startsWith('\n') ? '' : '\n'}${newCode}\n`;
-          i++;
+          scriptIndex++;
+        }
+
+        if (node.type === 'VElement'
+          && node.name === 'style'
+          && node.parent === templateAst
+          && node.children[0]?.type === 'VText') {
+          const newCode = styleASTs[styleIndex]!
+            .toResult().css
+            .replace(/\/\* METAMORPH_START \*\/\n+/g, '\n');
+
+          node.children[0].value = `${newCode.startsWith('\n') ? '' : '\n'}${newCode}`;
+          styleIndex++;
         }
       },
       leaveNode() {
@@ -195,6 +210,7 @@ function transformTypescriptFile(
     const count = codemod.transform({
       scriptASTs: [ast],
       sfcAST: null,
+      styleASTs: [],
       filename,
       utils,
       opts,
@@ -204,6 +220,42 @@ function transformTypescriptFile(
 
   return {
     code: `${recast.print(ast, recastOptions).code}\n`,
+    stats,
+  };
+}
+
+function transformCssFile(
+  code: string,
+  filename: string,
+  codemods: CodemodPlugin[],
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  opts: Record<string, any>,
+) {
+  let dialect = 'css';
+  switch (true) {
+    case filename.endsWith('.less'): dialect = 'less'; break;
+    case filename.endsWith('.scss'): dialect = 'scss'; break;
+    case filename.endsWith('.sass'): dialect = 'sass'; break;
+    default:
+  }
+  const ast = parseCss(code, dialect);
+  const stats: [string, number][] = [];
+
+  for (const codemod of codemods) {
+    const count = codemod.transform({
+      scriptASTs: [],
+      sfcAST: null,
+      styleASTs: [ast],
+      filename,
+      utils,
+      opts,
+    });
+
+    stats.push([codemod.name, count]);
+  }
+
+  return {
+    code: ast.toResult().css,
     stats,
   };
 }
@@ -224,7 +276,13 @@ export function transform(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   opts: Record<string, any> = {},
 ) {
-  return filename.endsWith('.vue')
-    ? transformVueFile(code, filename, plugins, opts)
-    : transformTypescriptFile(code, filename, plugins, opts);
+  if (filename.endsWith('.vue')) {
+    return transformVueFile(code, filename, plugins, opts);
+  }
+
+  if (getCssDialectForFilename(filename)) {
+    return transformCssFile(code, filename, plugins, opts);
+  }
+
+  return transformTypescriptFile(code, filename, plugins, opts);
 }

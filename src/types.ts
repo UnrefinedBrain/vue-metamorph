@@ -1,4 +1,5 @@
 import { builders, namedTypes, visit } from 'ast-types';
+import postcss from 'postcss';
 import * as AST from './ast';
 import * as templateBuilders from './builders';
 import * as astHelpers from './ast-helpers';
@@ -28,7 +29,7 @@ export type VueProgram = namedTypes.Program & {
   isScriptSetup: boolean;
 };
 
-export type ReportFunction = (node: AST.Node, message: string) => void;
+export type ReportFunction = (node: AST.Node | postcss.AnyNode, message: string) => void;
 
 /**
  * @public
@@ -44,6 +45,12 @@ export type ManualMigrationPluginContext = {
    * If this is a .vue file, the AST of the SFC. Otherwise, null
    */
   sfcAST: AST.VDocumentFragment | null;
+
+  /**
+   * If this is a .vue file, postcss contexts of each \<style\> block
+   * If this is a css/scss/less/sass file, the 0th element is the context of the file
+   */
+  styleASTs: postcss.Root[];
 
   /**
    * The absolute path of the file being worked on
@@ -95,6 +102,12 @@ export type CodemodPluginContext = {
    * If this is a .vue file, the AST of the SFC. Otherwise, null
    */
   sfcAST: AST.VDocumentFragment | null;
+
+  /**
+   * If this is a .vue file, postcss contexts of each \<style\> block
+   * If this is a css/scss/less/sass file, the 0th element is the context of the file
+   */
+  styleASTs: postcss.Root[];
 
   /**
    * The absolute path of the file being worked on

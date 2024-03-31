@@ -1,6 +1,6 @@
 {
   "name": "vue-metamorph",
-  "version": "3.0.0",
+  "version": "3.1.0",
   "description": "Codemod framework for Vue files",
   "keywords": [
     "codemod",
@@ -45,6 +45,7 @@
     "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
+    "@babel/types": "^7.24.0",
     "@microsoft/api-documenter": "^7.24.1",
     "@microsoft/api-extractor": "^7.43.0",
     "@shikijs/vitepress-twoslash": "^1.2.0",
@@ -76,6 +77,10 @@
     "glob": "^10.3.10",
     "lodash-es": "^4.17.21",
     "magic-string": "^0.30.8",
+    "postcss": "^8.4.38",
+    "postcss-less": "^6.0.0",
+    "postcss-sass": "^0.5.0",
+    "postcss-scss": "^4.0.9",
     "recast": "^0.23.6",
     "table": "^6.8.1",
     "vue-eslint-parser": "^9.4.2"

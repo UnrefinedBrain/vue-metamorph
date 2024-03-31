@@ -1,8 +1,10 @@
+import postcss from 'postcss';
 import * as AST from './ast';
 import { parseTs, parseVue } from './parse';
 import {
   ManualMigrationPlugin, ReportFunction, VueProgram, utils,
 } from './types';
+import { getCssDialectForFilename, parseCss } from './parse/css';
 
 type SampleArgs = {
   /**
@@ -148,26 +150,89 @@ export function findManualMigrations(
 
   let scripts: VueProgram[] = [];
   let template: AST.VDocumentFragment | null = null;
+  let styles: postcss.Root[] = [];
 
   if (filename.endsWith('.vue')) {
-    const { scriptASTs: scriptAsts, sfcAST: vueAst } = parseVue(code);
+    const { scriptASTs: scriptAsts, sfcAST: vueAst, styleASTs } = parseVue(code);
     scripts = scriptAsts;
     template = vueAst.templateBody!.parent as AST.VDocumentFragment;
+    styles = styleASTs;
+  } else if (getCssDialectForFilename(filename)) {
+    styles = [parseCss(code, getCssDialectForFilename(filename)!)];
   } else {
     scripts = [parseTs(code, /\.[jt]sx$/.test(filename))];
   }
 
   for (const plugin of plugins) {
     const report: ReportFunction = (node, message) => {
-      let snippet = '';
-      if ('loc' in node && node.loc) {
-        snippet = sample({
+      if ('loc' in node) {
+        if (node.loc) {
+          const snippet = sample({
+            code,
+            extraLines: 3,
+            lineStart: node.loc.start.line,
+            lineEnd: node.loc.end.line,
+            columnStart: node.loc.start.column + 1,
+            columnEnd: node.loc.end.column,
+          });
+
+          reports.push({
+            message,
+            file: filename,
+            snippet,
+            pluginName: plugin.name,
+            lineStart: node.loc.start.line,
+            lineEnd: node.loc.end.line,
+            columnStart: node.loc.start.column + 1,
+            columnEnd: node.loc.end.column,
+          });
+        } else if ('range' in node && Array.isArray(node.range)) {
+          // parser didn't attach loc info for some reason, we'll have to compute it
+          const [start, end] = node.range;
+
+          const before = code.slice(0, start);
+          const middle = code.slice(start, end);
+
+          const lineStart = (before.match(/\n/g)?.length ?? 0) + 1;
+          const columnStart = start - before.lastIndexOf('\n');
+
+          const lineEnd = lineStart + (middle.match(/\n/g)?.length ?? 0);
+          const columnEnd = end - code.slice(0, end).lastIndexOf('\n') - 1;
+
+          const snippet = sample({
+            code,
+            extraLines: 3,
+            lineStart,
+            lineEnd,
+            columnStart,
+            columnEnd,
+          });
+
+          reports.push({
+            message,
+            file: filename,
+            snippet,
+            pluginName: plugin.name,
+            lineStart,
+            lineEnd,
+            columnStart,
+            columnEnd,
+          });
+        }
+
+        return;
+      }
+
+      if ('positionInside' in node) {
+        const { line: lineStart, column: columnStart } = node.source!.start!;
+        const { line: lineEnd, column: columnEnd } = node.source!.end!;
+        const snippet = sample({
           code,
           extraLines: 3,
-          lineStart: node.loc.start.line,
-          lineEnd: node.loc.end.line,
-          columnStart: node.loc.start.column + 1,
-          columnEnd: node.loc.end.column,
+          lineStart,
+          lineEnd,
+          columnStart,
+          columnEnd: columnEnd - 1,
         });
 
         reports.push({
@@ -175,10 +240,10 @@ export function findManualMigrations(
           file: filename,
           snippet,
           pluginName: plugin.name,
-          lineStart: node.loc.start.line,
-          lineEnd: node.loc.end.line,
-          columnStart: node.loc.start.column + 1,
-          columnEnd: node.loc.end.column,
+          lineStart,
+          lineEnd,
+          columnStart,
+          columnEnd: columnEnd - 1,
         });
 
         return;
@@ -190,6 +255,7 @@ export function findManualMigrations(
     plugin.find({
       scriptASTs: scripts,
       sfcAST: template,
+      styleASTs: styles,
       filename,
       report,
       utils,
