@@ -40,21 +40,20 @@ export default defineComponent({
 const stringLiteralPlugin: CodemodPlugin = {
   name: 'test',
   type: 'codemod',
-  transform(
-    scripts,
-    template,
-    _filename,
-    {
-      traverseScriptAST, traverseTemplateAST, templateBuilders, astHelpers,
+  transform({
+    scriptASTs,
+    sfcAST,
+    utils: {
+      traverseScriptAST, traverseTemplateAST, builders, astHelpers,
     },
-  ) {
-    if (!template) {
+  }) {
+    if (!sfcAST) {
       return 0;
     }
 
     let count = 0;
 
-    for (const script of scripts) {
+    for (const script of scriptASTs) {
       traverseScriptAST(script, {
         visitProperty(path) {
           if (path.node.value.type === 'Literal'
@@ -66,12 +65,12 @@ const stringLiteralPlugin: CodemodPlugin = {
       });
     }
 
-    traverseTemplateAST(template, {
+    traverseTemplateAST(sfcAST, {
       enterNode(node) {
         if (node.type === 'VElement' && node.rawName === 'script') {
           node.startTag.attributes.push(
-            templateBuilders.vAttribute(
-              templateBuilders.vIdentifier('setup'),
+            builders.vAttribute(
+              builders.vIdentifier('setup'),
               null,
             ),
           );
@@ -83,8 +82,8 @@ const stringLiteralPlugin: CodemodPlugin = {
           node.rawName = 'strong';
 
           node.startTag.attributes.push(
-            templateBuilders.vAttribute(
-              templateBuilders.vIdentifier('hi'),
+            builders.vAttribute(
+              builders.vIdentifier('hi'),
               null,
             ),
           );
@@ -95,7 +94,7 @@ const stringLiteralPlugin: CodemodPlugin = {
       },
     });
 
-    astHelpers.findAll(template, {
+    astHelpers.findAll(sfcAST, {
       type: 'VElement',
       name: 'custom',
     })
@@ -165,7 +164,7 @@ describe('transform', () => {
     const codemod: CodemodPlugin = {
       type: 'codemod',
       name: 'test',
-      transform(scriptASTs, _sfcAST, _filename, utils) {
+      transform({ scriptASTs, utils }) {
         let count = 0;
         for (const scriptAST of scriptASTs) {
           utils.astHelpers.findAll(scriptAST, {

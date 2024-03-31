@@ -1,7 +1,7 @@
 import * as AST from './ast';
 import { parseTs, parseVue } from './parse';
 import {
-  ManualMigrationPlugin, ReportFunction, VueProgram, util,
+  ManualMigrationPlugin, ReportFunction, VueProgram, utils,
 } from './types';
 
 type SampleArgs = {
@@ -150,7 +150,7 @@ export function findManualMigrations(
   let template: AST.VDocumentFragment | null = null;
 
   if (filename.endsWith('.vue')) {
-    const { scriptAsts, vueAst } = parseVue(code);
+    const { scriptASTs: scriptAsts, sfcAST: vueAst } = parseVue(code);
     scripts = scriptAsts;
     template = vueAst.templateBody!.parent as AST.VDocumentFragment;
   } else {
@@ -187,7 +187,14 @@ export function findManualMigrations(
       throw new Error(`Node type ${node.type} is missing location information`);
     };
 
-    plugin.find(scripts, template, filename, report, util, opts);
+    plugin.find({
+      scriptASTs: scripts,
+      sfcAST: template,
+      filename,
+      report,
+      utils,
+      opts,
+    });
   }
 
   return reports;

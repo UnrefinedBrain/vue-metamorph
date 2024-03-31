@@ -3,11 +3,13 @@ import * as AST from './ast';
 import * as templateBuilders from './builders';
 import * as astHelpers from './ast-helpers';
 
-export const util = {
+export const utils = {
   traverseTemplateAST: AST.traverseNodes,
   traverseScriptAST: visit,
-  templateBuilders,
-  scriptBuilders: builders,
+  builders: {
+    ...templateBuilders,
+    ...builders,
+  },
   astHelpers,
 };
 
@@ -29,6 +31,43 @@ export type VueProgram = namedTypes.Program & {
 export type ReportFunction = (node: AST.Node, message: string) => void;
 
 /**
+ * @public
+ */
+export type ManualMigrationPluginContext = {
+  /**
+   * If this is a .vue file, the AST of the \<script\> blocks.
+   * If this is a JS/TS module, the 0th element is the AST of the module
+   */
+  scriptASTs: VueProgram[];
+
+  /**
+   * If this is a .vue file, the AST of the SFC. Otherwise, null
+   */
+  sfcAST: AST.VDocumentFragment | null;
+
+  /**
+   * The absolute path of the file being worked on
+   */
+  filename: string;
+
+  /**
+   * Function to report a node that needs to be migrated
+   */
+  report: ReportFunction;
+
+  /**
+   * Utility functions
+   */
+  utils: typeof utils;
+
+  /**
+   * CLI Options
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  opts: Record<string, any>;
+};
+
+/**
  * A plugin for finding nodes that cannot be migrated automatically
  *
  * @public
@@ -38,22 +77,40 @@ export type ManualMigrationPlugin = {
   name: string;
   /**
    * Find nodes that need manual migration
-   * @param scriptASTs - If this is a .vue file, the AST of the \<script\> blocks.
-   * If this is a JS/TS module, the 0th element is the AST of the module
-   * @param sfcAST - If this is a .vue file, the AST of the SFC. Otherwise, null
-   * @param filename - The absolute path of the file being worked on
-   * @param report - Function to report a node that needs to be migrated
-   * @param utils - Utility functions
    */
-  find(
-    scriptASTs: VueProgram[],
-    sfcAST: AST.VDocumentFragment | null,
-    filename: string,
-    report: ReportFunction,
-    utils: typeof util,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    opts: Record<string, any>
-  ): void;
+  find(context: ManualMigrationPluginContext): void;
+};
+
+/**
+ * @public
+ */
+export type CodemodPluginContext = {
+  /**
+   * If this is a .vue file, the AST of the `<script>` blocks.
+   * If this is a JS/TS module, the 0th element is the AST of the module
+   */
+  scriptASTs: VueProgram[];
+
+  /**
+   * If this is a .vue file, the AST of the SFC. Otherwise, null
+   */
+  sfcAST: AST.VDocumentFragment | null;
+
+  /**
+   * The absolute path of the file being worked on
+   */
+  filename: string;
+
+  /**
+   * Utility functions
+   */
+  utils: typeof utils;
+
+  /**
+   * CLI Options
+   */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  opts: Record<string, any>;
 };
 
 /**
@@ -66,21 +123,9 @@ export type CodemodPlugin = {
 
   /**
    * Mutate the AST to make changes
-   * @param scriptASTs - If this is a .vue file, the AST of the `<script>` blocks.
-   * If this is a JS/TS module, the 0th element is the AST of the module
-   * @param sfcAST - If this is a .vue file, the AST of the SFC. Otherwise, null
-   * @param filename - The absolute path of the file being worked on
-   * @param utils - Utility functions
    * @returns Number of transforms applied. Used for stats
    */
-  transform(
-    scriptASTs: VueProgram[],
-    sfcAST: AST.VDocumentFragment | null,
-    filename: string,
-    utils: typeof util,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    opts: Record<string, any>
-  ): number;
+  transform(context: CodemodPluginContext): number;
 };
 
 /**

@@ -17,13 +17,13 @@ import { ManualMigrationPlugin } from 'vue-metamorph';
 const migrateVueEmitter: ManualMigrationPlugin = {
   type: 'manual',
   name: 'Migrate vue event emitter',
-  find(
+  find({
     scriptASTs,
-    templateAST,
+    sfcAST,
     filename,
     report,
-    { traverseScriptAST }
-  ) {
+    utils: { traverseScriptAST }
+  }) {
     for (const scriptAST of scriptASTs) {
       traverseScriptAST(scriptAST, {
         visitCallExpression(path) {

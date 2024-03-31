@@ -5,7 +5,7 @@ import {
 import * as recast from 'recast';
 import deepDiff from 'deep-diff';
 import * as AST from './ast';
-import { util, type CodemodPlugin } from './types';
+import { utils, type CodemodPlugin } from './types';
 import { setParents } from './builders';
 import { stringify } from './stringify';
 import { parseTs, parseVue } from './parse';
@@ -52,18 +52,18 @@ function transformVueFile(
   const stats: [string, number][] = [];
 
   const ms = new MagicString(workingCode);
-  const { scriptAsts, vueAst } = parseVue(workingCode);
-  const templateAst = vueAst.templateBody?.parent as VDocumentFragment;
+  const { scriptASTs, sfcAST } = parseVue(workingCode);
+  const templateAst = sfcAST.templateBody?.parent as VDocumentFragment;
   const originalTemplate = cloneDeep(templateAst);
 
   for (const codemod of codemods) {
-    const count = codemod.transform(
-      scriptAsts,
-      templateAst ?? null,
+    const count = codemod.transform({
+      scriptASTs,
+      sfcAST: templateAst ?? null,
       filename,
-      util,
+      utils,
       opts,
-    );
+    });
 
     stats.push([codemod.name, count]);
   }
@@ -79,7 +79,7 @@ function transformVueFile(
           && node.parent === templateAst
           && node.children[0]?.type === 'VText') {
           const newCode = recast
-            .print(scriptAsts[i]!, recastOptions)
+            .print(scriptASTs[i]!, recastOptions)
             .code
             .replace(/\/\* METAMORPH_START \*\/\n+/g, '\n');
 
@@ -192,7 +192,13 @@ function transformTypescriptFile(
   const stats: [string, number][] = [];
 
   for (const codemod of codemods) {
-    const count = codemod.transform([ast], null, filename, util, opts);
+    const count = codemod.transform({
+      scriptASTs: [ast],
+      sfcAST: null,
+      filename,
+      utils,
+      opts,
+    });
     stats.push([codemod.name, count]);
   }
 

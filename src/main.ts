@@ -1,12 +1,19 @@
 import * as Kinds from 'ast-types/gen/kinds';
+import { builders as scriptBuilders } from 'ast-types';
 import * as templateBuilders from './builders';
 import * as AST from './ast';
 
+/**
+ * AST Node builders
+ * @public
+ */
+const builders = {
+  ...scriptBuilders,
+  ...templateBuilders,
+};
+
 export {
-  /**
-   * Utility functions for building new Vue \<template\> AST Nodes
-   */
-  templateBuilders,
+  builders,
 };
 
 export {
@@ -18,7 +25,6 @@ export {
 
 export {
   namedTypes,
-  builders as scriptBuilders,
   visit as traverseScriptAST,
 } from 'ast-types';
 
@@ -44,6 +50,8 @@ export type {
   CodemodPlugin,
   ManualMigrationPlugin,
   VueProgram,
+  CodemodPluginContext,
+  ManualMigrationPluginContext,
 } from './types.js';
 
 export type {
