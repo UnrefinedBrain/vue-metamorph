@@ -120,9 +120,11 @@ export default {
 </script>`, 'file.vue', [{
       name: 'test',
       type: 'manual',
-      find(scriptAST, templateAST, _filename, report, { astHelpers }) {
-        if (scriptAST[0]) {
-          const onCall = astHelpers.findFirst(scriptAST[0], {
+      find({
+        scriptASTs, sfcAST, report, utils: { astHelpers },
+      }) {
+        if (scriptASTs[0]) {
+          const onCall = astHelpers.findFirst(scriptASTs[0], {
             type: 'CallExpression',
             callee: {
               type: 'MemberExpression',
@@ -138,8 +140,8 @@ export default {
           }
         }
 
-        if (templateAST) {
-          const div = astHelpers.findFirst(templateAST, {
+        if (sfcAST) {
+          const div = astHelpers.findFirst(sfcAST, {
             type: 'VElement',
             rawName: 'div',
           });
@@ -201,7 +203,9 @@ console.log('')`,
       [{
         name: 'console-logs',
         type: 'manual',
-        find(scriptASTs, sfcAST, filename, report, utils) {
+        find({
+          scriptASTs, sfcAST, filename, report, utils,
+        }) {
           expect(sfcAST).toBeNull();
           expect(filename).toBe('file.js');
           expect(scriptASTs.length).toBe(1);
@@ -249,7 +253,9 @@ console.log('')`,
         [{
           name: 'console-logs',
           type: 'manual',
-          find(scriptASTs, sfcAST, filename, report, utils) {
+          find({
+            scriptASTs, sfcAST, filename, report, utils,
+          }) {
             expect(sfcAST).toBeNull();
             expect(filename).toBe('file.js');
             expect(scriptASTs.length).toBe(1);

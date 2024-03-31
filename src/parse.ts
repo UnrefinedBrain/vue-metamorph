@@ -104,17 +104,17 @@ export function parseVue(code: string) {
     code += '\n<template></template>';
   }
 
-  const vueAst = vueParser.parse(code, {
+  const sfcAST = vueParser.parse(code, {
     parser: tsParser(true),
     sourceType: 'module',
   });
 
-  const scripts = findAll(vueAst.templateBody!.parent as VDocumentFragment, {
+  const scripts = findAll(sfcAST.templateBody!.parent as VDocumentFragment, {
     type: 'VElement',
     name: 'script',
   }) as vueParser.AST.VElement[];
 
-  const scriptAsts = scripts.map((el) => {
+  const scriptASTs = scripts.map((el) => {
     // hack: make the source locations line up properly
     const blankLines = '\n'.repeat(el.loc.start.line - 1);
     const start = el.children[0]?.range[0];
@@ -132,8 +132,8 @@ export function parseVue(code: string) {
   });
 
   return {
-    vueAst,
-    scriptAsts,
+    sfcAST,
+    scriptASTs,
   };
 }
 

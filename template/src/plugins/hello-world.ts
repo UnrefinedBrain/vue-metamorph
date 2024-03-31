@@ -3,7 +3,7 @@ import { CodemodPlugin } from 'vue-metamorph';
 export const helloWorldCodemod: CodemodPlugin = {
   type: 'codemod',
   name: 'hello-world',
-  transform(scriptASTs, _templateAST, _filename, { traverseScriptAST, astHelpers }) {
+  transform({ scriptASTs, utils: { traverseScriptAST, astHelpers } }) {
     let transformCount = 0;
 
     for (const scriptAST of scriptASTs) {

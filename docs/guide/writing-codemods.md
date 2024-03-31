@@ -2,7 +2,7 @@
 
 ## Basics
 
-In a nutshell, a vue-metamorph codemod is a function that you define, which is passed two ASTs - the script AST, and the template AST. Your function can traverse and mutate these ASTs, and vue-metamorph will detect your changes and apply them to your source code file.
+In a nutshell, a vue-metamorph codemod is a function that you define, which is passed two ASTs - the script AST, and the template AST. Your function can traverse and mutate these ASTs by changing properties, or adding/removing nodes, and vue-metamorph will detect your changes and apply them to your source code file.
 
 In a `.js` or `.ts` file, the template AST will always be null.
 
@@ -17,7 +17,7 @@ const changeStringLiterals: CodemodPlugin = {
   type: 'codemod',
   name: 'change string literals to hello, world',
 
-  transform(scriptASTs, templateAST, filename, { traverseScriptAST, traverseTemplateAST }) {
+  transform({ scriptASTs, sfcAST, filename, utils: { traverseScriptAST, traverseTemplateAST } }) {
     // codemod plugins self-report the number of transforms it made
     // this is only used to print the stats in CLI output
     let transformCount = 0;
@@ -41,10 +41,10 @@ const changeStringLiterals: CodemodPlugin = {
       });
     }
 
-    if (templateAST) {
+    if (sfcAST) {
       // traverseTemplateAST is an alias for the vue-eslint-parser 'AST.traverseNodes' function
       // see: https://github.com/vuejs/vue-eslint-parser/blob/master/src/ast/traverse.ts#L118
-      traverseTemplateAST(templateAST, {
+      traverseTemplateAST(sfcAST, {
         enterNode(node) {
           if (node.type === 'Literal' && typeof node.value === 'string') {
             // mutate the node
@@ -70,7 +70,7 @@ Codemods can choose which files to operate on using the `filename` parameter. Fo
 
 ```ts
 const codemod = {
-  transform(scriptASTs, templateAST, filename) {
+  transform({ filename }) {
     if (!/\.spec\.[jt]s/g.test(filename)) {
       return;
     }

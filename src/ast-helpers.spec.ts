@@ -7,9 +7,9 @@ describe('createDefaultImport', () => {
   const codemod: CodemodPlugin = {
     type: 'codemod',
     name: '',
-    transform(scriptAST) {
-      if (scriptAST[0]) {
-        astHelpers.createDefaultImport(scriptAST[0], 'vue', 'Vue');
+    transform({ scriptASTs }) {
+      if (scriptASTs[0]) {
+        astHelpers.createDefaultImport(scriptASTs[0], 'vue', 'Vue');
       }
 
       return 1;
@@ -67,9 +67,9 @@ describe('createNamedImport', () => {
   const codemod: CodemodPlugin = {
     type: 'codemod',
     name: '',
-    transform(scriptAST) {
-      if (scriptAST[0]) {
-        astHelpers.createNamedImport(scriptAST[0], 'vue', 'defineComponent');
+    transform({ scriptASTs }) {
+      if (scriptASTs[0]) {
+        astHelpers.createNamedImport(scriptASTs[0], 'vue', 'defineComponent');
       }
 
       return 1;
