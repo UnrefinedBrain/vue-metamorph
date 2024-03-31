@@ -10,7 +10,7 @@ import { setParents } from './builders';
 import { stringify } from './stringify';
 import { parseTs, parseVue } from './parse';
 import { VDocumentFragment } from './ast';
-import { parseCss } from './parse/css';
+import { getCssDialectForFilename, parseCss } from './parse/css';
 
 const recastOptions: recast.Options = {
   tabWidth: 2,
@@ -280,7 +280,7 @@ export function transform(
     return transformVueFile(code, filename, plugins, opts);
   }
 
-  if (/\.(less|s?[ac]ss)$/.test(filename)) {
+  if (getCssDialectForFilename(filename)) {
     return transformCssFile(code, filename, plugins, opts);
   }
 

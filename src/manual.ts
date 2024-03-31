@@ -4,7 +4,7 @@ import { parseTs, parseVue } from './parse';
 import {
   ManualMigrationPlugin, ReportFunction, VueProgram, utils,
 } from './types';
-import { parseCss } from './parse/css';
+import { getCssDialectForFilename, parseCss } from './parse/css';
 
 type SampleArgs = {
   /**
@@ -157,14 +157,8 @@ export function findManualMigrations(
     scripts = scriptAsts;
     template = vueAst.templateBody!.parent as AST.VDocumentFragment;
     styles = styleASTs;
-  } else if (filename.endsWith('.css')) {
-    styles = [parseCss(code, 'css')];
-  } else if (filename.endsWith('.less')) {
-    styles = [parseCss(code, 'less')];
-  } else if (filename.endsWith('.sass')) {
-    styles = [parseCss(code, 'sass')];
-  } else if (filename.endsWith('.scss')) {
-    styles = [parseCss(code, 'scss')];
+  } else if (getCssDialectForFilename(filename)) {
+    styles = [parseCss(code, getCssDialectForFilename(filename)!)];
   } else {
     scripts = [parseTs(code, /\.[jt]sx$/.test(filename))];
   }
