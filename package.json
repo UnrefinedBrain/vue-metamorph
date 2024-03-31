@@ -45,6 +45,7 @@
     "docs:preview": "vitepress preview docs"
   },
   "devDependencies": {
+    "@babel/types": "^7.24.0",
     "@microsoft/api-documenter": "^7.24.1",
     "@microsoft/api-extractor": "^7.43.0",
     "@shikijs/vitepress-twoslash": "^1.2.0",

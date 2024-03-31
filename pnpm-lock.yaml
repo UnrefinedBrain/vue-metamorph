@@ -46,6 +46,9 @@ dependencies:
     version: 9.4.2(eslint@8.57.0)
 
 devDependencies:
+  '@babel/types':
+    specifier: ^7.24.0
+    version: 7.24.0
   '@microsoft/api-documenter':
     specifier: ^7.24.1
     version: 7.24.1(@types/node@20.11.30)
