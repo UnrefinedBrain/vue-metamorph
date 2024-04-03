@@ -188,13 +188,14 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
             writeFile = true;
           }
         }
-        manualMigrationReports.push(
-          ...findManualMigrations(newCode.code, file, manualMigrationPlugins, opts),
-        );
 
         if (writeFile) {
           await fs.writeFile(file, newCode.code);
         }
+
+        manualMigrationReports.push(
+          ...findManualMigrations(newCode.code, file, manualMigrationPlugins, opts),
+        );
 
         const progressArgs = {
           stats,
