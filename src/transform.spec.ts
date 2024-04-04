@@ -30,10 +30,21 @@ export default defineComponent({
 });
 </script>
 
+<style src="./style.css"></style>
+<style src="./style.css" />
+
 <style lang="less">
 .className {
   $variable: 1234;
   color: red;
+}
+</style>
+
+
+<style lang="scss">
+.className {
+  $variable: 1234;
+  color: blue;
 }
 </style>
 `;
@@ -155,10 +166,22 @@ describe('transform', () => {
       });
       </script>
 
+      <style src="./style.css"></style>
+      <style src="./style.css" />
+
       <style lang="less">
       .className {
         $variable: 1234;
         color: red !important;
+        background-color: black;
+      }
+      </style>
+
+
+      <style lang="scss">
+      .className {
+        $variable: 1234;
+        color: blue !important;
         background-color: black;
       }
       </style>
