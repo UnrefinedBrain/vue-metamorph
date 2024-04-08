@@ -2,7 +2,7 @@
 
 ## Basics
 
-In a nutshell, a vue-metamorph codemod is a function that you define, which is passed two ASTs - the script AST, and the template AST. Your function can traverse and mutate these ASTs by changing properties, or adding/removing nodes, and vue-metamorph will detect your changes and apply them to your source code file.
+In a nutshell, a vue-metamorph codemod is a function that you define, which is passed several ASTs - the script ASTs, the template AST, and the style ASTs. Your function can traverse and mutate these ASTs by changing properties, or adding/removing nodes, and vue-metamorph will detect your changes and apply them to your source code file.
 
 In a `.js` or `.ts` file, the template AST will always be null.
 
