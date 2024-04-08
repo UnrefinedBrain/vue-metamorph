@@ -15,6 +15,7 @@ import {
   getLangAttribute,
   isSupportedLang,
   parseCss,
+  syntaxMap,
 } from './parse/css';
 
 const recastOptions: recast.Options = {
@@ -101,7 +102,7 @@ function transformVueFile(
           && isSupportedLang(getLangAttribute(node))
           && node.children[0]?.type === 'VText') {
           const newCode = styleASTs[styleIndex]!
-            .toResult().css
+            .toString(syntaxMap[getLangAttribute(node)]!.stringify)
             .replace(/\/\* METAMORPH_START \*\/\n+/g, '\n');
 
           node.children[0].value = `${newCode.startsWith('\n') ? '' : '\n'}${newCode}`;
@@ -237,13 +238,13 @@ function transformCssFile(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   opts: Record<string, any>,
 ) {
-  let dialect = 'css';
-  switch (true) {
-    case filename.endsWith('.less'): dialect = 'less'; break;
-    case filename.endsWith('.scss'): dialect = 'scss'; break;
-    case filename.endsWith('.sass'): dialect = 'sass'; break;
-    case filename.endsWith('.styl'): dialect = 'stylus'; break;
-    default:
+  const dialect = getCssDialectForFilename(filename);
+
+  if (!dialect) {
+    return {
+      code,
+      stats: [],
+    }
   }
   const ast = parseCss(code, dialect);
   const stats: [string, number][] = [];
@@ -262,7 +263,7 @@ function transformCssFile(
   }
 
   return {
-    code: ast.toResult().css,
+    code: ast.toString(syntaxMap[dialect]),
     stats,
   };
 }

@@ -5,7 +5,7 @@ import postcssScss from 'postcss-scss';
 import postcssStyl from 'postcss-styl';
 import * as AST from '../ast';
 
-const syntaxMap: Record<string, typeof postcssScss> = {
+export const syntaxMap: Record<string, typeof postcssScss> = {
   css: postcss,
   scss: postcssScss,
   less: postcssLess,
@@ -22,7 +22,7 @@ export const getCssDialectForFilename = (filename: string) => {
     case filename.endsWith('.sass'): return 'sass';
     case filename.endsWith('.less'): return 'less';
     case filename.endsWith('.css'): return 'css';
-    case filename.endsWith('.styl'): return 'styl';
+    case filename.endsWith('.styl'): return 'stylus';
     default: return null;
   }
 };
