@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { transform } from './transform';
 import { CodemodPlugin } from './types';
+import postcss from 'postcss';
 
 const example = `
 <template>
@@ -52,6 +53,12 @@ export default defineComponent({
   color: blue;
 }
 </style>
+
+<style lang="stylus">
+.className
+  $variable= 1234
+  color green
+</style>
 `;
 
 const stringLiteralPlugin: CodemodPlugin = {
@@ -77,7 +84,10 @@ const stringLiteralPlugin: CodemodPlugin = {
     for (const style of styleASTs) {
       style.walkDecls('color', (decl) => {
         decl.important = true;
-        decl.after('\n  background-color: black');
+        decl.after(postcss.decl({
+          prop: 'background-color',
+          value: 'black',
+        }));
       });
     }
 
@@ -195,6 +205,13 @@ describe('transform', () => {
         background-color: black;
       }
       </style>
+
+      <style lang="stylus">
+      .className
+        $variable= 1234
+        color green !important;
+        background-color: black
+      </style>
       ",
         "stats": [
           [
@@ -205,6 +222,38 @@ describe('transform', () => {
       }
     `);
   });
+
+  it('should tranform stylus', () => {
+    const input = `
+.className
+  $variable= 1234
+  color green
+`;
+    expect(transform(input, 'file.styl', [{
+      name: 'test',
+      type: 'codemod',
+      transform({ styleASTs }) {
+        for (const ast of styleASTs) {
+          ast.walkDecls('color', (decl) => {
+            
+            decl.after(postcss.decl({
+              prop: 'background-color',
+              value: 'black'
+            }));
+          });
+        }
+
+        return 1;
+      },
+    }]).code).toMatchInlineSnapshot(`
+      "
+      .className
+        $variable= 1234
+        color green;
+        background-color: black
+      "
+    `);
+  })
 
   it('should transform jsx', () => {
     const input = 'const btn = () => <button>Hello</button>';

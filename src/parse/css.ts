@@ -2,13 +2,15 @@ import postcss from 'postcss';
 import postcssLess from 'postcss-less';
 import postcssSass from 'postcss-sass';
 import postcssScss from 'postcss-scss';
+import postcssStyl from 'postcss-styl';
 import * as AST from '../ast';
 
-const syntaxMap: Record<string, typeof postcssScss> = {
+export const syntaxMap: Record<string, typeof postcssScss> = {
   css: postcss,
   scss: postcssScss,
   less: postcssLess,
   sass: postcssSass,
+  stylus: postcssStyl,
 };
 
 export const isSupportedLang = (str: string) => !!syntaxMap[str];
@@ -20,6 +22,7 @@ export const getCssDialectForFilename = (filename: string) => {
     case filename.endsWith('.sass'): return 'sass';
     case filename.endsWith('.less'): return 'less';
     case filename.endsWith('.css'): return 'css';
+    case filename.endsWith('.styl'): return 'stylus';
     default: return null;
   }
 };

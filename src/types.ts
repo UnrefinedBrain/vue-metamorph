@@ -48,7 +48,7 @@ export type ManualMigrationPluginContext = {
 
   /**
    * If this is a .vue file, postcss contexts of each \<style\> block
-   * If this is a css/scss/less/sass file, the 0th element is the context of the file
+   * If this is a css/scss/less/sass/styl file, the 0th element is the context of the file
    */
   styleASTs: postcss.Root[];
 
@@ -105,7 +105,7 @@ export type CodemodPluginContext = {
 
   /**
    * If this is a .vue file, postcss contexts of each \<style\> block
-   * If this is a css/scss/less/sass file, the 0th element is the context of the file
+   * If this is a css/scss/less/sass/styl file, the 0th element is the context of the file
    */
   styleASTs: postcss.Root[];
 
