@@ -236,6 +236,7 @@ function transformCssFile(
     case filename.endsWith('.less'): dialect = 'less'; break;
     case filename.endsWith('.scss'): dialect = 'scss'; break;
     case filename.endsWith('.sass'): dialect = 'sass'; break;
+    case filename.endsWith('.styl'): dialect = 'stylus'; break;
     default:
   }
   const ast = parseCss(code, dialect);

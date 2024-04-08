@@ -92,7 +92,7 @@ The code printed by vue-metamorph will not be formatted perfectly. vue-metamorph
 
 ## CSS
 
-CSS codemods are supported as of vue-metamorph v3.1.0. Supported syntaxes include css, sass, scss, and less.
+CSS codemods are supported as of vue-metamorph v3.1.0. Supported syntaxes include css, sass, scss, less and stylus.
 
 Each codemod plugin will be passed an array of [PostCSS Root](https://postcss.org/api/#root) objects. Use the PostCSS API to make changes to the stylesheets.
 
@@ -110,12 +110,14 @@ Make sure to choose the correct parser:
 | Vue SFC `<style lang="scss">` | `postcss` (parser=scss) |
 | Vue SFC `<style lang="sass">` | `postcss` (parser=sass) |
 | Vue SFC `<style lang="less">` | `postcss` (parser=less) |
+| Vue SFC `<style lang="stylus">` | Not supported |
 | JavaScript | `@babel/parser` |
 | TypeScript | `@babel/parser` |
 | CSS | `postcss` |
 | LESS | `postcss` (parser=less) |
 | SASS | `postcss` (parser=sass) |
 | SCSS | `postcss` (parser=scss) |
+| STYLUS | Not supported |
 
 When using `@babel/parser` with AST Explorer, enable [this list](https://github.com/UnrefinedBrain/vue-metamorph/blob/master/src/parse/typescript.ts#L15-L57) of plugins to get an accurate representation of the AST you'll be working with.
 

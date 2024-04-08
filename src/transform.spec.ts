@@ -47,6 +47,12 @@ export default defineComponent({
   color: blue;
 }
 </style>
+
+<style lang="stylus">
+.className
+  $variable= 1234
+  color green
+</style>
 `;
 
 const stringLiteralPlugin: CodemodPlugin = {
@@ -184,6 +190,13 @@ describe('transform', () => {
         color: blue !important;
         background-color: black;
       }
+      </style>
+
+      <style lang="stylus">
+      .className{
+        $variable: 1234;
+        color: green !important;
+        background-color: black}
       </style>
       ",
         "stats": [

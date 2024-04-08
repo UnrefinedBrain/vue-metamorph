@@ -131,7 +131,7 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
             return true;
           }
 
-          if (!/\.(vue|ts|js|tsx|jsx|css|scss|less|sass)$/.test(p.fullpath())) {
+          if (!/\.(vue|ts|js|tsx|jsx|css|scss|less|sass|styl)$/.test(p.fullpath())) {
             return true;
           }
 
