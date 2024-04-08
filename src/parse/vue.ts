@@ -5,7 +5,7 @@ import { VueProgram } from '../types';
 import { findAll } from '../ast-helpers';
 import { VDocumentFragment } from '../ast';
 import { tsParser } from './typescript';
-import { parseCss } from './css';
+import { getLangAttribute, isSupportedLang, parseCss } from './css';
 
 /**
  * Parse Vue code
@@ -52,14 +52,14 @@ export function parseVue(code: string) {
   });
 
   const styleASTs = styles
-    .filter((el) => el.children.length > 0)
+    .filter((el) => el.children.length > 0 && isSupportedLang(getLangAttribute(el as never)))
     .map((el) => {
     // hack: make the source locations line up properly
       const blankLines = '\n'.repeat(el.loc.start.line - 1);
       const start = el.children[0]?.range[0];
       const end = el.children[0]?.range[1];
 
-      const lang = el.startTag.attributes.find((attr): attr is vueParser.AST.VAttribute => !attr.directive && attr.key.rawName === 'lang')?.value?.value ?? 'css';
+      const lang = getLangAttribute(el as never);
 
       return parseCss(`/* METAMORPH_START */${blankLines}${code.slice(start, end)}`, lang);
     });
