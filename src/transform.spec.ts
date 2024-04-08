@@ -40,6 +40,11 @@ export default defineComponent({
 }
 </style>
 
+<style lang="unknown lang">
+.red
+  color ---> red
+</style>
+
 
 <style lang="scss">
 .className {
@@ -175,6 +180,11 @@ describe('transform', () => {
         color: red !important;
         background-color: black;
       }
+      </style>
+
+      <style lang="unknown lang">
+      .red
+        color ---> red
       </style>
 
 

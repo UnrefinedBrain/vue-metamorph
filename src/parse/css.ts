@@ -2,6 +2,7 @@ import postcss from 'postcss';
 import postcssLess from 'postcss-less';
 import postcssSass from 'postcss-sass';
 import postcssScss from 'postcss-scss';
+import * as AST from '../ast';
 
 const syntaxMap: Record<string, typeof postcssScss> = {
   css: postcss,
@@ -9,6 +10,9 @@ const syntaxMap: Record<string, typeof postcssScss> = {
   less: postcssLess,
   sass: postcssSass,
 };
+
+export const isSupportedLang = (str: string) => !!syntaxMap[str];
+export const getLangAttribute = (el: AST.VElement) => el.startTag.attributes.find((attr): attr is AST.VAttribute => !attr.directive && attr.key.rawName === 'lang')?.value?.value ?? 'css';
 
 export const getCssDialectForFilename = (filename: string) => {
   switch (true) {
