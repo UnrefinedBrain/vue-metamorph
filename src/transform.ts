@@ -10,7 +10,12 @@ import { setParents } from './builders';
 import { stringify } from './stringify';
 import { parseTs, parseVue } from './parse';
 import { VDocumentFragment } from './ast';
-import { getCssDialectForFilename, parseCss } from './parse/css';
+import {
+  getCssDialectForFilename,
+  getLangAttribute,
+  isSupportedLang,
+  parseCss,
+} from './parse/css';
 
 const recastOptions: recast.Options = {
   tabWidth: 2,
@@ -93,6 +98,7 @@ function transformVueFile(
         if (node.type === 'VElement'
           && node.name === 'style'
           && node.parent === templateAst
+          && isSupportedLang(getLangAttribute(node))
           && node.children[0]?.type === 'VText') {
           const newCode = styleASTs[styleIndex]!
             .toResult().css
