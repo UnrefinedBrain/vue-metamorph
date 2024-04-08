@@ -244,7 +244,7 @@ function transformCssFile(
     return {
       code,
       stats: [],
-    }
+    };
   }
   const ast = parseCss(code, dialect);
   const stats: [string, number][] = [];
