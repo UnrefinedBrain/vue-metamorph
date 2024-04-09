@@ -6,7 +6,7 @@ import * as recast from 'recast';
 import deepDiff from 'deep-diff';
 import * as AST from './ast';
 import { utils, type CodemodPlugin } from './types';
-import { setParents } from './builders';
+import { setParents, vText } from './builders';
 import { stringify } from './stringify';
 import { parseTs, parseVue } from './parse';
 import { VDocumentFragment } from './ast';
@@ -105,7 +105,9 @@ function transformVueFile(
             .toString(syntaxMap[getLangAttribute(node)]!.stringify)
             .replace(/\/\* METAMORPH_START \*\/\n+/g, '\n');
 
-          node.children[0].value = `${newCode.startsWith('\n') ? '' : '\n'}${newCode}`;
+          node.children.length = 0;
+          node.children.push(vText(`${newCode.startsWith('\n') ? '' : '\n'}${newCode}`));
+
           styleIndex++;
         }
       },

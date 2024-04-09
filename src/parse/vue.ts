@@ -34,30 +34,32 @@ export function parseVue(code: string) {
     name: 'style',
   }) as vueParser.AST.VElement[];
 
-  const scriptASTs = scripts.map((el) => {
-    // hack: make the source locations line up properly
-    const blankLines = '\n'.repeat(el.loc.start.line - 1);
-    const start = el.children[0]?.range[0];
-    const end = el.children[0]?.range[1];
-
-    const isJsx = el.startTag.attributes.some((attr) => !attr.directive && attr.key.rawName === 'lang' && attr.value && ['jsx', 'tsx'].includes(attr.value.value));
-
-    const ast = recast.parse(`/* METAMORPH_START */${blankLines}${code.slice(start, end)}`, {
-      parser: tsParser(isJsx),
-    }).program as VueProgram;
-
-    ast.isScriptSetup = el.startTag.attributes.some((attr) => !attr.directive && attr.key.rawName === 'setup');
-
-    return ast;
-  });
-
-  const styleASTs = styles
-    .filter((el) => el.children.length > 0 && isSupportedLang(getLangAttribute(el as never)))
+  const scriptASTs = scripts
+    .filter((el) => el.children.length > 0)
     .map((el) => {
     // hack: make the source locations line up properly
       const blankLines = '\n'.repeat(el.loc.start.line - 1);
       const start = el.children[0]?.range[0];
       const end = el.children[0]?.range[1];
+
+      const isJsx = el.startTag.attributes.some((attr) => !attr.directive && attr.key.rawName === 'lang' && attr.value && ['jsx', 'tsx'].includes(attr.value.value));
+
+      const ast = recast.parse(`/* METAMORPH_START */${blankLines}${code.slice(start, end)}`, {
+        parser: tsParser(isJsx),
+      }).program as VueProgram;
+
+      ast.isScriptSetup = el.startTag.attributes.some((attr) => !attr.directive && attr.key.rawName === 'setup');
+
+      return ast;
+    });
+
+  const styleASTs = styles
+    .filter((el) => el.children.length > 0 && isSupportedLang(getLangAttribute(el as never)))
+    .map((el) => {
+      // hack: make the source locations line up properly
+      const blankLines = '\n'.repeat(el.loc.start.line - 1);
+      const start = el.children[0]?.range[0];
+      const end = el.children.at(-1)!.range[1];
 
       const lang = getLangAttribute(el as never);
 
