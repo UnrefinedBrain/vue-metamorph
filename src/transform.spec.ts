@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
+import postcss from 'postcss';
 import { transform } from './transform';
 import { CodemodPlugin } from './types';
-import postcss from 'postcss';
 
 const example = `
 <template>
@@ -235,10 +235,9 @@ describe('transform', () => {
       transform({ styleASTs }) {
         for (const ast of styleASTs) {
           ast.walkDecls('color', (decl) => {
-            
             decl.after(postcss.decl({
               prop: 'background-color',
-              value: 'black'
+              value: 'black',
             }));
           });
         }
@@ -253,7 +252,7 @@ describe('transform', () => {
         background-color: black
       "
     `);
-  })
+  });
 
   it('should transform jsx', () => {
     const input = 'const btn = () => <button>Hello</button>';
