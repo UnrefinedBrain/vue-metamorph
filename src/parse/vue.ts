@@ -54,10 +54,10 @@ export function parseVue(code: string) {
   const styleASTs = styles
     .filter((el) => el.children.length > 0 && isSupportedLang(getLangAttribute(el as never)))
     .map((el) => {
-    // hack: make the source locations line up properly
+      // hack: make the source locations line up properly
       const blankLines = '\n'.repeat(el.loc.start.line - 1);
       const start = el.children[0]?.range[0];
-      const end = el.children[0]?.range[1];
+      const end = el.children.at(-1)!.range[1];
 
       const lang = getLangAttribute(el as never);
 

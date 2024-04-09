@@ -38,7 +38,7 @@
   },
   "scripts": {
     "build": "scripts/build",
-    "lint": "eslint src docs/.vitepress",
+    "lint": "eslint src docs/.vitepress --ignore-path .gitignore",
     "test": "vitest",
     "docs:dev": "pnpm build && vitepress dev docs",
     "docs:build": "pnpm build && vitepress build docs",

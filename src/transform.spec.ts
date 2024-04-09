@@ -327,4 +327,42 @@ export default {
       "
     `);
   });
+
+  it('can use v-bind in CSS', () => {
+    const i = `
+<template>
+  <div class="className">
+    Hi 
+  </div>
+</template>
+<script setup>
+import { ref } from 'vue';
+const color = ref('red');
+</script>
+<style lang="css" scoped>
+.className {
+  color: v-bind(color);
+}
+</style>
+      `;
+
+    expect(transform(i, 'file.vue', []).code).toMatchInlineSnapshot(`
+      "
+      <template>
+        <div class="className">
+          Hi 
+        </div>
+      </template>
+      <script setup>
+      import { ref } from 'vue';
+      const color = ref('red');
+      </script>
+      <style lang="css" scoped>
+      .className {
+        color: v-bind(color);
+      }
+      </style>
+            "
+    `);
+  });
 });
