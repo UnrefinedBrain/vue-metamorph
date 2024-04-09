@@ -17,7 +17,7 @@ const changeStringLiterals: CodemodPlugin = {
   type: 'codemod',
   name: 'change string literals to hello, world',
 
-  transform({ scriptASTs, sfcAST, filename, utils: { traverseScriptAST, traverseTemplateAST } }) {
+  transform({ scriptASTs, sfcAST, styleASTs, filename, utils: { traverseScriptAST, traverseTemplateAST } }) {
     // codemod plugins self-report the number of transforms it made
     // this is only used to print the stats in CLI output
     let transformCount = 0;
