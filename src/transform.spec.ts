@@ -365,4 +365,24 @@ const color = ref('red');
             "
     `);
   });
+
+  it('should not fail when the script tag is empty', () => {
+    const i = `<template>
+      <div>
+        Hi
+      </div>
+    </template>
+    <script></script>
+    `;
+
+    expect(transform(i, 'file.vue', [stringLiteralPlugin]).code).toMatchInlineSnapshot(`
+      "<template>
+            <strong hi>
+              Hi
+            </strong>
+          </template>
+          <script setup></script>
+          "
+    `);
+  });
 });
