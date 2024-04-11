@@ -24,4 +24,4 @@ find docs/api \
   | xargs sed -i '1s|^|---\neditLink: false\n---\n|'
 
 # remove old dts files after api-extractor generated the new one
-ls dist | grep -P '.*(?<!vue-metamorph)\.d\.ts.*' | xargs -I {} rm dist/{}
+find dist | grep -P '.*(?<!vue-metamorph)\.d\.ts.*' | xargs rm
