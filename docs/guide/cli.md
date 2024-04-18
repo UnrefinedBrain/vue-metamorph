@@ -7,7 +7,7 @@ vue-metamorph provides a CLI codemod runner to faciliate running codemods agains
 | Option | Description | Default |
 | - | - | - |
 | --help | Print available options | N/A |
-| --files \<glob> | Run transforms against these files using a [glob](https://www.npmjs.com/package/glob) pattern | `'**/src/**/*'` |
+| --files &lt;glob&gt; | Run transforms against these files using a [glob](https://www.npmjs.com/package/glob) pattern | `'**/src/**/*'` |
 
 ## API
 
