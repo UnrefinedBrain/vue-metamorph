@@ -69,10 +69,10 @@ devDependencies:
     version: 7.24.5
   '@microsoft/api-documenter':
     specifier: ^7.24.1
-    version: 7.24.8(@types/node@20.12.12)
+    version: 7.24.9(@types/node@20.12.12)
   '@microsoft/api-extractor':
     specifier: ^7.43.0
-    version: 7.43.7(@types/node@20.12.12)
+    version: 7.43.8(@types/node@20.12.12)
   '@shikijs/vitepress-twoslash':
     specifier: ^1.2.0
     version: 1.6.0(typescript@5.4.5)
@@ -111,7 +111,7 @@ devDependencies:
     version: 5.12.0
   tsup:
     specifier: ^8.0.2
-    version: 8.0.2(@microsoft/api-extractor@7.43.7)(postcss@8.4.38)(typescript@5.4.5)
+    version: 8.0.2(@microsoft/api-extractor@7.43.8)(postcss@8.4.38)(typescript@5.4.5)
   typescript:
     specifier: ^5.4.3
     version: 5.4.5
@@ -891,42 +891,42 @@ packages:
       '@jridgewell/sourcemap-codec': 1.4.15
     dev: true
 
-  /@microsoft/api-documenter@7.24.8(@types/node@20.12.12):
-    resolution: {integrity: sha512-5gTlnaeRWp4qY1LyWfzPi9NTsFdxW/+/nWpSMlHGPuYoPuQ5x8pm7LdTbBcLnisY7Gj/+o0+VwC+47mKtQdPZQ==}
+  /@microsoft/api-documenter@7.24.9(@types/node@20.12.12):
+    resolution: {integrity: sha512-wVU1k/XGv24D7zA/z8tuE5sfExvkdGiwy+UpIKyN+/YehxbMqjkvfrdBboCTJt+5pqDjxSBo00jyDc+IPanedA==}
     hasBin: true
     dependencies:
-      '@microsoft/api-extractor-model': 7.28.17(@types/node@20.12.12)
+      '@microsoft/api-extractor-model': 7.28.18(@types/node@20.12.12)
       '@microsoft/tsdoc': 0.14.2
-      '@rushstack/node-core-library': 4.3.0(@types/node@20.12.12)
-      '@rushstack/terminal': 0.11.0(@types/node@20.12.12)
-      '@rushstack/ts-command-line': 4.21.0(@types/node@20.12.12)
+      '@rushstack/node-core-library': 5.0.0(@types/node@20.12.12)
+      '@rushstack/terminal': 0.11.1(@types/node@20.12.12)
+      '@rushstack/ts-command-line': 4.21.1(@types/node@20.12.12)
       js-yaml: 3.13.1
       resolve: 1.22.8
     transitivePeerDependencies:
       - '@types/node'
     dev: true
 
-  /@microsoft/api-extractor-model@7.28.17(@types/node@20.12.12):
-    resolution: {integrity: sha512-b2AfLP33oEVtWLeNavSBRdyDa8sKlXjN4pdhBnC4HLontOtjILhL1ERAmZObF4PWSyChnnC2vjb47C9WKCFRGg==}
+  /@microsoft/api-extractor-model@7.28.18(@types/node@20.12.12):
+    resolution: {integrity: sha512-5j8Vp4IiXD68Auccf9wP/VQ0GYfI5x3bW447SLwJOqinvnnXfNZlaYp7sj3u/LyzhrJFsynJ+tBJlN/koDGfZg==}
     dependencies:
       '@microsoft/tsdoc': 0.14.2
       '@microsoft/tsdoc-config': 0.16.2
-      '@rushstack/node-core-library': 4.3.0(@types/node@20.12.12)
+      '@rushstack/node-core-library': 5.0.0(@types/node@20.12.12)
     transitivePeerDependencies:
       - '@types/node'
     dev: true
 
-  /@microsoft/api-extractor@7.43.7(@types/node@20.12.12):
-    resolution: {integrity: sha512-t5M8BdnS+TmroUA/Z9HJXExS9iL4pK9I3yGu9PsXVTXPmcVXlBlA1CVI7TjRa1jwm+vusG/+sbX1/t5UkJhQMg==}
+  /@microsoft/api-extractor@7.43.8(@types/node@20.12.12):
+    resolution: {integrity: sha512-rGEFjr9xnjP/5YwDpPL10BBPQnWEz7X7sSF8twHevZVJTlBFKRetMLE7v8tIw6CX1iIJeYO6NWQcUz23cGthdA==}
     hasBin: true
     dependencies:
-      '@microsoft/api-extractor-model': 7.28.17(@types/node@20.12.12)
+      '@microsoft/api-extractor-model': 7.28.18(@types/node@20.12.12)
       '@microsoft/tsdoc': 0.14.2
       '@microsoft/tsdoc-config': 0.16.2
-      '@rushstack/node-core-library': 4.3.0(@types/node@20.12.12)
+      '@rushstack/node-core-library': 5.0.0(@types/node@20.12.12)
       '@rushstack/rig-package': 0.5.2
-      '@rushstack/terminal': 0.11.0(@types/node@20.12.12)
-      '@rushstack/ts-command-line': 4.21.0(@types/node@20.12.12)
+      '@rushstack/terminal': 0.11.1(@types/node@20.12.12)
+      '@rushstack/ts-command-line': 4.21.1(@types/node@20.12.12)
       lodash: 4.17.21
       minimatch: 3.0.8
       resolve: 1.22.8
@@ -1206,8 +1206,8 @@ packages:
     dev: true
     optional: true
 
-  /@rushstack/node-core-library@4.3.0(@types/node@20.12.12):
-    resolution: {integrity: sha512-JuNZ7lwaYQ4R1TugpryyWBn4lIxK+L7fF+muibFp0by5WklG22nsvH868fuBoZMLo5FqAs6WFOifNos4PJjWSA==}
+  /@rushstack/node-core-library@5.0.0(@types/node@20.12.12):
+    resolution: {integrity: sha512-5VpOqJ48ADNTl3AOQlFbck6ig0fFGxT22eXAFtW0zOfCtrqJi50lyzEWjhJ8o+xyfEh+mD6ay0cJImkWJYoshg==}
     peerDependencies:
       '@types/node': '*'
     peerDependenciesMeta:
@@ -1215,12 +1215,14 @@ packages:
         optional: true
     dependencies:
       '@types/node': 20.12.12
+      ajv: 8.13.0
+      ajv-draft-04: 1.0.0(ajv@8.13.0)
+      ajv-formats: 3.0.1(ajv@8.13.0)
       fs-extra: 7.0.1
       import-lazy: 4.0.0
       jju: 1.4.0
       resolve: 1.22.8
       semver: 7.5.4
-      z-schema: 5.0.5
     dev: true
 
   /@rushstack/rig-package@0.5.2:
@@ -1230,23 +1232,23 @@ packages:
       strip-json-comments: 3.1.1
     dev: true
 
-  /@rushstack/terminal@0.11.0(@types/node@20.12.12):
-    resolution: {integrity: sha512-LKz7pv0G9Py5uULahNSixK1pTqIIKd103pAGhDW51YfzPojvmO5wfITe0PEUNAJZjuufN/KgeRW83dJo1gL2rQ==}
+  /@rushstack/terminal@0.11.1(@types/node@20.12.12):
+    resolution: {integrity: sha512-DtTYA8ujZFJZUYD+dJkH3soAeOJ710Bu/5sLO5T0QBoMFR1PkCUUBYsGo9r8f2vLKSATbAJCeWH9ijoP7hhN9w==}
     peerDependencies:
       '@types/node': '*'
     peerDependenciesMeta:
       '@types/node':
         optional: true
     dependencies:
-      '@rushstack/node-core-library': 4.3.0(@types/node@20.12.12)
+      '@rushstack/node-core-library': 5.0.0(@types/node@20.12.12)
       '@types/node': 20.12.12
       supports-color: 8.1.1
     dev: true
 
-  /@rushstack/ts-command-line@4.21.0(@types/node@20.12.12):
-    resolution: {integrity: sha512-z38FLUCn8M9FQf19gJ9eltdwkvc47PxvJmVZS6aKwbBAa3Pis3r3A+ZcBCVPNb9h/Tbga+i0tHdzoSGUoji9GQ==}
+  /@rushstack/ts-command-line@4.21.1(@types/node@20.12.12):
+    resolution: {integrity: sha512-D4sNIzGqgPRPSJ3UirnpMmxlVzs+x7vL+hwC0b73CE0aflFoU87P/93Fm2QJFGYM099ErM4Usxa1JR4eICIiKw==}
     dependencies:
-      '@rushstack/terminal': 0.11.0(@types/node@20.12.12)
+      '@rushstack/terminal': 0.11.1(@types/node@20.12.12)
       '@types/argparse': 1.0.38
       argparse: 1.0.10
       string-argv: 0.3.2
@@ -1814,6 +1816,28 @@ packages:
     engines: {node: '>=0.4.0'}
     hasBin: true
 
+  /ajv-draft-04@1.0.0(ajv@8.13.0):
+    resolution: {integrity: sha512-mv00Te6nmYbRp5DCwclxtt7yV/joXJPGS7nM+97GdxvuttCOfgI3K4U25zboyeX0O+myI8ERluxQe5wljMmVIw==}
+    peerDependencies:
+      ajv: ^8.5.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
+    dependencies:
+      ajv: 8.13.0
+    dev: true
+
+  /ajv-formats@3.0.1(ajv@8.13.0):
+    resolution: {integrity: sha512-8iUql50EUR+uUcdRQ3HDqa6EVyo3docL8g5WJ3FNcWmu62IbkGUue/pEyLBW8VGKKucTPgqeks4fIU1DA4yowQ==}
+    peerDependencies:
+      ajv: ^8.0.0
+    peerDependenciesMeta:
+      ajv:
+        optional: true
+    dependencies:
+      ajv: 8.13.0
+    dev: true
+
   /ajv@6.12.6:
     resolution: {integrity: sha512-j3fVLgvTo527anyYyJOGTYJbG+vnnQYvE0m5mmkc1TK+nxAppkCLMIL0aZ4dblVCNoGShhm+kzE4ZUykBoMg4g==}
     dependencies:
@@ -1830,6 +1854,15 @@ packages:
       require-from-string: 2.0.2
       uri-js: 4.4.1
     dev: false
+
+  /ajv@8.13.0:
+    resolution: {integrity: sha512-PRA911Blj99jR5RMeTunVbNXMF6Lp4vZXnk5GQjcnUWUTsrXtekg/pnmFFI2u/I36Y/2bITGS30GZCXei6uNkA==}
+    dependencies:
+      fast-deep-equal: 3.1.3
+      json-schema-traverse: 1.0.0
+      require-from-string: 2.0.2
+      uri-js: 4.4.1
+    dev: true
 
   /algoliasearch@4.23.3:
     resolution: {integrity: sha512-Le/3YgNvjW9zxIQMRhUHuhiUjAlKY/zsdZpfq4dlLqg6mEm0nL6yk+7f2hDOtLpxsgE4jSzDmvHL7nXdBp5feg==}
@@ -2157,13 +2190,6 @@ packages:
     resolution: {integrity: sha512-NOKm8xhkzAjzFx8B2v5OAHT+u5pRQc2UCa2Vq9jYL/31o2wi9mxBA7LIFs3sV5VSC49z6pEhfbMULvShKj26WA==}
     engines: {node: '>= 6'}
     dev: true
-
-  /commander@9.5.0:
-    resolution: {integrity: sha512-KRs7WVDKg86PWiuAqhDrAQnTXZKraVcCc6vFdL14qrZ/DcWwuRo7VoiYXalXO7S5GKpqYiVEwCbgFDfxNHKJBQ==}
-    engines: {node: ^12.20.0 || >=14}
-    requiresBuild: true
-    dev: true
-    optional: true
 
   /computeds@0.0.1:
     resolution: {integrity: sha512-7CEBgcMjVmitjYo5q8JTJVra6X5mQ20uTThdK+0kR7UEaDrAWEQcRiBtWJzga4eRpP6afNwwLsX2SET2JhVB1Q==}
@@ -3398,7 +3424,6 @@ packages:
 
   /json-schema-traverse@1.0.0:
     resolution: {integrity: sha512-NM8/P9n3XjXhIZn1lLhkFaACTOURQXjWhV4BA/RnOv8xvgqtqpAX9IO4mRQxSx1Rlo4tqzeqb0sOlruaOy3dug==}
-    dev: false
 
   /json-stable-stringify-without-jsonify@1.0.1:
     resolution: {integrity: sha512-Bdboy+l7tA3OGW6FjyFHWkP5LuByj1Tk33Ljyq0axyzdk9//JSi2u3fP1QSmd1KNwq6VOKYGlAu87CisVir6Pw==}
@@ -3467,14 +3492,6 @@ packages:
   /lodash-es@4.17.21:
     resolution: {integrity: sha512-mKnC+QJ9pWVzv+C4/U3rRsHapFfHvQFoFB92e52xeyGMcX6/OlIl78je1u8vePzYZSkkogMPJ2yjxxsb89cxyw==}
     dev: false
-
-  /lodash.get@4.4.2:
-    resolution: {integrity: sha512-z+Uw/vLuy6gQe8cfaFWD7p0wVv8fJl3mbzXh33RS+0oW2wvUqiRXiQ69gLWSLpgB5/6sU+r6BlQR0MBILadqTQ==}
-    dev: true
-
-  /lodash.isequal@4.5.0:
-    resolution: {integrity: sha512-pDo3lu8Jhfjqls6GkMgpahsF9kCyayhgykjyLMNFTKWrpVdAQtYyB4muAMWozBB4ig/dtWAmsMxLEI8wuz+DYQ==}
-    dev: true
 
   /lodash.merge@4.6.2:
     resolution: {integrity: sha512-0KpjqXRVvrYyCsX1swR/XTK0va6VQkQM6MNo7PqW77ByjAhoARA8EfrP1N4+KlKj8YS0ZUCtRT/YUuhyYDujIQ==}
@@ -4314,7 +4331,6 @@ packages:
   /require-from-string@2.0.2:
     resolution: {integrity: sha512-Xf0nWe6RseziFMu+Ap9biiUbmplq6S9/p+7w7YXP/JBHhrUDDUhwa+vANyubuqfZWTveU//DYVGsDG7RKL/vEw==}
     engines: {node: '>=0.10.0'}
-    dev: false
 
   /resolve-from@4.0.0:
     resolution: {integrity: sha512-pb/MYmXstAkysRFx8piNI1tGFNQIFA3vkE3Gq4EuA1dF6gHp/+vgZqsCGJapvy8N3Q+4o7FwvquPJcnZ7RYy4g==}
@@ -4842,7 +4858,7 @@ packages:
     resolution: {integrity: sha512-AEYxH93jGFPn/a2iVAwW87VuUIkR1FVUKB77NwMF7nBTDkDrrT/Hpt/IrCJ0QXhW27jTBDcf5ZY7w6RiqTMw2Q==}
     dev: false
 
-  /tsup@8.0.2(@microsoft/api-extractor@7.43.7)(postcss@8.4.38)(typescript@5.4.5):
+  /tsup@8.0.2(@microsoft/api-extractor@7.43.8)(postcss@8.4.38)(typescript@5.4.5):
     resolution: {integrity: sha512-NY8xtQXdH7hDUAZwcQdY/Vzlw9johQsaqf7iwZ6g1DOUlFYQ5/AtVAjTvihhEyeRlGo4dLRVHtrRaL35M1daqQ==}
     engines: {node: '>=18'}
     hasBin: true
@@ -4861,7 +4877,7 @@ packages:
       typescript:
         optional: true
     dependencies:
-      '@microsoft/api-extractor': 7.43.7(@types/node@20.12.12)
+      '@microsoft/api-extractor': 7.43.8(@types/node@20.12.12)
       bundle-require: 4.0.2(esbuild@0.19.12)
       cac: 6.7.14
       chokidar: 3.6.0
@@ -5047,11 +5063,6 @@ packages:
     resolution: {integrity: sha512-7rKUyy33Q1yc98pQ1DAmLtwX109F7TIfWlW1Ydo8Wl1ii1SeHieeh0HHfPeL2fMXK6z0s8ecKs9frCuLJvndBg==}
     dependencies:
       punycode: 2.3.1
-
-  /validator@13.12.0:
-    resolution: {integrity: sha512-c1Q0mCiPlgdTVVVIJIrBuxNicYE+t/7oKeI9MWLj3fh/uq2Pxh/3eeWbVZ4OcGW1TUf53At0njHw5SMdA3tmMg==}
-    engines: {node: '>= 0.10'}
-    dev: true
 
   /vfile-message@4.0.2:
     resolution: {integrity: sha512-jRDZ1IMLttGj41KcZvlrYAaI3CfqpLpfpf+Mfig13viT6NKvRzWZ+lXz0Y5D60w6uJIBAOGq9mSHf0gktF0duw==}
@@ -5409,18 +5420,6 @@ packages:
   /yocto-queue@1.0.0:
     resolution: {integrity: sha512-9bnSc/HEW2uRy67wc+T8UwauLuPJVn28jb+GtJY16iiKWyvmYJRXVT4UamsAEGQfPohgr2q4Tq0sQbQlxTfi1g==}
     engines: {node: '>=12.20'}
-    dev: true
-
-  /z-schema@5.0.5:
-    resolution: {integrity: sha512-D7eujBWkLa3p2sIpJA0d1pr7es+a7m0vFAnZLlCEKq/Ij2k0MLi9Br2UPxoxdYystm5K1yeBGzub0FlYUEWj2Q==}
-    engines: {node: '>=8.0.0'}
-    hasBin: true
-    dependencies:
-      lodash.get: 4.4.2
-      lodash.isequal: 4.5.0
-      validator: 13.12.0
-    optionalDependencies:
-      commander: 9.5.0
     dev: true
 
   /zwitch@2.0.4:
