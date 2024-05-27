@@ -385,4 +385,56 @@ const color = ref('red');
           "
     `);
   });
+
+  it('should add a new element to the sfc ast', () => {
+    const input = `<template>
+  <div></div>
+</template>
+
+<script>
+export default {};
+</script>
+`;
+    const plugin: CodemodPlugin = {
+      type: 'codemod',
+      name: '',
+      transform({ sfcAST, utils: { builders } }) {
+        let transformCount = 0;
+
+        if (sfcAST) {
+          sfcAST.children.push(
+            builders.vElement(
+              'script',
+              builders.vStartTag([
+                builders.vAttribute(
+                  builders.vIdentifier('setup'),
+                  null,
+                ),
+              ], false),
+              [
+                builders.vText('\nconst { t } = useI18n();\n'),
+              ],
+            ),
+          );
+
+          transformCount++;
+        }
+
+        return transformCount;
+      },
+    };
+
+    expect(transform(input, 'file.vue', [plugin]).code).toMatchInlineSnapshot(`
+      "<template>
+        <div></div>
+      </template>
+
+      <script>
+      export default {};
+      </script>
+      <script setup>
+      const { t } = useI18n();
+      </script>"
+    `);
+  });
 });
