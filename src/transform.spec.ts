@@ -437,4 +437,85 @@ export default {};
       </script>"
     `);
   });
+
+  it('should add a new element to the sfc ast', () => {
+    const input = `<template>
+  <div></div>
+</template>
+
+<script>
+export default {};
+</script>
+`;
+    const plugin: CodemodPlugin = {
+      type: 'codemod',
+      name: '',
+      transform({ scriptASTs, sfcAST, utils: { builders } }) {
+        let transformCount = 0;
+
+        if (sfcAST) {
+          sfcAST.children.push(
+            builders.vElement(
+              'script',
+              builders.vStartTag([
+                builders.vAttribute(
+                  builders.vIdentifier('setup'),
+                  null,
+                ),
+              ], false),
+              [],
+            ),
+          );
+
+          scriptASTs.push(
+            builders.program([
+              builders.variableDeclaration(
+                'const',
+                [
+                  builders.variableDeclarator(
+                    builders.objectPattern([
+                      (() => {
+                        const prop = builders.property(
+                          'init',
+                          builders.identifier('t'),
+                          builders.identifier('t'),
+                        );
+
+                        prop.shorthand = true;
+
+                        return prop;
+                      })(),
+                    ]),
+                    builders.callExpression(
+                      builders.identifier('useI18n'),
+                      [],
+                    ),
+                  ),
+                ],
+              ),
+            ]) as never,
+          );
+
+          transformCount++;
+        }
+
+        return transformCount;
+      },
+    };
+
+    expect(transform(input, 'file.vue', [plugin]).code).toMatchInlineSnapshot(`
+      "<template>
+        <div></div>
+      </template>
+
+      <script>
+      export default {};
+      </script>
+      <script setup>
+      const {
+        t,
+      } = useI18n();
+      </script>"
+    `);
+  });
 });
