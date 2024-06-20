@@ -155,6 +155,13 @@ function transformVueFile(
           path.pop();
         }
 
+        // vue-eslint-parser has wrong location for VExpressionContainer sometimes
+        // just render whole tag again as a workaround
+        if (path.at(-1) === 'expression') {
+          path.pop();
+          path.pop();
+        }
+
         if (path.length <= 3 && p.kind !== 'E') {
           // adding/removing children from the root node should cause a re-print of the root
           rootNodeChanged = true;
