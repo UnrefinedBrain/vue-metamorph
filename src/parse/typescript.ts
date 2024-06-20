@@ -1,11 +1,9 @@
 import { visit } from 'ast-types';
 import * as babelParser from '@babel/parser';
-import { type File } from '@babel/types';
 import * as recast from 'recast';
 import { VueProgram } from '../types';
 
 const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
-  sourceType: 'module',
   strictMode: false,
   allowImportExportEverywhere: true,
   allowReturnOutsideFunction: true,
@@ -43,9 +41,6 @@ const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
     ],
     [
       'recordAndTuple',
-      {
-        syntaxType: 'hash',
-      },
     ],
     'throwExpressions',
     'topLevelAwait',
@@ -58,8 +53,8 @@ const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
 });
 
 export const tsParser = (isJsx: boolean) => ({
-  parse: (code: string): babelParser.ParseResult<File> => babelParser.parse(code, babelOptions(isJsx)),
-  parseForESLint: (code: string) => {
+  parse: (code: string): babelParser.File => babelParser.parse(code, babelOptions(isJsx)),
+  parseForESLint: (code: string): { ast: babelParser.File['program'] } => {
     const res = babelParser.parse(code, babelOptions(isJsx));
 
     // needed to avoid vue-eslint-parser error
@@ -76,6 +71,7 @@ export const tsParser = (isJsx: boolean) => ({
     });
 
     res.tokens?.forEach((tok) => {
+      // @ts-expect-error Needed by vue-eslint-parser
       tok.range = [tok.start, tok.end];
     });
 
