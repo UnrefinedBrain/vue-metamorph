@@ -1,7 +1,6 @@
-// plugin.ts
 import { namedTypes as n } from 'ast-types';
 import { test, expect } from 'vitest';
-import { CodemodPlugin, AST, transform } from './main';
+import { CodemodPlugin, AST, transform } from '../main';
 
 const checkKeyProp = (node: AST.VAttribute | AST.VDirective) => (
   node.key.type === 'VDirectiveKey' && node.key.argument?.type === 'VIdentifier' && node.key.argument?.name === 'key'
