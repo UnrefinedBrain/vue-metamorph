@@ -39,6 +39,7 @@ const shorthands: Record<string, string> = {
   bind: ':',
   on: '@',
   slot: '#',
+  generic: 'generic',
 };
 
 export function stringifyVDirectiveKey(node: AST.VDirectiveKey): string {
@@ -151,7 +152,8 @@ export function stringifyVExpressionContainer(node: AST.VExpressionContainer): s
   if (node.expression.type === 'VSlotScopeExpression'
     || node.expression.type === 'VForExpression'
     || node.expression.type === 'VOnExpression'
-    || node.expression.type === 'VFilterSequenceExpression') {
+    || node.expression.type === 'VFilterSequenceExpression'
+    || node.expression.type === 'VGenericExpression') {
     return stringify(node.expression);
   }
 
@@ -211,6 +213,10 @@ export function stringifyVDocumentFragment(node: AST.VDocumentFragment): string 
   return node.children.map(stringify).join('');
 }
 
+export function stringifyVGenericExpression(node: AST.VGenericExpression): string {
+  return node.params.map(stringifyWithRecast).join(', ');
+}
+
 export function stringify(node: AST.Node): string {
   switch (node.type) {
     case 'VAttribute': return stringifyVAttribute(node);
@@ -227,6 +233,7 @@ export function stringify(node: AST.Node): string {
     case 'VSlotScopeExpression': return stringifyVSlotScopeExpression(node);
     case 'VFilterSequenceExpression': return stringifyVFilterSequenceExpression(node);
     case 'VDocumentFragment': return stringifyVDocumentFragment(node);
+    case 'VGenericExpression': return stringifyVGenericExpression(node);
     default: return stringifyWithRecast(node);
   }
 }

@@ -129,6 +129,17 @@ export interface VFilter extends HasParent {
 }
 
 /**
+ * The generic expression on a \<script setup lang="ts" generic="..."\> node
+ * @public
+ */
+export interface VGenericExpression extends HasParent {
+  type: 'VGenericExpression';
+  parent: VExpressionContainer;
+  params: namedTypes.TSTypeParameterDeclaration['params'];
+  rawParams: string[];
+}
+
+/**
  * The union type of any nodes.
  * @public
  */
@@ -143,7 +154,8 @@ export type VNode =
   | VIdentifier
   | VLiteral
   | VStartTag
-  | VText;
+  | VText
+  | VGenericExpression;
 
 /**
  * Text nodes.
@@ -170,6 +182,7 @@ export interface VExpressionContainer extends HasParent {
   | VForExpression
   | VOnExpression
   | VSlotScopeExpression
+  | VGenericExpression
   | null;
 
 }

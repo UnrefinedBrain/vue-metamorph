@@ -16,7 +16,7 @@ const example = `
     </span>
   </div>
 </template>
-<script setup>
+<script setup lang="ts" generic="T extends string">
 const someRef = ref('my string');
 </script>
 <script lang="ts">
@@ -166,7 +166,7 @@ describe('transform', () => {
           </span>
         </strong>
       </template>
-      <script setup setup>
+      <script setup lang="ts" generic="T extends string" setup>
       const someRef = ref('my string');
       </script>
       <script lang="ts" setup>
