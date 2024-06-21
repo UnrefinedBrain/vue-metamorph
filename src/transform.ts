@@ -30,6 +30,7 @@ const ignoreProperties: Record<string, true> = {
   loc: true,
   range: true,
   variables: true,
+  references: true,
 };
 
 /**
@@ -203,7 +204,7 @@ function transformVueFile(
           const lesser = a.path.length < b.path.length ? a : b;
           const greater = lesser === a ? b : a;
 
-          return isEqual(lesser.path, greater.path.slice(0, lesser.path.length));
+          return isEqual(lesser.path, greater.path.slice(0, lesser.path.length - 1));
         });
 
         for (const { start, end, node } of collapsedChanges) {
