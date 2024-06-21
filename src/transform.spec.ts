@@ -16,7 +16,7 @@ const example = `
     </span>
   </div>
 </template>
-<script setup>
+<script setup lang="ts" generic="T extends string">
 const someRef = ref('my string');
 </script>
 <script lang="ts">
