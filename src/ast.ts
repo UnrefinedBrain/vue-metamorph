@@ -129,7 +129,8 @@ export interface VFilter extends HasParent {
 }
 
 /**
- * The generic expression on a <script setup lang="ts" generic="..."> node
+ * The generic expression on a \<script setup lang="ts" generic="..."\> node
+ * @public
  */
 export interface VGenericExpression extends HasParent {
   type: 'VGenericExpression';
