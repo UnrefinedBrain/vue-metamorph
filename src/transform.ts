@@ -163,6 +163,14 @@ function transformVueFile(
           path.pop();
         }
 
+        if (path.at(-1) === 'body') {
+          path.pop();
+        }
+
+        if (path.at(-1) === 'children') {
+          path.pop();
+        }
+
         if (path.length <= 3 && p.kind !== 'E') {
           // adding/removing children from the root node should cause a re-print of the root
           rootNodeChanged = true;
@@ -171,15 +179,19 @@ function transformVueFile(
         const originalNode = rootNodeChanged
           ? originalTemplate
           : get(originalTemplate, path);
-
-        return {
-          path,
-          start: originalNode.range[0],
-          end: originalNode.range[1],
-          node: path.length === 0
-            ? templateAst
-            : get(templateAst, path),
-        };
+        try {
+          return {
+            path,
+            start: originalNode.range[0],
+            end: originalNode.range[1],
+            node: path.length === 0
+              ? templateAst
+              : get(templateAst, path),
+          };
+        } catch (e) {
+          console.log(path);
+          throw e;
+        }
       });
 
       if (rootNodeChanged) {
@@ -205,7 +217,7 @@ function transformVueFile(
           const greater = lesser === a ? b : a;
 
           return isEqual(lesser.path, greater.path.slice(0, lesser.path.length - 1));
-        });
+        }).sort((a, b) => b.path.length - a.path.length);
 
         for (const { start, end, node } of collapsedChanges) {
           ms.update(start, end, stringify(node));
