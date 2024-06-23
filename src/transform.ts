@@ -91,7 +91,7 @@ function transformVueFile(
           const newCode = recast
             .print(scriptASTs[scriptIndex]!, recastOptions)
             .code
-            .replace(/\/\* METAMORPH_START \*\/\n+/g, '\n');
+            .replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
 
           const text = `${newCode.startsWith('\n') ? '' : '\n'}${newCode}\n`;
           if (node.children[0]?.type === 'VText') {
@@ -111,7 +111,7 @@ function transformVueFile(
           && node.children[0]?.type === 'VText') {
           const newCode = styleASTs[styleIndex]!
             .toString(syntaxMap[getLangAttribute(node)]!.stringify)
-            .replace(/\/\* METAMORPH_START \*\/\n+/g, '\n');
+            .replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
 
           node.children.length = 0;
           node.children.push(vText(`${newCode.startsWith('\n') ? '' : '\n'}${newCode}`));

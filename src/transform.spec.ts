@@ -61,6 +61,52 @@ export default defineComponent({
 </style>
 `;
 
+const example2 = `<script setup lang="ts" generic="T extends string">const someRef = ref('my string');
+</script>
+
+<template>
+  <div>
+    <custom />
+    <span v-if="hello">
+      <em>Hi there</em>
+      {{ value | someFilter | otherFilter }}
+      <div v-for="(item, index) in someArray">
+        {{ item | myFilter(arg1) }}
+      </div>
+    </span>
+  </div>
+</template>
+
+<style src="./style.css"></style>
+<style src="./style.css" />
+
+<style lang="less">
+.className {
+  $variable: 1234;
+  color: red;
+}
+</style>
+
+<style lang="unknown lang">
+.red
+  color ---> red
+</style>
+
+
+<style lang="scss">
+.className {
+  $variable: 1234;
+  color: blue;
+}
+</style>
+
+<style lang="stylus">
+.className
+  $variable= 1234
+  color green
+</style>
+`.replaceAll(/\n/g, '\r\n');
+
 const stringLiteralPlugin: CodemodPlugin = {
   name: 'test',
   type: 'codemod',
@@ -150,6 +196,7 @@ const stringLiteralPlugin: CodemodPlugin = {
 describe('transform', () => {
   it('should work with the test file', () => {
     const res = transform(example, 'file.vue', [stringLiteralPlugin]);
+    const res2 = transform(example2, 'file2.vue', [stringLiteralPlugin]);
 
     expect(res).toMatchInlineSnapshot(`
       {
@@ -217,6 +264,66 @@ describe('transform', () => {
           [
             "test",
             5,
+          ],
+        ],
+      }
+    `);
+
+    expect(res2).toMatchInlineSnapshot(`
+      {
+        "code": "<script setup lang="ts" generic="T extends string" setup>
+      const someRef = ref('my string');
+      </script>
+
+      <template>
+        <strong hi>
+          <custom></custom>
+          <span v-if="hello">
+            <em>Hi there</em>
+            {{ value | someFilter | otherFilter }}
+            <strong v-for="(item, index) in someArray" hi>
+              {{ item | myFilter(arg1) }}
+            </strong>
+          </span>
+        </strong>
+      </template>
+
+      <style src="./style.css"></style>
+      <style src="./style.css" />
+
+      <style lang="less">
+      .className {
+        $variable: 1234;
+        color: red !important;
+        background-color: black;
+      }
+      </style>
+
+      <style lang="unknown lang">
+      .red
+        color ---> red
+      </style>
+
+
+      <style lang="scss">
+      .className {
+        $variable: 1234;
+        color: blue !important;
+        background-color: black;
+      }
+      </style>
+
+      <style lang="stylus">
+      .className
+        $variable= 1234
+        color green !important;
+        background-color: black
+      </style>
+      ",
+        "stats": [
+          [
+            "test",
+            4,
           ],
         ],
       }
