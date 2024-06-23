@@ -179,19 +179,15 @@ function transformVueFile(
         const originalNode = rootNodeChanged
           ? originalTemplate
           : get(originalTemplate, path);
-        try {
-          return {
-            path,
-            start: originalNode.range[0],
-            end: originalNode.range[1],
-            node: path.length === 0
-              ? templateAst
-              : get(templateAst, path),
-          };
-        } catch (e) {
-          console.log(path);
-          throw e;
-        }
+
+        return {
+          path,
+          start: originalNode.range[0],
+          end: originalNode.range[1],
+          node: path.length === 0
+            ? templateAst
+            : get(templateAst, path),
+        };
       });
 
       if (rootNodeChanged) {

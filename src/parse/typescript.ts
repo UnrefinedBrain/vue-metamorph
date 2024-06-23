@@ -10,6 +10,7 @@ const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
   startLine: 1,
   tokens: true,
   ranges: true,
+  sourceType: 'module',
   plugins: [
     'asyncGenerators',
     'bigInt',
