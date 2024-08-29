@@ -68,7 +68,7 @@ importers:
     devDependencies:
       '@babel/types':
         specifier: ^7.24.7
-        version: 7.25.4
+        version: 7.25.6
       '@microsoft/api-documenter':
         specifier: ^7.25.3
         version: 7.25.12(@types/node@22.5.1)
@@ -221,8 +221,8 @@ packages:
     engines: {node: ^18.20.0 || ^20.10.0 || >=21.0.0}
     hasBin: true
 
-  '@babel/types@7.25.4':
-    resolution: {integrity: sha512-zQ1ijeeCXVEh+aNL0RlmkPkG8HUiDcU2pzQQFjtbntgAczRASFzj4H+6+bV+dy1ntKR14I/DypeuRG1uma98iQ==}
+  '@babel/types@7.25.6':
+    resolution: {integrity: sha512-/l42B1qxpG6RdfYf343Uw1vmDjeNhneUXtzhojE7pDgfpEypmRhI6j1kr17XCVv4Cgl9HdAiQY2x0GwKm7rWCw==}
     engines: {node: '>=6.9.0'}
 
   '@bcoe/v8-coverage@0.2.3':
@@ -3163,15 +3163,15 @@ snapshots:
 
   '@babel/parser@7.25.0':
     dependencies:
-      '@babel/types': 7.25.4
+      '@babel/types': 7.25.6
 
   '@babel/parser@7.25.4':
     dependencies:
-      '@babel/types': 7.25.4
+      '@babel/types': 7.25.6
 
   '@babel/parser@8.0.0-alpha.12': {}
 
-  '@babel/types@7.25.4':
+  '@babel/types@7.25.6':
     dependencies:
       '@babel/helper-string-parser': 7.24.8
       '@babel/helper-validator-identifier': 7.24.7
@@ -5084,7 +5084,7 @@ snapshots:
   magicast@0.3.4:
     dependencies:
       '@babel/parser': 7.25.0
-      '@babel/types': 7.25.4
+      '@babel/types': 7.25.6
       source-map-js: 1.2.0
 
   make-dir@4.0.0:
