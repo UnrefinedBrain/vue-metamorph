@@ -1,6 +1,7 @@
 import { Command } from 'commander';
 import { globSync } from 'glob';
 import { promises as fs } from 'fs';
+import micromatch from 'micromatch';
 import type { CodemodPlugin, ManualMigrationPlugin, Plugin } from './types';
 import { transform } from './transform';
 import { ManualMigrationReport, findManualMigrations } from './manual';
@@ -100,6 +101,8 @@ export interface CreateVueMetamorphCliOptions {
 
 type ProgramOptions = {
   files: string;
+  plugins: string[];
+  listPlugins: boolean;
 };
 
 /**
@@ -111,7 +114,9 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
   const defaultCliProgressHandler = createDefaultCliProgressHandler(console);
 
   program
-    .requiredOption('--files <glob>', 'Run transforms against these files', '**/src/**/*');
+    .requiredOption('--files <glob>', 'Run transforms against these files', '**/src/**/*')
+    .requiredOption('--plugins <glob...>', 'Run only these plugins using micromatch queries', '*')
+    .option('--list-plugins', 'Print a list of plugins.');
 
   options.additionalCliOptions?.(program);
 
@@ -121,6 +126,11 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
     program.parse(argv);
     const opts = program.opts<ProgramOptions>();
     const stats: Record<string, number> = {};
+
+    if (opts.listPlugins) {
+      process.stdout.write(`${options.plugins.flat().map((plugin) => plugin.name).join('\n')}\n`);
+      process.exit(0);
+    }
 
     const files = globSync(opts.files, {
       absolute: true,
@@ -140,7 +150,11 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
       },
     });
 
-    const plugins = options.plugins.flat();
+    const plugins = options
+      .plugins
+      .flat()
+      .filter((plugin) => micromatch.isMatch(plugin.name, opts.plugins));
+
     const codemodPlugins = plugins.filter((plugin): plugin is CodemodPlugin => plugin.type === 'codemod');
     const manualMigrationPlugins = plugins.filter((plugin): plugin is ManualMigrationPlugin => plugin.type === 'manual');
     const manualMigrationReports: ManualMigrationReport[] = [];
