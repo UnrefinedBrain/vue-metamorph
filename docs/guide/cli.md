@@ -7,7 +7,9 @@ vue-metamorph provides a CLI codemod runner to faciliate running codemods agains
 | Option | Description | Default |
 | - | - | - |
 | --help | Print available options | N/A |
+| --list-plugins | Lists all registered plugins and exists | N/A |
 | --files &lt;glob&gt; | Run transforms against these files using a [glob](https://www.npmjs.com/package/glob) pattern | `'**/src/**/*'` |
+| --plugins &lt;glob&gt; | Only run plugins matching these [micromatch](https://github.com/micromatch/micromatch) patterns. This option can be passed multiple times to specify multiple patterns | `'*'` |
 
 ## API
 
@@ -54,9 +56,11 @@ Options will be passed to the CodemodPlugin `transform()` and ManualMigrationPlu
 const myCodemod: CodemodPlugin = {
   name: 'myCodemod',
   type: 'codemod',
-  transform(scriptASTs, sfcAST, filename, utils, opts) {
+  transform({ opts }) {
     if (opts.myCustomOption) {
-      // behave differently
+      // do something
+    } else {
+      // do something else
     }
   }
 }
