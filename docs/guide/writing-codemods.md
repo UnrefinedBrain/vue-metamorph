@@ -119,7 +119,7 @@ Make sure to choose the correct parser:
 | SCSS | `postcss` (parser=scss) |
 | Stylus | `postcss-styl` ([AST visualizer](https://stylus.github.io/postcss-styl/)) |
 
-When using `@babel/parser` with AST Explorer, enable [this list](https://github.com/UnrefinedBrain/vue-metamorph/blob/master/src/parse/typescript.ts#L15-L57) of plugins to get an accurate representation of the AST you'll be working with.
+When using `@babel/parser` with AST Explorer, enable [this list](https://github.com/UnrefinedBrain/vue-metamorph/blob/master/src/parse/typescript.ts#L15-L53) of plugins to get an accurate representation of the AST you'll be working with.
 
 ## Testing
 
