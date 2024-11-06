@@ -18,7 +18,6 @@ const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
     'classPrivateProperties',
     'classProperties',
     'classStaticBlock',
-    'decimal',
     'decorators-legacy',
     'doExpressions',
     'dynamicImport',
@@ -27,7 +26,6 @@ const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
     'exportNamespaceFrom',
     'functionBind',
     'functionSent',
-    'importAssertions',
     'importMeta',
     'nullishCoalescingOperator',
     'numericSeparator',
@@ -37,7 +35,7 @@ const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
     [
       'pipelineOperator',
       {
-        proposal: 'minimal',
+        proposal: 'fsharp',
       },
     ],
     [
