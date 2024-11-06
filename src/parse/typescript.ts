@@ -37,7 +37,7 @@ const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
     [
       'pipelineOperator',
       {
-        proposal: 'minimal',
+        proposal: 'fsharp',
       },
     ],
     [
