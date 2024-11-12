@@ -46,16 +46,16 @@ importers:
         version: 6.1.13
       postcss:
         specifier: ^8.4.38
-        version: 8.4.48
+        version: 8.4.49
       postcss-less:
         specifier: ^6.0.0
-        version: 6.0.0(postcss@8.4.48)
+        version: 6.0.0(postcss@8.4.49)
       postcss-sass:
         specifier: ^0.5.0
         version: 0.5.0
       postcss-scss:
         specifier: ^4.0.9
-        version: 4.0.9(postcss@8.4.48)
+        version: 4.0.9(postcss@8.4.49)
       postcss-styl:
         specifier: ^0.12.3
         version: 0.12.3
@@ -119,13 +119,13 @@ importers:
         version: 5.12.0(rollup@4.24.4)
       tsup:
         specifier: ^8.1.0
-        version: 8.3.5(@microsoft/api-extractor@7.47.11(@types/node@22.9.0))(postcss@8.4.48)(typescript@5.6.3)(yaml@2.4.5)
+        version: 8.3.5(@microsoft/api-extractor@7.47.11(@types/node@22.9.0))(postcss@8.4.49)(typescript@5.6.3)(yaml@2.4.5)
       typescript:
         specifier: ^5.5.2
         version: 5.6.3
       vitepress:
         specifier: 1.5.0
-        version: 1.5.0(@algolia/client-search@5.12.0)(@types/node@22.9.0)(postcss@8.4.48)(search-insights@2.14.0)(stylus@0.57.0)(typescript@5.6.3)
+        version: 1.5.0(@algolia/client-search@5.12.0)(@types/node@22.9.0)(postcss@8.4.49)(search-insights@2.14.0)(stylus@0.57.0)(typescript@5.6.3)
       vitest:
         specifier: ^2.0.0
         version: 2.1.4(@types/node@22.9.0)(stylus@0.57.0)
@@ -2471,8 +2471,8 @@ packages:
     resolution: {integrity: sha512-8I7Cd8sxiEITIp32xBK4K/Aj1ukX6vuWnx8oY/oAH35NfQI4OZaY5nd68Yx8HeN5S49uhQ6DL0rNk0ZBu/TaLg==}
     engines: {node: ^8.10.0 || ^10.13.0 || ^11.10.1 || >=12.13.0}
 
-  postcss@8.4.48:
-    resolution: {integrity: sha512-GCRK8F6+Dl7xYniR5a4FYbpBzU8XnZVeowqsQFYdcXuSbChgiks7qybSkbvnaeqv0G0B+dd9/jJgH8kkLDQeEA==}
+  postcss@8.4.49:
+    resolution: {integrity: sha512-OCVPnIObs4N29kxTjzLfUryOkvZEq+pf8jTF0lg8E7uETuWHA+v7j3c/xJmiqpX450191LlmZfUKkXxkTry7nA==}
     engines: {node: ^10 || ^12 || >=14}
 
   preact@10.24.3:
@@ -3973,7 +3973,7 @@ snapshots:
       '@vue/shared': 3.5.12
       estree-walker: 2.0.2
       magic-string: 0.30.12
-      postcss: 8.4.48
+      postcss: 8.4.49
       source-map-js: 1.2.1
 
   '@vue/compiler-ssr@3.5.12':
@@ -5602,37 +5602,37 @@ snapshots:
 
   possible-typed-array-names@1.0.0: {}
 
-  postcss-less@6.0.0(postcss@8.4.48):
+  postcss-less@6.0.0(postcss@8.4.49):
     dependencies:
-      postcss: 8.4.48
+      postcss: 8.4.49
 
-  postcss-load-config@6.0.1(postcss@8.4.48)(yaml@2.4.5):
+  postcss-load-config@6.0.1(postcss@8.4.49)(yaml@2.4.5):
     dependencies:
       lilconfig: 3.1.2
     optionalDependencies:
-      postcss: 8.4.48
+      postcss: 8.4.49
       yaml: 2.4.5
 
   postcss-sass@0.5.0:
     dependencies:
       gonzales-pe: 4.3.0
-      postcss: 8.4.48
+      postcss: 8.4.49
 
-  postcss-scss@4.0.9(postcss@8.4.48):
+  postcss-scss@4.0.9(postcss@8.4.49):
     dependencies:
-      postcss: 8.4.48
+      postcss: 8.4.49
 
   postcss-styl@0.12.3:
     dependencies:
       debug: 4.3.5
       fast-diff: 1.3.0
       lodash.sortedlastindex: 4.1.0
-      postcss: 8.4.48
+      postcss: 8.4.49
       stylus: 0.57.0
     transitivePeerDependencies:
       - supports-color
 
-  postcss@8.4.48:
+  postcss@8.4.49:
     dependencies:
       nanoid: 3.3.7
       picocolors: 1.1.1
@@ -6009,7 +6009,7 @@ snapshots:
 
   tslib@2.6.3: {}
 
-  tsup@8.3.5(@microsoft/api-extractor@7.47.11(@types/node@22.9.0))(postcss@8.4.48)(typescript@5.6.3)(yaml@2.4.5):
+  tsup@8.3.5(@microsoft/api-extractor@7.47.11(@types/node@22.9.0))(postcss@8.4.49)(typescript@5.6.3)(yaml@2.4.5):
     dependencies:
       bundle-require: 5.0.0(esbuild@0.24.0)
       cac: 6.7.14
@@ -6019,7 +6019,7 @@ snapshots:
       esbuild: 0.24.0
       joycon: 3.1.1
       picocolors: 1.1.1
-      postcss-load-config: 6.0.1(postcss@8.4.48)(yaml@2.4.5)
+      postcss-load-config: 6.0.1(postcss@8.4.49)(yaml@2.4.5)
       resolve-from: 5.0.0
       rollup: 4.24.2
       source-map: 0.8.0-beta.0
@@ -6029,7 +6029,7 @@ snapshots:
       tree-kill: 1.2.2
     optionalDependencies:
       '@microsoft/api-extractor': 7.47.11(@types/node@22.9.0)
-      postcss: 8.4.48
+      postcss: 8.4.49
       typescript: 5.6.3
     transitivePeerDependencies:
       - jiti
@@ -6168,14 +6168,14 @@ snapshots:
   vite@5.4.10(@types/node@22.9.0)(stylus@0.57.0):
     dependencies:
       esbuild: 0.21.5
-      postcss: 8.4.48
+      postcss: 8.4.49
       rollup: 4.24.4
     optionalDependencies:
       '@types/node': 22.9.0
       fsevents: 2.3.3
       stylus: 0.57.0
 
-  vitepress@1.5.0(@algolia/client-search@5.12.0)(@types/node@22.9.0)(postcss@8.4.48)(search-insights@2.14.0)(stylus@0.57.0)(typescript@5.6.3):
+  vitepress@1.5.0(@algolia/client-search@5.12.0)(@types/node@22.9.0)(postcss@8.4.49)(search-insights@2.14.0)(stylus@0.57.0)(typescript@5.6.3):
     dependencies:
       '@docsearch/css': 3.6.3
       '@docsearch/js': 3.6.3(@algolia/client-search@5.12.0)(search-insights@2.14.0)
@@ -6196,7 +6196,7 @@ snapshots:
       vite: 5.4.10(@types/node@22.9.0)(stylus@0.57.0)
       vue: 3.5.12(typescript@5.6.3)
     optionalDependencies:
-      postcss: 8.4.48
+      postcss: 8.4.49
     transitivePeerDependencies:
       - '@algolia/client-search'
       - '@types/node'
