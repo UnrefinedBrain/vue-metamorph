@@ -15,6 +15,7 @@ type Matcher<T> = T extends { type: string }
  * @param ast - The node to traverse
  * @param matcher - Partial object to match against
  * @returns The first matching node, or null if no matching node was found
+ * @public
  */
 export function findFirst<
   M extends Matcher<namedTypes.ASTNode | AST.Node>,
@@ -48,6 +49,13 @@ export function findFirst<
   return matchingNode;
 }
 
+/**
+ * Finds all nodes in an AST that match a partial node
+ * @param ast - The node to traverse
+ * @param matcher - Partial object to match against
+ * @returns - All matching nodes
+ * @public
+ */
 export function findAll<
   M extends Matcher<namedTypes.ASTNode | AST.Node>,
 >(ast: AST.Node | namedTypes.ASTNode, matcher: M): (AST.Node & { type: M['type'] })[] {
@@ -81,6 +89,7 @@ export function findAll<
  * @param ast - The script AST
  * @param moduleSpecifier - The module name
  * @returns The ImportDeclaration node if one was found, or null
+ * @public
  */
 export function findImportDeclaration(
   ast: namedTypes.Program,
@@ -102,6 +111,7 @@ export function findImportDeclaration(
  * @param moduleSpecifier - The module name to import from
  * @param importName - The name of the import
  * @param localName - (optional) The local name of the named import
+ * @public
  */
 export function createNamedImport(
   ast: namedTypes.Program,
@@ -155,6 +165,7 @@ export function createNamedImport(
  * @param ast - The script AST
  * @param moduleSpecifier - The module name to import from
  * @param importName - The name of the default import
+ * @public
  */
 export function createDefaultImport(
   ast: namedTypes.Program,
@@ -204,6 +215,7 @@ export function createDefaultImport(
  * @param ast - The script AST
  * @param moduleSpecifier - The module name to import from
  * @param namespaceName - The name of the namespace in the module
+ * @public
  */
 export function createNamespaceImport(
   ast: namedTypes.Program,
@@ -253,6 +265,7 @@ export function createNamespaceImport(
  * Vue.mixin(), defineComponent(), or new Vue()
  * @param ast - The script AST
  * @param isSfc - If true, treat the default export as an options api object
+ * @public
  */
 export function findVueComponentOptions(
   ast: namedTypes.Program,

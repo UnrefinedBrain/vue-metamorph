@@ -4,6 +4,8 @@ import postcss from 'postcss';
 import * as templateBuilders from './builders';
 import * as AST from './ast';
 
+export * as astHelpers from './ast-helpers';
+
 /**
  * AST Node builders
  * @public
