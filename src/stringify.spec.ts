@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { builders as b } from 'ast-types';
+import { builders as b } from 'ast-types-x';
 import * as builders from './builders';
 import { stringify } from './stringify';
 

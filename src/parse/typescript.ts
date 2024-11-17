@@ -1,4 +1,4 @@
-import { visit } from 'ast-types';
+import { visit } from 'ast-types-x';
 import * as babelParser from '@babel/parser';
 import * as recast from 'recast';
 import { VueProgram } from '../types';

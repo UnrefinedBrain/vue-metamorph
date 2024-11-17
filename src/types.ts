@@ -1,4 +1,4 @@
-import { builders, namedTypes, visit } from 'ast-types';
+import { builders, namedTypes, visit } from 'ast-types-x';
 import postcss from 'postcss';
 import * as AST from './ast';
 import * as templateBuilders from './builders';

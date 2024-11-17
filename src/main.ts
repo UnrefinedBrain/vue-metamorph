@@ -1,5 +1,5 @@
-import * as Kinds from 'ast-types/gen/kinds';
-import { builders as scriptBuilders } from 'ast-types';
+import * as Kinds from 'ast-types-x/gen/kinds';
+import { builders as scriptBuilders } from 'ast-types-x';
 import postcss from 'postcss';
 import * as templateBuilders from './builders';
 import * as AST from './ast';
@@ -30,7 +30,7 @@ export {
 export {
   namedTypes,
   visit as traverseScriptAST,
-} from 'ast-types';
+} from 'ast-types-x';
 
 export {
   createVueMetamorphCli,
