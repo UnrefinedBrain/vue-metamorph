@@ -1,6 +1,6 @@
 import { visit } from 'ast-types-x';
 import * as babelParser from '@babel/parser';
-import * as recast from 'recast';
+import * as recast from 'recast-x';
 import { VueProgram } from '../types';
 
 const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({

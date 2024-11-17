@@ -1,5 +1,5 @@
 import * as vueParser from 'vue-eslint-parser';
-import * as recast from 'recast';
+import * as recast from 'recast-x';
 import htmlParser from 'node-html-parser';
 import { VueProgram } from '../types';
 import { findAll } from '../ast-helpers';
