@@ -38,4 +38,31 @@ describe('parseVue', () => {
     const ast = parseVue('<script>/* <template> tags are overrated */ export default {} </script>');
     expect(ast.sfcAST).toBeDefined();
   });
+
+  it('should parse comments', () => {
+    const ast = parseVue(`
+<template><!-- before VText -->
+  <!-- before VStartTag --><div>
+    Foo <!-- before VExpressionContainer -->{{ bar }}
+  <!-- before VEndTag --></div>
+</template>
+`);
+    expect(findFirst(ast.sfcAST.templateBody as never, {
+      type: 'VText',
+    })?.leadingComment?.value).toBe(' before VText ');
+
+    expect(findFirst(ast.sfcAST.templateBody as never, {
+      type: 'VElement',
+      name: 'div',
+    })?.startTag.leadingComment?.value).toBe(' before VStartTag ');
+
+    expect(findFirst(ast.sfcAST.templateBody as never, {
+      type: 'VExpressionContainer',
+    })?.leadingComment?.value).toBe(' before VExpressionContainer ');
+
+    expect(findFirst(ast.sfcAST.templateBody as never, {
+      type: 'VElement',
+      name: 'div',
+    })?.endTag?.leadingComment?.value).toBe(' before VEndTag ');
+  });
 });

@@ -4,8 +4,9 @@ import { AST } from 'vue-eslint-parser';
 
 // Adapted from https://github.com/vuejs/vue-eslint-parser/blob/master/src/ast/nodes.ts
 
-// Removed HasLocation from types for better compatibility with builders
-// Also changed ESLint* types to namedTypes types
+// - Removed HasLocation from types for better compatibility with builders
+// - Changed ESLint* types to namedTypes types
+// - Added leadingComment property to some nodes
 
 /*
  * MIT License
@@ -35,6 +36,13 @@ import { AST } from 'vue-eslint-parser';
  */
 export interface HasParent {
   parent?: Node | null;
+}
+
+/**
+ * @public
+ */
+export interface HasLeadingComment {
+  leadingComment: HtmlComment | null;
 }
 
 /**
@@ -161,10 +169,19 @@ export type VNode =
  * Text nodes.
  * @public
  */
-export interface VText extends HasParent {
+export interface VText extends HasParent, HasLeadingComment {
   type: 'VText';
   parent: VDocumentFragment | VElement;
   value: string;
+}
+
+/**
+ * @public
+ */
+export interface HtmlComment extends HasLeadingComment {
+  type: 'HtmlComment';
+  value: string;
+  range: [number, number];
 }
 
 /**
@@ -172,7 +189,7 @@ export interface VText extends HasParent {
  * e.g. `{{ name }}`
  * @public
  */
-export interface VExpressionContainer extends HasParent {
+export interface VExpressionContainer extends HasParent, HasLeadingComment {
   type: 'VExpressionContainer';
   parent: VDocumentFragment | VElement | VDirective | VDirectiveKey;
   expression:
@@ -248,7 +265,7 @@ export interface VDirective extends HasParent {
  * Start tag nodes.
  * @public
  */
-export interface VStartTag extends HasParent {
+export interface VStartTag extends HasParent, HasLeadingComment {
   type: 'VStartTag';
   parent: VElement;
   selfClosing: boolean;
@@ -259,7 +276,7 @@ export interface VStartTag extends HasParent {
  * End tag nodes.
  * @public
  */
-export interface VEndTag extends HasParent {
+export interface VEndTag extends HasParent, HasLeadingComment {
   type: 'VEndTag';
   parent: VElement;
 }
@@ -277,7 +294,6 @@ export interface VElement extends HasParent {
   startTag: VStartTag;
   children: (VElement | VText | VExpressionContainer)[];
   endTag: VEndTag | null;
-
 }
 
 /**

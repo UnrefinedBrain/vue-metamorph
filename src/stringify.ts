@@ -115,13 +115,12 @@ export function stringifyVStartTag(node: AST.VStartTag, isVoidElement = false): 
   return str;
 }
 
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-export function stringifyVEndTag(_node: AST.VEndTag): string {
-  return '';
+export function stringifyVEndTag(node: AST.VEndTag): string {
+  return stringifyHtmlComment(node.leadingComment);
 }
 
 export function stringifyVElement(node: AST.VElement): string {
-  let str = `<${node.rawName}`;
+  let str = `${stringifyHtmlComment(node.startTag.leadingComment)}<${node.rawName}`;
 
   str += stringifyVStartTag(node.startTag, voidElements[node.rawName] ?? false);
   str += '>';
@@ -129,6 +128,7 @@ export function stringifyVElement(node: AST.VElement): string {
   if (!node.startTag.selfClosing && !voidElements[node.rawName]) {
     for (const child of node.children) {
       if (child.type === 'VExpressionContainer') {
+        str += stringifyHtmlComment(child.leadingComment);
         str += '{{ ';
       }
       str += stringify(child);
@@ -137,7 +137,9 @@ export function stringifyVElement(node: AST.VElement): string {
         str += ' }}';
       }
     }
-
+    if (node.endTag) {
+      str += stringifyVEndTag(node.endTag);
+    }
     str += `</${node.rawName}>`;
   }
 
@@ -206,7 +208,7 @@ export function stringifyVSlotScopeExpression(node: AST.VSlotScopeExpression): s
 }
 
 export function stringifyVText(node: AST.VText): string {
-  return node.value;
+  return stringifyHtmlComment(node.leadingComment) + node.value;
 }
 
 export function stringifyVDocumentFragment(node: AST.VDocumentFragment): string {
@@ -215,6 +217,19 @@ export function stringifyVDocumentFragment(node: AST.VDocumentFragment): string 
 
 export function stringifyVGenericExpression(node: AST.VGenericExpression): string {
   return node.params.map(stringifyWithRecast).join(', ');
+}
+
+export function stringifyHtmlComment(node: AST.HtmlComment | null) {
+  if (!node) {
+    return '';
+  }
+
+  let leadingComments = '';
+  if (node.leadingComment) {
+    leadingComments += stringifyHtmlComment(node.leadingComment);
+  }
+
+  return `${leadingComments}<!--${node.value}-->`;
 }
 
 export function stringify(node: AST.Node): string {

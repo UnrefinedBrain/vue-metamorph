@@ -7,13 +7,15 @@ const example = `
 <template>
   <div>
     <custom />
-    <span v-if="hello">
+    <span v-if="hello"><!-- 1 comment -->
+      <!-- 2 comment -->
       <em>Hi there</em>
+      <!-- 3 comment --><!-- 4 comment -->
       {{ value | someFilter | otherFilter }}
       <div v-for="(item, index) in someArray">
-        {{ item | myFilter(arg1) }}
+        <!-- 5 comment -->{{ item | myFilter(arg1) }}
       </div>
-    </span>
+    <!-- 6 comment --></span>
   </div>
 </template>
 <script setup lang="ts" generic="T extends string">
@@ -204,13 +206,15 @@ describe('transform', () => {
       <template>
         <strong hi>
           <custom></custom>
-          <span v-if="hello">
+          <span v-if="hello"><!-- 1 comment -->
+            <!-- 2 comment -->
             <em>Hi there</em>
+            <!-- 3 comment --><!-- 4 comment -->
             {{ value | someFilter | otherFilter }}
             <strong v-for="(item, index) in someArray" hi>
-              {{ item | myFilter(arg1) }}
+              <!-- 5 comment -->{{ item | myFilter(arg1) }}
             </strong>
-          </span>
+          <!-- 6 comment --></span>
         </strong>
       </template>
       <script setup lang="ts" generic="T extends string" setup>

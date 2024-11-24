@@ -109,12 +109,14 @@ export function vDocumentFragment(
 
 /**
  * Creates a new VEndTag node
+ * @param leadingComment - A HTML comment directly before the end tag, if any
  * @returns A new VEndTag node
  * @public
  */
-export function vEndTag(): AST.VEndTag {
+export function vEndTag(leadingComment?: AST.HtmlComment): AST.VEndTag {
   return {
     type: 'VEndTag',
+    leadingComment: leadingComment ?? null,
     // @ts-expect-error Parent is not known yet
     parent: undefined,
   };
@@ -151,14 +153,19 @@ export function vElement(
 /**
  * Creates a new VExpressionContainer node
  * @param expression - The expression in the container
+ * @param leadingComment - If the VExpressionContainer is a child of a VElement, a HTML comment to print directly before this node, if any
  * @returns A new VExpressionContainer node
  * @public
  */
-export function vExpressionContainer(expression: AST.VExpressionContainer['expression']): AST.VExpressionContainer {
+export function vExpressionContainer(
+  expression: AST.VExpressionContainer['expression'],
+  leadingComment?: AST.HtmlComment,
+): AST.VExpressionContainer {
   return {
     type: 'VExpressionContainer',
     references: [],
     expression,
+    leadingComment: leadingComment ?? null,
 
     // @ts-expect-error Parent is not known yet
     parent: undefined,
@@ -231,12 +238,14 @@ export function vLiteral(
  * Creates a new VStartTag node
  * @param attributes - Attributes or Directives
  * @param selfClosing - Whether the tag is self-closing. Void elements should not be self-closing
+ * @param leadingComment - A HTML comment to print directly before the start tag, if any
  * @returns A new VStartTag node
  * @public
  */
 export function vStartTag(
   attributes: AST.VStartTag['attributes'],
   selfClosing: AST.VStartTag['selfClosing'],
+  leadingComment?: AST.HtmlComment,
 ): AST.VStartTag {
   return {
     type: 'VStartTag',
@@ -244,23 +253,27 @@ export function vStartTag(
     // @ts-expect-error Parent is not known yet
     parent: undefined,
     selfClosing,
+    leadingComment: leadingComment ?? null,
   };
 }
 
 /**
  * Create a new VText node
  * @param value - Text value
+ * @param leadingComment - A HTML comment directly before the VText, if any
  * @returns A new VText node
  * @public
  */
 export function vText(
   value: AST.VText['value'],
+  leadingComment?: AST.HtmlComment,
 ): AST.VText {
   return {
     type: 'VText',
     // @ts-expect-error Parent is not known yet
     parent: undefined,
     value,
+    leadingComment: leadingComment ?? null,
   };
 }
 
@@ -316,5 +329,23 @@ export function vFilter(
     callee,
     // @ts-expect-error Parent is not known yet
     parent: undefined,
+  };
+}
+
+/**
+ * Creates a new HtmlComment
+ * @param value The comment's inner value
+ * @param leadingComment Any comment directly before this one
+ * @public
+ */
+export function htmlComment(
+  value: string,
+  leadingComment?: AST.HtmlComment,
+): AST.HtmlComment {
+  return {
+    type: 'HtmlComment',
+    value,
+    leadingComment: leadingComment ?? null,
+    range: [-1, -1],
   };
 }
