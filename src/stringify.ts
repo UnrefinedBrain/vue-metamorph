@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-use-before-define */
 
-import * as recast from 'recast';
+import * as recast from 'recast-x';
 import * as AST from './ast';
 
 // https://www.w3.org/TR/2011/WD-html-markup-20110113/syntax.html#syntax-elements

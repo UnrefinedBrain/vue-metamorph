@@ -1,4 +1,4 @@
-import { builders, namedTypes, visit } from 'ast-types';
+import { builders, namedTypes, visit } from 'ast-types-x';
 import { isMatch } from 'lodash-es';
 import * as AST from './ast';
 

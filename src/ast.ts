@@ -1,5 +1,5 @@
-import { namedTypes } from 'ast-types';
-import { ExpressionKind, PatternKind, StatementKind } from 'ast-types/gen/kinds';
+import { namedTypes } from 'ast-types-x';
+import { ExpressionKind, PatternKind, StatementKind } from 'ast-types-x/gen/kinds';
 import { AST } from 'vue-eslint-parser';
 
 // Adapted from https://github.com/vuejs/vue-eslint-parser/blob/master/src/ast/nodes.ts
