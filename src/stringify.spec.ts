@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { builders as b } from 'ast-types-x';
 import * as builders from './builders';
-import { stringify } from './stringify';
+import { stringify, stringifyHtmlComment } from './stringify';
 
 describe('VEndTag', () => {
   it('should print an empty string', () => {
@@ -236,5 +236,28 @@ describe('VFilterSequenceExpression', () => {
     );
 
     expect(stringify(filter)).toBe('myValue | myFilter(arg1, arg2) | myOtherFilter');
+  });
+});
+
+describe('HtmlComment', () => {
+  it('should print an empty string if null', () => {
+    expect(stringifyHtmlComment(null)).toBe('');
+  });
+
+  it('should print a single comment', () => {
+    const comment = builders.htmlComment(' A comment ');
+    expect(stringifyHtmlComment(comment)).toBe('<!-- A comment -->');
+  });
+
+  it('should print all comments', () => {
+    const comment = builders.htmlComment(
+      ' 1 ',
+      builders.htmlComment(
+        ' 2 ',
+        builders.htmlComment(' 3 '),
+      ),
+    );
+
+    expect(stringifyHtmlComment(comment)).toBe('<!-- 3 --><!-- 2 --><!-- 1 -->');
   });
 });

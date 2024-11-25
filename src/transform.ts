@@ -61,7 +61,7 @@ function transformVueFile(
 
   const ms = new MagicString(workingCode);
   const { scriptASTs, sfcAST, styleASTs } = parseVue(workingCode);
-  const templateAst = sfcAST.templateBody?.parent as VDocumentFragment;
+  const templateAst = sfcAST.templateBody?.parent as unknown as VDocumentFragment;
   const originalTemplate = cloneDeep(templateAst);
 
   for (const codemod of codemods) {

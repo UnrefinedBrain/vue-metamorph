@@ -155,7 +155,7 @@ export function findManualMigrations(
   if (filename.endsWith('.vue')) {
     const { scriptASTs: scriptAsts, sfcAST: vueAst, styleASTs } = parseVue(code);
     scripts = scriptAsts;
-    template = vueAst.templateBody!.parent as AST.VDocumentFragment;
+    template = vueAst.templateBody!.parent as unknown as AST.VDocumentFragment;
     styles = styleASTs;
   } else if (getCssDialectForFilename(filename)) {
     styles = [parseCss(code, getCssDialectForFilename(filename)!)];

@@ -82,9 +82,11 @@ const codemod = {
 
 :::
 
-## Code Comment Preservation
+## HTML Code Comments
 
-Recast does a fairly decent job of preserving code comments in JavaScript and TypeScript, but at this time, HTML comments inside of modified `<template>` nodes will not be re-printed. Comments inside unchanged `<template>` nodes will not be affected.
+Certain `<template>` node types (`VExpressionContainer`, `VText`, `VStartTag`, `VEndTag`, `HtmlComment`) have a `leadingComment` property that contains a `HtmlComment` node that is attached to the node and will be printed directly prior to it.
+
+Note: a `VExpressionContainer`'s `leadingComment` will only be printed if the `VExpressionContainer` is a direct child of a `VElement`.
 
 ## Code Formatting
 

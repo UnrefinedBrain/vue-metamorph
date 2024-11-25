@@ -3,7 +3,7 @@ import * as recast from 'recast-x';
 import htmlParser from 'node-html-parser';
 import { VueProgram } from '../types';
 import { findAll } from '../ast-helpers';
-import { VDocumentFragment } from '../ast';
+import * as AST from '../ast';
 import { tsParser } from './typescript';
 import { getLangAttribute, isSupportedLang, parseCss } from './css';
 
@@ -24,15 +24,62 @@ export function parseVue(code: string) {
     sourceType: 'module',
   });
 
-  const scripts = findAll(sfcAST.templateBody!.parent as VDocumentFragment, {
+  const comments = (sfcAST.templateBody!.comments ?? [])
+    .map((token): AST.HtmlComment => ({
+      type: 'HtmlComment',
+      value: token.value,
+      range: token.range,
+      leadingComment: null,
+    }));
+
+  const canHaveLeadingComment: AST.HasLeadingComment[] = [...comments];
+  const positionLookup = new Map<number, AST.Node | AST.HtmlComment>();
+
+  vueParser.AST.traverseNodes(sfcAST.templateBody!.parent as vueParser.AST.VDocumentFragment, {
+    enterNode(node) {
+      const prev = positionLookup.get(node.range[0] - 1);
+      if (prev?.type === 'HtmlComment') {
+        (node as unknown as AST.HasLeadingComment).leadingComment = prev;
+      }
+
+      if (node.type === 'VText'
+        || node.type === 'VExpressionContainer'
+        || node.type === 'VEndTag'
+        || node.type === 'VStartTag'
+      ) {
+        canHaveLeadingComment.push(node as never);
+      }
+    },
+
+    leaveNode() {
+      // empty
+    },
+  });
+
+  comments.forEach((comment) => {
+    const [, end] = comment.range;
+    positionLookup.set(end - 1, comment);
+  });
+
+  canHaveLeadingComment.forEach((node) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const adjacentNode = positionLookup.get((node as any).range[0] - 1);
+    if (adjacentNode?.type === 'HtmlComment') {
+      node.leadingComment = adjacentNode;
+    } else {
+      node.leadingComment = null;
+    }
+  });
+
+  const scripts = findAll(sfcAST.templateBody!.parent as unknown as AST.VDocumentFragment, {
     type: 'VElement',
     name: 'script',
-  }) as vueParser.AST.VElement[];
+  }) as unknown as vueParser.AST.VElement[];
 
-  const styles = findAll(sfcAST.templateBody!.parent as VDocumentFragment, {
+  const styles = findAll(sfcAST.templateBody!.parent as unknown as AST.VDocumentFragment, {
     type: 'VElement',
     name: 'style',
-  }) as vueParser.AST.VElement[];
+  }) as unknown as vueParser.AST.VElement[];
 
   const scriptASTs = scripts
     .filter((el) => el.children.length > 0)
