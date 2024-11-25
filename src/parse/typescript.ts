@@ -8,6 +8,7 @@ const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
   allowImportExportEverywhere: true,
   allowReturnOutsideFunction: true,
   startLine: 1,
+  errorRecovery: true,
   tokens: true,
   ranges: true,
   sourceType: 'module',

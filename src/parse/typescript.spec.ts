@@ -13,4 +13,9 @@ describe('parseTs', () => {
     const ast = parseTs('const btn = () => <button>Hello</button>', true);
     expect(findFirst(ast, { type: 'JSXElement' })).not.toBeNull();
   });
+
+  it('should allow errors', () => {
+    const ast = parseTs('const a = 1; const a = 2;', false);
+    expect(ast).toBeDefined();
+  });
 });

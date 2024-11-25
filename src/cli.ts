@@ -207,9 +207,11 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
           await fs.writeFile(file, newCode.code);
         }
 
-        manualMigrationReports.push(
-          ...findManualMigrations(newCode.code, file, manualMigrationPlugins, opts),
-        );
+        if (manualMigrationPlugins.length > 0) {
+          manualMigrationReports.push(
+            ...findManualMigrations(newCode.code, file, manualMigrationPlugins, opts),
+          );
+        }
 
         const progressArgs = {
           stats,
