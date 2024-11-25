@@ -1,6 +1,6 @@
 {
   "name": "vue-metamorph",
-  "version": "3.2.3",
+  "version": "3.2.4",
   "description": "Codemod framework for Vue files",
   "keywords": [
     "codemod",
@@ -68,7 +68,7 @@
     "vue-metamorph": "link:"
   },
   "dependencies": {
-    "@babel/parser": "8.0.0-alpha.13",
+    "@babel/parser": "8.0.0-alpha.12",
     "ast-types-x": "1.18.0",
     "chalk": "^5.3.0",
     "cli-progress": "^3.12.0",

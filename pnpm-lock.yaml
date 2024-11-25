@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@babel/parser':
-        specifier: 8.0.0-alpha.13
-        version: 8.0.0-alpha.13
+        specifier: 8.0.0-alpha.12
+        version: 8.0.0-alpha.12
       ast-types-x:
         specifier: 1.18.0
         version: 1.18.0
@@ -221,35 +221,23 @@ packages:
     resolution: {integrity: sha512-4A/SCr/2KLd5jrtOMFzaKjVtAei3+2r/NChoBNoZ3EyP/+GlhoaEGoWOZUmFmoITP7zOJyHIMm+DYRd8o3PvHA==}
     engines: {node: '>=6.9.0'}
 
-  '@babel/helper-string-parser@8.0.0-alpha.13':
-    resolution: {integrity: sha512-YHapkEwMu3nqoikRQhUqPZXUjqRepotzlYww49FWObNaU+9CKYtOJkJBwfY9RmcFDsFqGeLNk+IUSWRPgwhujA==}
-    engines: {node: ^18.20.0 || ^20.17.0 || >=22.8.0}
-
   '@babel/helper-validator-identifier@7.25.9':
     resolution: {integrity: sha512-Ed61U6XJc3CVRfkERJWDz4dJwKe7iLmmJsbOGu9wSloNSFttHV0I8g6UAgb7qnK5ly5bGLPd4oXZlxCdANBOWQ==}
     engines: {node: '>=6.9.0'}
-
-  '@babel/helper-validator-identifier@8.0.0-alpha.13':
-    resolution: {integrity: sha512-/IZpaAHTp39t0YIZQT51w7xEAPVlEYA9YsxA4tUsveqjvkK47rc/teUWzhQnXKwMwWDiSnP9vLfxYCR2DomrWg==}
-    engines: {node: ^18.20.0 || ^20.17.0 || >=22.8.0}
 
   '@babel/parser@7.26.2':
     resolution: {integrity: sha512-DWMCZH9WA4Maitz2q21SRKHo9QXZxkDsbNZoVD62gusNtNBBqDg9i7uOhASfTfIGNzW+O+r7+jAlM8dwphcJKQ==}
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  '@babel/parser@8.0.0-alpha.13':
-    resolution: {integrity: sha512-b8jxzP/fDYLjByadJgnXutKZvjXJUIyf0bIWMUIX47jhtbgA3ZFPC0PByLlqD6rKhTbgvuGHZ0GQilMFL5EaOQ==}
-    engines: {node: ^18.20.0 || ^20.17.0 || >=22.8.0}
+  '@babel/parser@8.0.0-alpha.12':
+    resolution: {integrity: sha512-AzWmrp4uJ+DcXVH0uoUpJVhRqxNirC0BbXsZ82AQuVod41CoaV5G+cwcvtYusrIIxv7BIJb6ce0dQ9L0wAl1iA==}
+    engines: {node: ^18.20.0 || ^20.10.0 || >=21.0.0}
     hasBin: true
 
   '@babel/types@7.26.0':
     resolution: {integrity: sha512-Z/yiTPj+lDVnF7lWeKCIJzaIkI0vYO87dMpZ4bg4TDrFe4XXLFWL1TbXU27gBP3QccxV9mZICCrnjnYlJjXHOA==}
     engines: {node: '>=6.9.0'}
-
-  '@babel/types@8.0.0-alpha.13':
-    resolution: {integrity: sha512-Kt8oBPvsc0h5t06LfUPkBtkPk6t58FzCcpf4Qsjg142gEgaDwFcg+ZPeBCJySLqenk+ISUkdTXsvhbLXj74kIA==}
-    engines: {node: ^18.20.0 || ^20.17.0 || >=22.8.0}
 
   '@bcoe/v8-coverage@0.2.3':
     resolution: {integrity: sha512-0hYQ8SB4Db5zvZB4axdMHGwEaQjkZzFjQiN9LVYvIFB2nSUHW9tYpxWriPrWDASIxiaXax83REcLxuSdnGPZtw==}
@@ -3436,29 +3424,18 @@ snapshots:
 
   '@babel/helper-string-parser@7.25.9': {}
 
-  '@babel/helper-string-parser@8.0.0-alpha.13': {}
-
   '@babel/helper-validator-identifier@7.25.9': {}
-
-  '@babel/helper-validator-identifier@8.0.0-alpha.13': {}
 
   '@babel/parser@7.26.2':
     dependencies:
       '@babel/types': 7.26.0
 
-  '@babel/parser@8.0.0-alpha.13':
-    dependencies:
-      '@babel/types': 8.0.0-alpha.13
+  '@babel/parser@8.0.0-alpha.12': {}
 
   '@babel/types@7.26.0':
     dependencies:
       '@babel/helper-string-parser': 7.25.9
       '@babel/helper-validator-identifier': 7.25.9
-
-  '@babel/types@8.0.0-alpha.13':
-    dependencies:
-      '@babel/helper-string-parser': 8.0.0-alpha.13
-      '@babel/helper-validator-identifier': 8.0.0-alpha.13
 
   '@bcoe/v8-coverage@0.2.3': {}
 
