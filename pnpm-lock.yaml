@@ -74,7 +74,7 @@ importers:
         version: 7.26.0
       '@microsoft/api-documenter':
         specifier: ^7.25.3
-        version: 7.26.0(@types/node@22.10.1)
+        version: 7.26.1(@types/node@22.10.1)
       '@microsoft/api-extractor':
         specifier: ^7.47.0
         version: 7.48.0(@types/node@22.10.1)
@@ -623,8 +623,8 @@ packages:
   '@jridgewell/trace-mapping@0.3.25':
     resolution: {integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==}
 
-  '@microsoft/api-documenter@7.26.0':
-    resolution: {integrity: sha512-iI/Oj+vzHwD2YlsHCmw3I5nvunVWxL+F5B1GOBDn5yl2dZ5KOCoh1osOTl9uRDRR65ZGymIUO1EajMgjMZBdEw==}
+  '@microsoft/api-documenter@7.26.1':
+    resolution: {integrity: sha512-flh7iPXsA3hzn03iXQYLiq7dvhTiBagGjmf7lvTNGABjWAKJez7ABI5T7+1jzbXjF3Luy1LFzugecXz9tMBavw==}
     hasBin: true
 
   '@microsoft/api-extractor-model@7.30.0':
@@ -3704,7 +3704,7 @@ snapshots:
       '@jridgewell/resolve-uri': 3.1.2
       '@jridgewell/sourcemap-codec': 1.5.0
 
-  '@microsoft/api-documenter@7.26.0(@types/node@22.10.1)':
+  '@microsoft/api-documenter@7.26.1(@types/node@22.10.1)':
     dependencies:
       '@microsoft/api-extractor-model': 7.30.0(@types/node@22.10.1)
       '@microsoft/tsdoc': 0.15.1
