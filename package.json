@@ -79,7 +79,7 @@
     "lodash-es": "^4.17.21",
     "magic-string": "^0.30.10",
     "micromatch": "^4.0.8",
-    "node-html-parser": "^6.1.13",
+    "node-html-parser": "^7.0.1",
     "postcss": "^8.4.38",
     "postcss-less": "^6.0.0",
     "postcss-sass": "^0.5.0",
