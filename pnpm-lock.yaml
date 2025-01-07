@@ -116,7 +116,7 @@ importers:
         version: 18.0.0(@typescript-eslint/eslint-plugin@7.18.0(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.2))(eslint@8.57.1)(typescript@5.7.2))(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.2))(eslint-plugin-import@2.29.1(@typescript-eslint/parser@7.18.0(eslint@8.57.1)(typescript@5.7.2))(eslint@8.57.1))(eslint@8.57.1)
       rollup-plugin-visualizer:
         specifier: ^5.12.0
-        version: 5.13.1(rollup@4.28.0)
+        version: 5.14.0(rollup@4.28.0)
       tsup:
         specifier: ^8.1.0
         version: 8.3.5(@microsoft/api-extractor@7.48.1(@types/node@22.10.5))(postcss@8.4.49)(typescript@5.7.2)(yaml@2.4.5)
@@ -2800,8 +2800,8 @@ packages:
     deprecated: Rimraf versions prior to v4 are no longer supported
     hasBin: true
 
-  rollup-plugin-visualizer@5.13.1:
-    resolution: {integrity: sha512-vMg8i6BprL8aFm9DKvL2c8AwS8324EgymYQo9o6E26wgVvwMhsJxS37aNL6ZsU7X9iAcMYwdME7gItLfG5fwJg==}
+  rollup-plugin-visualizer@5.14.0:
+    resolution: {integrity: sha512-VlDXneTDaKsHIw8yzJAFWtrzguoJ/LnQ+lMpoVfYJ3jJF4Ihe5oYLAqLklIK/35lgUY+1yEzCkHyZ1j4A5w5fA==}
     engines: {node: '>=18'}
     hasBin: true
     peerDependencies:
@@ -6348,7 +6348,7 @@ snapshots:
     dependencies:
       glob: 7.2.3
 
-  rollup-plugin-visualizer@5.13.1(rollup@4.28.0):
+  rollup-plugin-visualizer@5.14.0(rollup@4.28.0):
     dependencies:
       open: 8.4.2
       picomatch: 4.0.2
