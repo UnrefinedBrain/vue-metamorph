@@ -63,7 +63,7 @@
     "rollup-plugin-visualizer": "^5.12.0",
     "tsup": "^8.1.0",
     "typescript": "^5.5.2",
-    "vitepress": "1.6.1",
+    "vitepress": "1.6.2",
     "vitest": "^3.0.1",
     "vue-metamorph": "link:"
   },
