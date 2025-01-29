@@ -1,6 +1,6 @@
 {
   "name": "vue-metamorph",
-  "version": "3.3.1",
+  "version": "3.3.2",
   "description": "Codemod framework for Vue files",
   "keywords": [
     "codemod",
