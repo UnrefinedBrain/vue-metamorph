@@ -13,10 +13,13 @@ import { getLangAttribute, isSupportedLang, parseCss } from './css';
  * @returns SFC AST and Script AST
  */
 export function parseVue(code: string) {
+  const extraTemplate = '\n<template></template>';
+  let neededExtraTemplate = false;
   if (!htmlParser.parse(code).querySelector('template')) {
     // hack: if no <template> is present, templateBody will be null
     // and we cannot access the VDocumentFragment
-    code += '\n<template></template>';
+    code += extraTemplate;
+    neededExtraTemplate = true;
   }
 
   const sfcAST = vueParser.parse(code, {
@@ -113,7 +116,13 @@ export function parseVue(code: string) {
       return parseCss(`/* METAMORPH_START */${blankLines}${code.slice(start, end)}`, lang);
     });
 
+  if (neededExtraTemplate) {
+    sfcAST.templateBody!.parent!.range[1] -= extraTemplate.length;
+    sfcAST.templateBody!.parent!.end! -= extraTemplate.length;
+  }
+
   return {
+    neededExtraTemplate,
     sfcAST,
     scriptASTs,
     styleASTs,

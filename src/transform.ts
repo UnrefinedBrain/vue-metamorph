@@ -60,7 +60,12 @@ function transformVueFile(
   const stats: [string, number][] = [];
 
   const ms = new MagicString(workingCode);
-  const { scriptASTs, sfcAST, styleASTs } = parseVue(workingCode);
+  const {
+    scriptASTs,
+    sfcAST,
+    styleASTs,
+    neededExtraTemplate,
+  } = parseVue(workingCode);
   const templateAst = sfcAST.templateBody?.parent as unknown as VDocumentFragment;
   const originalTemplate = cloneDeep(templateAst);
 
@@ -108,7 +113,8 @@ function transformVueFile(
           && node.name === 'style'
           && node.parent === templateAst
           && isSupportedLang(getLangAttribute(node))
-          && node.children[0]?.type === 'VText') {
+          && node.children[0]?.type === 'VText'
+          && styleASTs[styleIndex]) {
           const newCode = styleASTs[styleIndex]!
             .toString(syntaxMap[getLangAttribute(node)]!.stringify)
             .replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
@@ -191,6 +197,11 @@ function transformVueFile(
       });
 
       if (rootNodeChanged) {
+        if (neededExtraTemplate) {
+          templateAst.children = templateAst.children
+            .filter((el) => el.type !== 'VElement'
+              || el.name !== 'template');
+        }
         // the 'range' property is present, though the types don't include it for DX
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const [start, end] = (originalTemplate as any).range;
