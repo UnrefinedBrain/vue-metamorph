@@ -48,7 +48,7 @@
     "@babel/types": "^7.24.7",
     "@microsoft/api-documenter": "^7.25.3",
     "@microsoft/api-extractor": "^7.47.0",
-    "@shikijs/vitepress-twoslash": "^2.0.3",
+    "@shikijs/vitepress-twoslash": "^3.0.0",
     "@types/cli-progress": "^3.11.5",
     "@types/deep-diff": "^1.0.5",
     "@types/lodash-es": "^4.17.12",
