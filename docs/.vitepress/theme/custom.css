@@ -117,7 +117,3 @@
 .DocSearch {
   --docsearch-primary-color: var(--vp-c-brand-1) !important;
 }
-
-.dark .VPContent.is-home {
-  background: #1f5057;
-}
