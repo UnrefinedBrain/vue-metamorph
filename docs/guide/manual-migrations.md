@@ -6,7 +6,7 @@ The vue-metamorph CLI runs manual migration plugins *after* running codemod plug
 
 ::: danger
 
-Do not mutate the AST in manual migrations! vue-metamorph passes the same object to each manual migration plugin, so any mutations may cause incorrect results from later plugins.
+Do not mutate the AST in manual migrations! vue-metamorph passes the same AST object to each manual migration plugin, so any mutations may cause incorrect results from later plugins.
 
 :::
 
