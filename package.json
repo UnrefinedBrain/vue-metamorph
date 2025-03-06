@@ -87,6 +87,6 @@
     "postcss-styl": "^0.12.3",
     "recast-x": "1.0.5",
     "table": "^6.8.2",
-    "vue-eslint-parser": "^9.4.3"
+    "vue-eslint-parser": "^10.1.0"
   }
 }
