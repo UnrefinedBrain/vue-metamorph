@@ -663,3 +663,51 @@ it('should add a new <script>', () => {
     </script>"
   `);
 });
+
+it('should add a lang to a <script>', () => {
+  const input = `
+<template>
+  <div />
+</template>
+
+<script>
+export default {
+
+};
+</script>
+`;
+
+  const cm: CodemodPlugin = {
+    type: 'codemod',
+    name: 'add lang',
+    transform({ sfcAST, utils: { builders } }) {
+      if (sfcAST) {
+        for (const child of sfcAST.children) {
+          if (child.type === 'VElement' && child.name === 'script') {
+            child.startTag.attributes.push(
+              builders.vAttribute(
+                builders.vIdentifier('lang'),
+                builders.vLiteral('js'),
+              ),
+            );
+          }
+        }
+      }
+      return 1;
+    },
+  };
+
+  expect(transform(input, 'file.vue', [cm]).code).toMatchInlineSnapshot(`
+    "
+    <template>
+      <div />
+    </template>
+
+    <script lang="js">
+    export default {
+
+    };
+    </script>
+    "
+  `);
+});
