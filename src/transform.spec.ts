@@ -143,7 +143,7 @@ const stringLiteralPlugin: CodemodPlugin = {
       traverseScriptAST(script, {
         visitProperty(path) {
           if (path.node.value.type === 'Literal'
-          && typeof path.node.value.value === 'string') {
+            && typeof path.node.value.value === 'string') {
             path.node.value.value = 'transformed string';
           }
           return this.traverse(path);
@@ -629,4 +629,37 @@ export default {};
       </script>"
     `);
   });
+});
+
+it('should add a new <script>', () => {
+  const input = '<template><div /></template>';
+
+  const cm: CodemodPlugin = {
+    type: 'codemod',
+    name: 'new-script',
+    transform({ sfcAST, scriptASTs, utils: { builders } }) {
+      sfcAST?.children.push(
+        builders.vText('\n\n'),
+        builders.vElement('script', builders.vStartTag([], false), []),
+      );
+      scriptASTs.push(builders.program([
+        builders.expressionStatement(
+          builders.binaryExpression(
+            '+',
+            builders.identifier('a'),
+            builders.identifier('b'),
+          ),
+        ),
+      ]) as never);
+      return 1;
+    },
+  };
+
+  expect(transform(input, 'file.vue', [cm]).code).toMatchInlineSnapshot(`
+    "<template><div /></template>
+
+    <script>
+    a + b;
+    </script>"
+  `);
 });
