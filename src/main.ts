@@ -15,6 +15,11 @@ const builders = {
   ...templateBuilders,
 };
 
+/**
+ * @public
+ */
+export type Builders = typeof builders;
+
 export {
   builders,
   postcss,
