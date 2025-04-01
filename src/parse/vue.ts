@@ -87,7 +87,7 @@ export function parseVue(code: string) {
   const scriptASTs = scripts
     .filter((el) => el.children.length > 0)
     .map((el) => {
-    // hack: make the source locations line up properly
+      // hack: make the source locations line up properly
       const blankLines = '\n'.repeat(el.loc.start.line - 1);
       const start = el.children[0]?.range[0];
       const end = el.children[0]?.range[1];
