@@ -20,7 +20,9 @@ beforeEach(() => {
     stop: vi.fn(),
     update: vi.fn(),
   } as never;
-  cliProgressMock.SingleBar.mockImplementation(() => bar as never);
+  cliProgressMock.SingleBar.mockImplementation(function () {
+    return bar as never;
+  });
 
   handler = createDefaultCliProgressHandler(consoleMock);
 });
