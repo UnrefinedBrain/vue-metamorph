@@ -1,6 +1,7 @@
 import * as vueParser from 'vue-eslint-parser';
 import * as recast from 'recast-x';
 import htmlParser from 'node-html-parser';
+import type postcss from 'postcss';
 import { VueProgram } from '../types';
 import { findAll } from '../ast-helpers';
 import * as AST from '../ast';
@@ -12,7 +13,12 @@ import { getLangAttribute, isSupportedLang, parseCss } from './css';
  * @param code Source code
  * @returns SFC AST and Script AST
  */
-export function parseVue(code: string) {
+export function parseVue(code: string): {
+  neededExtraTemplate: boolean;
+  sfcAST: vueParser.AST.ESLintProgram;
+  scriptASTs: VueProgram[];
+  styleASTs: postcss.Root[];
+} {
   const extraTemplate = '\n<template></template>';
   let neededExtraTemplate = false;
   if (!htmlParser.parse(code).querySelector('template')) {
@@ -22,7 +28,7 @@ export function parseVue(code: string) {
     neededExtraTemplate = true;
   }
 
-  const sfcAST = vueParser.parse(code, {
+  const sfcAST: vueParser.AST.ESLintProgram = vueParser.parse(code, {
     parser: tsParser(true),
     sourceType: 'module',
   });
