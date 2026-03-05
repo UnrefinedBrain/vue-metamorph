@@ -223,9 +223,7 @@ export function vIdentifier(
  * @returns A new VLiteral node
  * @public
  */
-export function vLiteral(
-  value: AST.VLiteral['value'],
-): AST.VLiteral {
+export function vLiteral(value: AST.VLiteral['value']): AST.VLiteral {
   return {
     type: 'VLiteral',
     // @ts-expect-error Parent is not known yet
@@ -264,10 +262,7 @@ export function vStartTag(
  * @returns A new VText node
  * @public
  */
-export function vText(
-  value: AST.VText['value'],
-  leadingComment?: AST.HtmlComment,
-): AST.VText {
+export function vText(value: AST.VText['value'], leadingComment?: AST.HtmlComment): AST.VText {
   return {
     type: 'VText',
     // @ts-expect-error Parent is not known yet
@@ -283,9 +278,7 @@ export function vText(
  * @returns A VOnExpression node
  * @public
  */
-export function vOnExpression(
-  body: AST.VOnExpression['body'],
-): AST.VOnExpression {
+export function vOnExpression(body: AST.VOnExpression['body']): AST.VOnExpression {
   return {
     type: 'VOnExpression',
     // @ts-expect-error Parent is not known yet
@@ -338,10 +331,7 @@ export function vFilter(
  * @param leadingComment Any comment directly before this one
  * @public
  */
-export function htmlComment(
-  value: string,
-  leadingComment?: AST.HtmlComment,
-): AST.HtmlComment {
+export function htmlComment(value: string, leadingComment?: AST.HtmlComment): AST.HtmlComment {
   return {
     type: 'HtmlComment',
     value,

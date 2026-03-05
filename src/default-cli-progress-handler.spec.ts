@@ -1,8 +1,4 @@
-import {
-  vi, it, beforeEach,
-  expect,
-  type Mocked,
-} from 'vitest';
+import { vi, it, beforeEach, expect, type Mocked } from 'vitest';
 import cliProgress from 'cli-progress';
 import { createDefaultCliProgressHandler } from './default-cli-progress-handler';
 
@@ -105,13 +101,16 @@ it('should print errors', () => {
   handler({
     aborted: false,
     done: true,
-    errors: [{
-      filename: 'file1.ts',
-      error: new Error('file1 error'),
-    }, {
-      filename: 'file2.js',
-      error: new Error('file2 error'),
-    }],
+    errors: [
+      {
+        filename: 'file1.ts',
+        error: new Error('file1 error'),
+      },
+      {
+        filename: 'file2.js',
+        error: new Error('file2 error'),
+      },
+    ],
     filesProcessed: 1,
     filesRemaining: 0,
     manualMigrations: [],
@@ -120,8 +119,12 @@ it('should print errors', () => {
   });
 
   expect(consoleMock.log).toHaveBeenCalledWith(expect.stringContaining('errors:'));
-  expect(consoleMock.log).toHaveBeenCalledWith(expect.stringContaining('file1.ts:\nError: file1 error'));
-  expect(consoleMock.log).toHaveBeenCalledWith(expect.stringContaining('file2.js:\nError: file2 error'));
+  expect(consoleMock.log).toHaveBeenCalledWith(
+    expect.stringContaining('file1.ts:\nError: file1 error'),
+  );
+  expect(consoleMock.log).toHaveBeenCalledWith(
+    expect.stringContaining('file2.js:\nError: file2 error'),
+  );
 });
 
 it('should not print errors if there are 0 errors', () => {
@@ -169,22 +172,26 @@ it('should print manual migrations', () => {
     errors: [],
     filesProcessed: 1,
     filesRemaining: 0,
-    manualMigrations: [{
-      file: 'file1.js',
-      columnEnd: 12,
-      columnStart: 10,
-      lineEnd: 2,
-      lineStart: 1,
-      message: 'file1 message',
-      pluginName: 'plugin',
-      snippet: 'file1 snippet',
-    }],
+    manualMigrations: [
+      {
+        file: 'file1.js',
+        columnEnd: 12,
+        columnStart: 10,
+        lineEnd: 2,
+        lineStart: 1,
+        message: 'file1 message',
+        pluginName: 'plugin',
+        snippet: 'file1 snippet',
+      },
+    ],
     stats: {},
     totalFiles: 1,
   });
 
   expect(consoleMock.log).toHaveBeenCalledWith(expect.stringMatching(/manual migration/i));
-  expect(consoleMock.log).toHaveBeenCalledWith(expect.stringMatching(/file1\.js\s+1:10-2:12.+file1 message.+file1 snippet/gsi));
+  expect(consoleMock.log).toHaveBeenCalledWith(
+    expect.stringMatching(/file1\.js\s+1:10-2:12.+file1 message.+file1 snippet/gis),
+  );
 });
 
 it('should not print manual migrations if there are 0 manual migrations', () => {

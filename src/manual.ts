@@ -1,9 +1,7 @@
 import postcss from 'postcss';
 import * as AST from './ast';
 import { parseTs, parseVue } from './parse';
-import {
-  ManualMigrationPlugin, ReportFunction, VueProgram, utils,
-} from './types';
+import { ManualMigrationPlugin, ReportFunction, VueProgram, utils } from './types';
 import { getCssDialectForFilename, parseCss } from './parse/css';
 
 type SampleArgs = {
@@ -60,7 +58,8 @@ export function sample({
   const lastLineNumber = Math.min(codeLines.length, lineEnd + extra);
   const snippet = codeLines.slice(firstLineNumber, lastLineNumber);
 
-  const prefix = (n?: number) => `${String(n ?? '').padStart(String(lastLineNumber).length, ' ')} | `;
+  const prefix = (n?: number) =>
+    `${String(n ?? '').padStart(String(lastLineNumber).length, ' ')} | `;
 
   const lines: string[] = [];
 

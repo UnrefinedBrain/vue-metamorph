@@ -20,10 +20,7 @@ const builders = {
  */
 export type Builders = typeof builders;
 
-export {
-  builders,
-  postcss,
-};
+export { builders, postcss };
 
 export {
   /**
@@ -32,10 +29,7 @@ export {
   type Kinds,
 };
 
-export {
-  namedTypes,
-  visit as traverseScriptAST,
-} from 'ast-types-x';
+export { namedTypes, visit as traverseScriptAST } from 'ast-types-x';
 
 export {
   createVueMetamorphCli,
@@ -44,15 +38,9 @@ export {
   type ProgressCallback,
 } from './cli.js';
 
-export {
-  transform,
-  type TransformResult,
-} from './transform.js';
+export { transform, type TransformResult } from './transform.js';
 
-export {
-  findManualMigrations,
-  type ManualMigrationReport,
-} from './manual.js';
+export { findManualMigrations, type ManualMigrationReport } from './manual.js';
 
 export type {
   Plugin,
@@ -63,6 +51,4 @@ export type {
   ManualMigrationPluginContext,
 } from './types.js';
 
-export type {
-  AST,
-};
+export type { AST };

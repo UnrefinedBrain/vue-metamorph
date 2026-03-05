@@ -8,28 +8,28 @@ export const createDefaultCliProgressHandler = (console: {
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   log: (...args: any[]) => void;
 }) => {
-  const bar = new cliProgress.SingleBar({
-    format: '{bar} | {percentage}% | Processed {value} of {total} files. Errors: {errors}',
-    hideCursor: true,
-    fps: 60,
-  }, cliProgress.Presets.legacy);
+  const bar = new cliProgress.SingleBar(
+    {
+      format: '{bar} | {percentage}% | Processed {value} of {total} files. Errors: {errors}',
+      hideCursor: true,
+      fps: 60,
+    },
+    cliProgress.Presets.legacy,
+  );
 
-  const defaultCliProgressHandler: Exclude<CreateVueMetamorphCliOptions['onProgress'], undefined> = ({
-    aborted,
-    done,
-    filesProcessed,
-    totalFiles,
-    errors,
-    manualMigrations,
-    stats,
-  }) => {
+  const defaultCliProgressHandler: Exclude<
+    CreateVueMetamorphCliOptions['onProgress'],
+    undefined
+  > = ({ aborted, done, filesProcessed, totalFiles, errors, manualMigrations, stats }) => {
     if (filesProcessed === 0) {
       bar.start(totalFiles, 0, { errors: 0 });
     }
 
     if (aborted || done) {
       bar.stop();
-      console.log(`Processed ${filesProcessed} of ${totalFiles} matching files with ${errors.length} errors`);
+      console.log(
+        `Processed ${filesProcessed} of ${totalFiles} matching files with ${errors.length} errors`,
+      );
 
       // print errors
       if (errors.length > 0) {

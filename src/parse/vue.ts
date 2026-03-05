@@ -27,13 +27,14 @@ export function parseVue(code: string) {
     sourceType: 'module',
   });
 
-  const comments = (sfcAST.templateBody!.comments ?? [])
-    .map((token): AST.HtmlComment => ({
+  const comments = (sfcAST.templateBody!.comments ?? []).map(
+    (token): AST.HtmlComment => ({
       type: 'HtmlComment',
       value: token.value,
       range: token.range,
       leadingComment: null,
-    }));
+    }),
+  );
 
   const canHaveLeadingComment: AST.HasLeadingComment[] = [...comments];
   const positionLookup = new Map<number, AST.Node | AST.HtmlComment>();
@@ -45,10 +46,11 @@ export function parseVue(code: string) {
         (node as unknown as AST.HasLeadingComment).leadingComment = prev;
       }
 
-      if (node.type === 'VText'
-        || node.type === 'VExpressionContainer'
-        || node.type === 'VEndTag'
-        || node.type === 'VStartTag'
+      if (
+        node.type === 'VText' ||
+        node.type === 'VExpressionContainer' ||
+        node.type === 'VEndTag' ||
+        node.type === 'VStartTag'
       ) {
         canHaveLeadingComment.push(node as never);
       }
@@ -92,13 +94,21 @@ export function parseVue(code: string) {
       const start = el.children[0]?.range[0];
       const end = el.children[0]?.range[1];
 
-      const isJsx = el.startTag.attributes.some((attr) => !attr.directive && attr.key.rawName === 'lang' && attr.value && ['jsx', 'tsx'].includes(attr.value.value));
+      const isJsx = el.startTag.attributes.some(
+        (attr) =>
+          !attr.directive &&
+          attr.key.rawName === 'lang' &&
+          attr.value &&
+          ['jsx', 'tsx'].includes(attr.value.value),
+      );
 
       const ast = recast.parse(`/* METAMORPH_START */${blankLines}${code.slice(start, end)}`, {
         parser: tsParser(isJsx),
       }).program as VueProgram;
 
-      ast.isScriptSetup = el.startTag.attributes.some((attr) => !attr.directive && attr.key.rawName === 'setup');
+      ast.isScriptSetup = el.startTag.attributes.some(
+        (attr) => !attr.directive && attr.key.rawName === 'setup',
+      );
 
       return ast;
     });

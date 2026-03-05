@@ -1,7 +1,5 @@
 import MagicString from 'magic-string';
-import {
-  cloneDeep, get, uniqWith, isEqual,
-} from 'lodash-es';
+import { cloneDeep, get, uniqWith, isEqual } from 'lodash-es';
 import * as recast from 'recast-x';
 import deepDiff from 'deep-diff';
 import * as AST from './ast';
@@ -60,12 +58,7 @@ function transformVueFile(
   const stats: [string, number][] = [];
 
   const ms = new MagicString(workingCode);
-  const {
-    scriptASTs,
-    sfcAST,
-    styleASTs,
-    neededExtraTemplate,
-  } = parseVue(workingCode);
+  const { scriptASTs, sfcAST, styleASTs, neededExtraTemplate } = parseVue(workingCode);
   const templateAst = sfcAST.templateBody?.parent as unknown as VDocumentFragment;
   const originalTemplate = cloneDeep(templateAst);
 
@@ -89,35 +82,36 @@ function transformVueFile(
     let styleIndex = 0;
     AST.traverseNodes(templateAst as never, {
       enterNode(node) {
-        if (node.type === 'VElement'
-          && node.name === 'script'
-          && node.parent === templateAst
-          && scriptIndex < scriptASTs.length) {
+        if (
+          node.type === 'VElement' &&
+          node.name === 'script' &&
+          node.parent === templateAst &&
+          scriptIndex < scriptASTs.length
+        ) {
           const newCode = recast
             .print(scriptASTs[scriptIndex]!, recastOptions)
-            .code
-            .replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
+            .code.replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
 
           const text = `${newCode.startsWith('\n') ? '' : '\n'}${newCode}\n`;
           if (node.children[0]?.type === 'VText') {
             node.children[0].value = text;
           } else {
-            node.children.unshift(
-              vText(text),
-            );
+            node.children.unshift(vText(text));
           }
           scriptIndex++;
         }
 
-        if (node.type === 'VElement'
-          && node.name === 'style'
-          && node.parent === templateAst
-          && isSupportedLang(getLangAttribute(node))
-          && node.children[0]?.type === 'VText'
-          && styleASTs[styleIndex]) {
-          const newCode = styleASTs[styleIndex]!
-            .toString(syntaxMap[getLangAttribute(node)]!.stringify)
-            .replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
+        if (
+          node.type === 'VElement' &&
+          node.name === 'style' &&
+          node.parent === templateAst &&
+          isSupportedLang(getLangAttribute(node)) &&
+          node.children[0]?.type === 'VText' &&
+          styleASTs[styleIndex]
+        ) {
+          const newCode = styleASTs[styleIndex]!.toString(
+            syntaxMap[getLangAttribute(node)]!.stringify,
+          ).replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
 
           node.children.length = 0;
           node.children.push(vText(`${newCode.startsWith('\n') ? '' : '\n'}${newCode}`));
@@ -130,11 +124,7 @@ function transformVueFile(
       },
     });
 
-    const diff = deepDiff(
-      originalTemplate,
-      templateAst,
-      (_, name) => !!ignoreProperties[name],
-    );
+    const diff = deepDiff(originalTemplate, templateAst, (_, name) => !!ignoreProperties[name]);
 
     if (diff) {
       let rootNodeChanged = false;
@@ -147,7 +137,7 @@ function transformVueFile(
       };
 
       const changedNodes: ChangedNode[] = diff.map((p) => {
-        const path = [...p.path ?? []];
+        const path = [...(p.path ?? [])];
 
         // we want the path to the node, not the path to the changed property
         path.pop();
@@ -182,25 +172,21 @@ function transformVueFile(
           rootNodeChanged = true;
         }
 
-        const originalNode = rootNodeChanged
-          ? originalTemplate
-          : get(originalTemplate, path);
+        const originalNode = rootNodeChanged ? originalTemplate : get(originalTemplate, path);
 
         return {
           path,
           start: originalNode.range[0],
           end: originalNode.range[1],
-          node: path.length === 0
-            ? templateAst
-            : get(templateAst, path),
+          node: path.length === 0 ? templateAst : get(templateAst, path),
         };
       });
 
       if (rootNodeChanged) {
         if (neededExtraTemplate) {
-          templateAst.children = templateAst.children
-            .filter((el) => el.type !== 'VElement'
-              || el.name !== 'template');
+          templateAst.children = templateAst.children.filter(
+            (el) => el.type !== 'VElement' || el.name !== 'template',
+          );
         }
         // the 'range' property is present, though the types don't include it for DX
         // eslint-disable-next-line @typescript-eslint/no-explicit-any

@@ -4,12 +4,7 @@ import { CodemodPlugin, transform } from '../main';
 export const compatibleVBindCodemod: CodemodPlugin = {
   type: 'codemod',
   name: 'compatible-v-bind',
-  transform({
-    sfcAST,
-    utils: {
-      astHelpers,
-    },
-  }) {
+  transform({ sfcAST, utils: { astHelpers } }) {
     let transformCount = 0;
 
     if (sfcAST) {
@@ -24,9 +19,9 @@ export const compatibleVBindCodemod: CodemodPlugin = {
         });
 
         elements.forEach(({ startTag: { attributes } }) => {
-          const idx = attributes.findIndex((attr) => (
-            attr.key.type === 'VDirectiveKey' && attr.key.name.rawName === 'bind'
-          ));
+          const idx = attributes.findIndex(
+            (attr) => attr.key.type === 'VDirectiveKey' && attr.key.name.rawName === 'bind',
+          );
 
           if (idx > 0) {
             // @ts-expect-error ignore
@@ -51,7 +46,5 @@ test('bug 113', () => {
 <SitemapItem v-bind="passProps" :id="!isShow" />
 </template>`;
 
-  expect(
-    transform(source, 'file.vue', [compatibleVBindCodemod]).code,
-  ).toBe(expected);
+  expect(transform(source, 'file.vue', [compatibleVBindCodemod]).code).toBe(expected);
 });

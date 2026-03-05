@@ -14,17 +14,27 @@ export const syntaxMap: Record<string, typeof postcssScss> = {
 };
 
 export const isSupportedLang = (str: string) => !!syntaxMap[str];
-export const getLangAttribute = (el: AST.VElement) => el.startTag.attributes.find((attr): attr is AST.VAttribute => !attr.directive && attr.key.rawName === 'lang')?.value?.value ?? 'css';
+export const getLangAttribute = (el: AST.VElement) =>
+  el.startTag.attributes.find(
+    (attr): attr is AST.VAttribute => !attr.directive && attr.key.rawName === 'lang',
+  )?.value?.value ?? 'css';
 
 export const getCssDialectForFilename = (filename: string) => {
   switch (true) {
-    case filename.endsWith('.scss'): return 'scss';
-    case filename.endsWith('.sass'): return 'sass';
-    case filename.endsWith('.less'): return 'less';
-    case filename.endsWith('.css'): return 'css';
-    case filename.endsWith('.styl'): return 'stylus';
-    default: return null;
+    case filename.endsWith('.scss'):
+      return 'scss';
+    case filename.endsWith('.sass'):
+      return 'sass';
+    case filename.endsWith('.less'):
+      return 'less';
+    case filename.endsWith('.css'):
+      return 'css';
+    case filename.endsWith('.styl'):
+      return 'stylus';
+    default:
+      return null;
   }
 };
 
-export const parseCss = (code: string, dialect: string): postcss.Root => (syntaxMap[dialect] ?? postcss).parse(code);
+export const parseCss = (code: string, dialect: string): postcss.Root =>
+  (syntaxMap[dialect] ?? postcss).parse(code);

@@ -193,15 +193,14 @@ export interface VExpressionContainer extends HasParent, HasLeadingComment {
   type: 'VExpressionContainer';
   parent: VDocumentFragment | VElement | VDirective | VDirectiveKey;
   expression:
-  | ExpressionKind
-  | PatternKind
-  | VFilterSequenceExpression
-  | VForExpression
-  | VOnExpression
-  | VSlotScopeExpression
-  | VGenericExpression
-  | null;
-
+    | ExpressionKind
+    | PatternKind
+    | VFilterSequenceExpression
+    | VForExpression
+    | VOnExpression
+    | VSlotScopeExpression
+    | VGenericExpression
+    | null;
 }
 
 /**
@@ -320,10 +319,13 @@ export interface VStyleElement extends VElement {
 /**
  * @public
  */
-export const traverseNodes = (node: Node, visitor: {
-  enterNode?(node: Node, parent: Node | null): void;
-  leaveNode?(node: Node, parent: Node | null): void;
-}) => {
+export const traverseNodes = (
+  node: Node,
+  visitor: {
+    enterNode?(node: Node, parent: Node | null): void;
+    leaveNode?(node: Node, parent: Node | null): void;
+  },
+) => {
   const noop = () => {};
 
   // eslint-disable-next-line @typescript-eslint/ban-types

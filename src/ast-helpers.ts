@@ -4,10 +4,12 @@ import * as AST from './ast';
 
 type Matcher<T> = T extends { type: string }
   ? {
-    [key in Exclude<keyof T, 'type' | 'comments' | 'loc' | 'range'>]?: NonNullable<T[key]> extends (infer A)[]
-      ? Matcher<A>[]
-      : Matcher<T[key]>
-  } & { type: T['type'] }
+      [key in Exclude<keyof T, 'type' | 'comments' | 'loc' | 'range'>]?: NonNullable<
+        T[key]
+      > extends (infer A)[]
+        ? Matcher<A>[]
+        : Matcher<T[key]>;
+    } & { type: T['type'] }
   : T;
 
 /**
@@ -17,9 +19,10 @@ type Matcher<T> = T extends { type: string }
  * @returns The first matching node, or null if no matching node was found
  * @public
  */
-export function findFirst<
-  M extends Matcher<namedTypes.ASTNode | AST.Node>,
->(ast: AST.Node | namedTypes.ASTNode, matcher: M): (AST.Node & { type: M['type'] }) | null {
+export function findFirst<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
+  ast: AST.Node | namedTypes.ASTNode,
+  matcher: M,
+): (AST.Node & { type: M['type'] }) | null {
   let matchingNode: AST.Node | namedTypes.Node | null = null;
 
   if (ast.type.startsWith('V')) {
@@ -56,9 +59,10 @@ export function findFirst<
  * @returns - All matching nodes
  * @public
  */
-export function findAll<
-  M extends Matcher<namedTypes.ASTNode | AST.Node>,
->(ast: AST.Node | namedTypes.ASTNode, matcher: M): (AST.Node & { type: M['type'] })[] {
+export function findAll<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
+  ast: AST.Node | namedTypes.ASTNode,
+  matcher: M,
+): (AST.Node & { type: M['type'] })[] {
   const matchingNodes: (AST.Node | namedTypes.Node)[] = [];
 
   if (ast.type.startsWith('V')) {
@@ -127,12 +131,7 @@ export function createNamedImport(
 
   if (!decl) {
     // case 1: no existing import for this module
-    ast.body.unshift(
-      builders.importDeclaration(
-        [newSpecifier],
-        builders.literal(moduleSpecifier),
-      ),
-    );
+    ast.body.unshift(builders.importDeclaration([newSpecifier], builders.literal(moduleSpecifier)));
   } else if (decl && !decl.specifiers) {
     // case 2: existing import, but with no specifiers
     decl.specifiers = [newSpecifier];
@@ -147,8 +146,10 @@ export function createNamedImport(
         continue;
       }
 
-      if (specifier.imported.name === importName
-        && (localName === importName || specifier.local?.name === localName)) {
+      if (
+        specifier.imported.name === importName &&
+        (localName === importName || specifier.local?.name === localName)
+      ) {
         found = true;
       }
     }
@@ -173,18 +174,11 @@ export function createDefaultImport(
   importName: string,
 ) {
   const decl = findImportDeclaration(ast, moduleSpecifier);
-  const newSpecifier = builders.importDefaultSpecifier(
-    builders.identifier(importName),
-  );
+  const newSpecifier = builders.importDefaultSpecifier(builders.identifier(importName));
 
   if (!decl) {
     // case 1: no existing import for this module
-    ast.body.unshift(
-      builders.importDeclaration(
-        [newSpecifier],
-        builders.literal(moduleSpecifier),
-      ),
-    );
+    ast.body.unshift(builders.importDeclaration([newSpecifier], builders.literal(moduleSpecifier)));
   } else if (decl && !decl.specifiers) {
     // case 2: existing import, but with no specifiers
     decl.specifiers = [newSpecifier];
@@ -223,18 +217,11 @@ export function createNamespaceImport(
   namespaceName: string,
 ) {
   const decl = findImportDeclaration(ast, moduleSpecifier);
-  const newSpecifier = builders.importNamespaceSpecifier(
-    builders.identifier(namespaceName),
-  );
+  const newSpecifier = builders.importNamespaceSpecifier(builders.identifier(namespaceName));
 
   if (!decl) {
     // case 1: no existing import for this module
-    ast.body.unshift(
-      builders.importDeclaration(
-        [newSpecifier],
-        builders.literal(moduleSpecifier),
-      ),
-    );
+    ast.body.unshift(builders.importDeclaration([newSpecifier], builders.literal(moduleSpecifier)));
   } else if (decl && !decl.specifiers) {
     // case 2: existing import, but with no specifiers
     decl.specifiers = [newSpecifier];
@@ -284,21 +271,25 @@ export function findVueComponentOptions(
 
     visitCallExpression(path) {
       // defineComponent({ ... })
-      if (path.node.callee.type === 'Identifier'
-        && path.node.callee.name === 'defineComponent'
-        && path.node.arguments[0]?.type === 'ObjectExpression') {
+      if (
+        path.node.callee.type === 'Identifier' &&
+        path.node.callee.name === 'defineComponent' &&
+        path.node.arguments[0]?.type === 'ObjectExpression'
+      ) {
         objects.push(path.node.arguments[0]);
       }
 
       // Vue.extend({ ... })
       // Vue.component({ ... })
       // Vue.mixin({ ... })
-      if (path.node.callee.type === 'MemberExpression'
-        && path.node.callee.object.type === 'Identifier'
-        && path.node.callee.property.type === 'Identifier'
-        && path.node.callee.object.name === 'Vue'
-        && ['extend', 'component', 'mixin'].includes(path.node.callee.property.name)
-        && path.node.arguments[0]?.type === 'ObjectExpression') {
+      if (
+        path.node.callee.type === 'MemberExpression' &&
+        path.node.callee.object.type === 'Identifier' &&
+        path.node.callee.property.type === 'Identifier' &&
+        path.node.callee.object.name === 'Vue' &&
+        ['extend', 'component', 'mixin'].includes(path.node.callee.property.name) &&
+        path.node.arguments[0]?.type === 'ObjectExpression'
+      ) {
         objects.push(path.node.arguments[0]);
       }
 
@@ -306,9 +297,11 @@ export function findVueComponentOptions(
     },
 
     visitNewExpression(path) {
-      if (path.node.callee.type === 'Identifier'
-        && path.node.callee.name === 'Vue'
-        && path.node.arguments[0]?.type === 'ObjectExpression') {
+      if (
+        path.node.callee.type === 'Identifier' &&
+        path.node.callee.name === 'Vue' &&
+        path.node.arguments[0]?.type === 'ObjectExpression'
+      ) {
         objects.push(path.node.arguments[0]);
       }
 

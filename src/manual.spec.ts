@@ -23,13 +23,15 @@ export default {
       extraLines: 3,
     });
 
-    expect(output).toBe(`
+    expect(output).toBe(
+      `
 1 | <template>
   | ^^^^^^^^^^
 2 |   <div>
 3 |     Hello
 4 |   </div>
-`.trim());
+`.trim(),
+    );
   });
 
   it('should point to values on two lines', () => {
@@ -53,7 +55,8 @@ export default {
       extraLines: 3,
     });
 
-    expect(output).toBe(`
+    expect(output).toBe(
+      `
 1 | <template>
   | ^^^^^^^^^^
 2 |   <div>
@@ -61,7 +64,8 @@ export default {
 3 |     Hello
 4 |   </div>
 5 | </template>
-`.trim());
+`.trim(),
+    );
   });
 
   it('should point to values on more than two lines', () => {
@@ -83,7 +87,8 @@ export default {
       extraLines: 3,
     });
 
-    expect(output).toBe(`
+    expect(output).toBe(
+      `
 1 | <template>
   | ^^^^^^^^^^
 2 |   <div>
@@ -97,13 +102,15 @@ export default {
 6 | <script>
 7 | export default {
 8 | }
-`.trim());
+`.trim(),
+    );
   });
 });
 
 describe('find', () => {
   it('should find manual migrations in vue files', () => {
-    const res = findManualMigrations(`<template>
+    const res = findManualMigrations(
+      `<template>
   <div>
     Hello
   </div>
@@ -123,51 +130,50 @@ export default {
 .foo {
   color: red;
 }
-</style>`, 'file.vue', [{
-      name: 'test',
-      type: 'manual',
-      find({
-        scriptASTs,
-        sfcAST,
-        styleASTs,
-        report,
-        utils: { astHelpers },
-      }) {
-        if (scriptASTs[0]) {
-          const onCall = astHelpers.findFirst(scriptASTs[0], {
-            type: 'CallExpression',
-            callee: {
-              type: 'MemberExpression',
-              object: { type: 'ThisExpression' },
-              property: {
-                type: 'Identifier',
-                name: '$on',
-              },
-            },
-          });
-          if (onCall) {
-            report(onCall, 'Do the thing');
-          }
-        }
+</style>`,
+      'file.vue',
+      [
+        {
+          name: 'test',
+          type: 'manual',
+          find({ scriptASTs, sfcAST, styleASTs, report, utils: { astHelpers } }) {
+            if (scriptASTs[0]) {
+              const onCall = astHelpers.findFirst(scriptASTs[0], {
+                type: 'CallExpression',
+                callee: {
+                  type: 'MemberExpression',
+                  object: { type: 'ThisExpression' },
+                  property: {
+                    type: 'Identifier',
+                    name: '$on',
+                  },
+                },
+              });
+              if (onCall) {
+                report(onCall, 'Do the thing');
+              }
+            }
 
-        if (sfcAST) {
-          const div = astHelpers.findFirst(sfcAST, {
-            type: 'VElement',
-            rawName: 'div',
-          });
+            if (sfcAST) {
+              const div = astHelpers.findFirst(sfcAST, {
+                type: 'VElement',
+                rawName: 'div',
+              });
 
-          if (div) {
-            report(div, 'boop');
-          }
-        }
+              if (div) {
+                report(div, 'boop');
+              }
+            }
 
-        for (const style of styleASTs) {
-          style.walkDecls('color', (decl) => {
-            report(decl, 'Do not use color');
-          });
-        }
-      },
-    }]);
+            for (const style of styleASTs) {
+              style.walkDecls('color', (decl) => {
+                report(decl, 'Do not use color');
+              });
+            }
+          },
+        },
+      ],
+    );
 
     expect(res).toMatchInlineSnapshot(`
       [
@@ -232,30 +238,32 @@ export default {
       `import something from 'somewhere';
 console.log('')`,
       'file.js',
-      [{
-        name: 'console-logs',
-        type: 'manual',
-        find({
-          scriptASTs, sfcAST, filename, report, utils,
-        }) {
-          expect(sfcAST).toBeNull();
-          expect(filename).toBe('file.js');
-          expect(scriptASTs.length).toBe(1);
+      [
+        {
+          name: 'console-logs',
+          type: 'manual',
+          find({ scriptASTs, sfcAST, filename, report, utils }) {
+            expect(sfcAST).toBeNull();
+            expect(filename).toBe('file.js');
+            expect(scriptASTs.length).toBe(1);
 
-          utils.astHelpers.findAll(scriptASTs[0]!, {
-            type: 'CallExpression',
-            callee: {
-              type: 'MemberExpression',
-              object: {
-                type: 'Identifier',
-                name: 'console',
-              },
-            },
-          }).forEach((node) => {
-            report(node.callee, 'no console statements');
-          });
+            utils.astHelpers
+              .findAll(scriptASTs[0]!, {
+                type: 'CallExpression',
+                callee: {
+                  type: 'MemberExpression',
+                  object: {
+                    type: 'Identifier',
+                    name: 'console',
+                  },
+                },
+              })
+              .forEach((node) => {
+                report(node.callee, 'no console statements');
+              });
+          },
         },
-      }],
+      ],
     );
 
     expect(res).toMatchInlineSnapshot(`
@@ -282,31 +290,33 @@ console.log('')`,
         `import something from 'somewhere';
 console.log('')`,
         'file.js',
-        [{
-          name: 'console-logs',
-          type: 'manual',
-          find({
-            scriptASTs, sfcAST, filename, report, utils,
-          }) {
-            expect(sfcAST).toBeNull();
-            expect(filename).toBe('file.js');
-            expect(scriptASTs.length).toBe(1);
+        [
+          {
+            name: 'console-logs',
+            type: 'manual',
+            find({ scriptASTs, sfcAST, filename, report, utils }) {
+              expect(sfcAST).toBeNull();
+              expect(filename).toBe('file.js');
+              expect(scriptASTs.length).toBe(1);
 
-            utils.astHelpers.findAll(scriptASTs[0]!, {
-              type: 'CallExpression',
-              callee: {
-                type: 'MemberExpression',
-                object: {
-                  type: 'Identifier',
-                  name: 'console',
-                },
-              },
-            }).forEach(() => {
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              report({} as any, 'no console statements');
-            });
+              utils.astHelpers
+                .findAll(scriptASTs[0]!, {
+                  type: 'CallExpression',
+                  callee: {
+                    type: 'MemberExpression',
+                    object: {
+                      type: 'Identifier',
+                      name: 'console',
+                    },
+                  },
+                })
+                .forEach(() => {
+                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                  report({} as any, 'no console statements');
+                });
+            },
           },
-        }],
+        ],
       );
       expect.fail('should have thrown');
     } catch {
@@ -317,15 +327,19 @@ console.log('')`,
   it('edge case 1', () => {
     const code = 'export default someCall();\nexport default someCall(\n1,\n2,\n3);';
 
-    const ree = findManualMigrations(code, 'file.ts', [{
-      type: 'manual',
-      name: '',
-      find({ scriptASTs, report, utils: { astHelpers } }) {
-        for (const scriptAST of scriptASTs) {
-          astHelpers.findAll(scriptAST, { type: 'CallExpression' }).forEach((node) => report(node, 'aa'));
-        }
+    const ree = findManualMigrations(code, 'file.ts', [
+      {
+        type: 'manual',
+        name: '',
+        find({ scriptASTs, report, utils: { astHelpers } }) {
+          for (const scriptAST of scriptASTs) {
+            astHelpers
+              .findAll(scriptAST, { type: 'CallExpression' })
+              .forEach((node) => report(node, 'aa'));
+          }
+        },
       },
-    }]);
+    ]);
     expect(ree).toMatchInlineSnapshot(`
       [
         {

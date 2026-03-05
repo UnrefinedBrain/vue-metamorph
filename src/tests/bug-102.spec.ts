@@ -2,18 +2,15 @@ import { namedTypes as n } from 'ast-types-x';
 import { test, expect } from 'vitest';
 import { CodemodPlugin, AST, transform } from '../main';
 
-const checkKeyProp = (node: AST.VAttribute | AST.VDirective) => (
-  node.key.type === 'VDirectiveKey' && node.key.argument?.type === 'VIdentifier' && node.key.argument?.name === 'key'
-);
+const checkKeyProp = (node: AST.VAttribute | AST.VDirective) =>
+  node.key.type === 'VDirectiveKey' &&
+  node.key.argument?.type === 'VIdentifier' &&
+  node.key.argument?.name === 'key';
 
 export const vueRequireVForKeyCodemod: CodemodPlugin = {
   type: 'codemod',
   name: 'vue-require-v-for-key',
-  transform({
-    sfcAST, utils: {
-      traverseTemplateAST, builders,
-    },
-  }) {
+  transform({ sfcAST, utils: { traverseTemplateAST, builders } }) {
     let transformCount = 0;
 
     function fix(hostElement: AST.VElement, directive: AST.VDirective, keyPrefix?: string) {
@@ -39,14 +36,17 @@ export const vueRequireVForKeyCodemod: CodemodPlugin = {
 
         hostElement.startTag.attributes.push(
           builders.vDirective(
-            builders.vDirectiveKey(builders.vIdentifier('bind', ':'), builders.vIdentifier('key', 'key')),
+            builders.vDirectiveKey(
+              builders.vIdentifier('bind', ':'),
+              builders.vIdentifier('key', 'key'),
+            ),
             builders.vExpressionContainer(
               keyPrefix
                 ? builders.binaryExpression(
-                  '+',
-                  builders.literal(keyPrefix),
-                  builders.identifier(indexIdentifier!.name),
-                )
+                    '+',
+                    builders.literal(keyPrefix),
+                    builders.identifier(indexIdentifier!.name),
+                  )
                 : builders.identifier(indexIdentifier!.name),
             ),
           ),
@@ -63,7 +63,8 @@ export const vueRequireVForKeyCodemod: CodemodPlugin = {
             const directive = (node.parent as AST.VDirectiveKey).parent;
             const hostElement = node.parent.parent.parent.parent as AST.VElement;
 
-            const isReservedTag = hostElement.rawName === 'template' || hostElement.rawName === 'slot';
+            const isReservedTag =
+              hostElement.rawName === 'template' || hostElement.rawName === 'slot';
 
             if (isReservedTag) {
               hostElement.children

@@ -39,16 +39,14 @@ const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
         proposal: 'fsharp',
       },
     ],
-    [
-      'recordAndTuple',
-    ],
+    ['recordAndTuple'],
     'throwExpressions',
     'topLevelAwait',
     'typescript',
     'v8intrinsic',
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...isJsx ? ['jsx'] as any[] : [],
+    ...(isJsx ? (['jsx'] as any[]) : []),
   ],
 });
 

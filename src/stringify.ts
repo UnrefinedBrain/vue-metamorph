@@ -72,7 +72,8 @@ export function stringifyVDirectiveKey(node: AST.VDirectiveKey): string {
       }
 
       // @ts-expect-error We shouldn't hit this case if the types are correct
-      default: throw new Error(`Unexpected argument type: ${node.argument.type}`);
+      default:
+        throw new Error(`Unexpected argument type: ${node.argument.type}`);
     }
   }
 
@@ -90,9 +91,7 @@ export function stringifyVLiteral(node: AST.VLiteral): string {
 }
 
 export function stringifyVAttribute(node: AST.VAttribute | AST.VDirective): string {
-  let str = node.directive
-    ? stringifyVDirectiveKey(node.key)
-    : node.key.rawName;
+  let str = node.directive ? stringifyVDirectiveKey(node.key) : node.key.rawName;
 
   if (node.value) {
     if (node.value.type === 'VLiteral') {
@@ -155,11 +154,13 @@ export function stringifyVExpressionContainer(node: AST.VExpressionContainer): s
     return '';
   }
 
-  if (node.expression.type === 'VSlotScopeExpression'
-    || node.expression.type === 'VForExpression'
-    || node.expression.type === 'VOnExpression'
-    || node.expression.type === 'VFilterSequenceExpression'
-    || node.expression.type === 'VGenericExpression') {
+  if (
+    node.expression.type === 'VSlotScopeExpression' ||
+    node.expression.type === 'VForExpression' ||
+    node.expression.type === 'VOnExpression' ||
+    node.expression.type === 'VFilterSequenceExpression' ||
+    node.expression.type === 'VGenericExpression'
+  ) {
     return stringify(node.expression);
   }
 
@@ -190,9 +191,7 @@ export function stringifyVForExpression(node: AST.VForExpression): string {
     str += '(';
   }
 
-  str += node.left
-    .map(stringifyWithRecast)
-    .join(', ');
+  str += node.left.map(stringifyWithRecast).join(', ');
 
   if (multiple) {
     str += ')';
@@ -238,21 +237,37 @@ export function stringifyHtmlComment(node: AST.HtmlComment | null) {
 
 export function stringify(node: AST.Node): string {
   switch (node.type) {
-    case 'VAttribute': return stringifyVAttribute(node);
-    case 'VDirectiveKey': return stringifyVDirectiveKey(node);
-    case 'VElement': return stringifyVElement(node);
-    case 'VEndTag': return stringifyVEndTag(node);
-    case 'VExpressionContainer': return stringifyVExpressionContainer(node);
-    case 'VIdentifier': return stringifyVIdentifier(node);
-    case 'VLiteral': return stringifyVLiteral(node);
-    case 'VStartTag': return stringifyVStartTag(node);
-    case 'VText': return stringifyVText(node);
-    case 'VForExpression': return stringifyVForExpression(node);
-    case 'VOnExpression': return stringifyVOnExpression(node);
-    case 'VSlotScopeExpression': return stringifyVSlotScopeExpression(node);
-    case 'VFilterSequenceExpression': return stringifyVFilterSequenceExpression(node);
-    case 'VDocumentFragment': return stringifyVDocumentFragment(node);
-    case 'VGenericExpression': return stringifyVGenericExpression(node);
-    default: return stringifyWithRecast(node);
+    case 'VAttribute':
+      return stringifyVAttribute(node);
+    case 'VDirectiveKey':
+      return stringifyVDirectiveKey(node);
+    case 'VElement':
+      return stringifyVElement(node);
+    case 'VEndTag':
+      return stringifyVEndTag(node);
+    case 'VExpressionContainer':
+      return stringifyVExpressionContainer(node);
+    case 'VIdentifier':
+      return stringifyVIdentifier(node);
+    case 'VLiteral':
+      return stringifyVLiteral(node);
+    case 'VStartTag':
+      return stringifyVStartTag(node);
+    case 'VText':
+      return stringifyVText(node);
+    case 'VForExpression':
+      return stringifyVForExpression(node);
+    case 'VOnExpression':
+      return stringifyVOnExpression(node);
+    case 'VSlotScopeExpression':
+      return stringifyVSlotScopeExpression(node);
+    case 'VFilterSequenceExpression':
+      return stringifyVFilterSequenceExpression(node);
+    case 'VDocumentFragment':
+      return stringifyVDocumentFragment(node);
+    case 'VGenericExpression':
+      return stringifyVGenericExpression(node);
+    default:
+      return stringifyWithRecast(node);
   }
 }

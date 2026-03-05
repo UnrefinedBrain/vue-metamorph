@@ -11,13 +11,9 @@ const plugin: CodemodPlugin = {
       script?.startTag.attributes.push(builders.vAttribute(builders.vIdentifier('setup'), null));
 
       sfcAST.children.push(
-        builders.vElement(
-          'style',
-          builders.vStartTag([], false),
-          [
-            builders.vText('\n.red {\n  color: red;\n}\n'),
-          ],
-        ),
+        builders.vElement('style', builders.vStartTag([], false), [
+          builders.vText('\n.red {\n  color: red;\n}\n'),
+        ]),
       );
     }
     return 1;

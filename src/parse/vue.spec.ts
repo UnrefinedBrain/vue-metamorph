@@ -30,7 +30,9 @@ describe('parseVue', () => {
   });
 
   it('should parse jsx', () => {
-    const ast = parseVue('<script setup lang="jsx">\nconst btn = () => <button>Hello</button>\n</script>');
+    const ast = parseVue(
+      '<script setup lang="jsx">\nconst btn = () => <button>Hello</button>\n</script>',
+    );
     expect(findFirst(ast.scriptASTs[0]!, { type: 'JSXElement' })).not.toBeNull();
   });
 
@@ -47,22 +49,30 @@ describe('parseVue', () => {
   <!-- before VEndTag --></div>
 </template>
 `);
-    expect(findFirst(ast.sfcAST.templateBody as never, {
-      type: 'VText',
-    })?.leadingComment?.value).toBe(' before VText ');
+    expect(
+      findFirst(ast.sfcAST.templateBody as never, {
+        type: 'VText',
+      })?.leadingComment?.value,
+    ).toBe(' before VText ');
 
-    expect(findFirst(ast.sfcAST.templateBody as never, {
-      type: 'VElement',
-      name: 'div',
-    })?.startTag.leadingComment?.value).toBe(' before VStartTag ');
+    expect(
+      findFirst(ast.sfcAST.templateBody as never, {
+        type: 'VElement',
+        name: 'div',
+      })?.startTag.leadingComment?.value,
+    ).toBe(' before VStartTag ');
 
-    expect(findFirst(ast.sfcAST.templateBody as never, {
-      type: 'VExpressionContainer',
-    })?.leadingComment?.value).toBe(' before VExpressionContainer ');
+    expect(
+      findFirst(ast.sfcAST.templateBody as never, {
+        type: 'VExpressionContainer',
+      })?.leadingComment?.value,
+    ).toBe(' before VExpressionContainer ');
 
-    expect(findFirst(ast.sfcAST.templateBody as never, {
-      type: 'VElement',
-      name: 'div',
-    })?.endTag?.leadingComment?.value).toBe(' before VEndTag ');
+    expect(
+      findFirst(ast.sfcAST.templateBody as never, {
+        type: 'VElement',
+        name: 'div',
+      })?.endTag?.leadingComment?.value,
+    ).toBe(' before VEndTag ');
   });
 });

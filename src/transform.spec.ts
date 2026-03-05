@@ -63,7 +63,8 @@ export default defineComponent({
 </style>
 `;
 
-const example2 = `<script setup lang="ts" generic="T extends string">const someRef = ref('my string');
+const example2 =
+  `<script setup lang="ts" generic="T extends string">const someRef = ref('my string');
 </script>
 
 <template>
@@ -116,12 +117,7 @@ const stringLiteralPlugin: CodemodPlugin = {
     scriptASTs,
     sfcAST,
     styleASTs,
-    utils: {
-      traverseScriptAST,
-      traverseTemplateAST,
-      builders,
-      astHelpers,
-    },
+    utils: { traverseScriptAST, traverseTemplateAST, builders, astHelpers },
   }) {
     if (!sfcAST) {
       return 0;
@@ -132,18 +128,19 @@ const stringLiteralPlugin: CodemodPlugin = {
     for (const style of styleASTs) {
       style.walkDecls('color', (decl) => {
         decl.important = true;
-        decl.after(postcss.decl({
-          prop: 'background-color',
-          value: 'black',
-        }));
+        decl.after(
+          postcss.decl({
+            prop: 'background-color',
+            value: 'black',
+          }),
+        );
       });
     }
 
     for (const script of scriptASTs) {
       traverseScriptAST(script, {
         visitProperty(path) {
-          if (path.node.value.type === 'Literal'
-            && typeof path.node.value.value === 'string') {
+          if (path.node.value.type === 'Literal' && typeof path.node.value.value === 'string') {
             path.node.value.value = 'transformed string';
           }
           return this.traverse(path);
@@ -154,12 +151,7 @@ const stringLiteralPlugin: CodemodPlugin = {
     traverseTemplateAST(sfcAST, {
       enterNode(node) {
         if (node.type === 'VElement' && node.rawName === 'script') {
-          node.startTag.attributes.push(
-            builders.vAttribute(
-              builders.vIdentifier('setup'),
-              null,
-            ),
-          );
+          node.startTag.attributes.push(builders.vAttribute(builders.vIdentifier('setup'), null));
 
           count++;
         }
@@ -167,12 +159,7 @@ const stringLiteralPlugin: CodemodPlugin = {
           count++;
           node.rawName = 'strong';
 
-          node.startTag.attributes.push(
-            builders.vAttribute(
-              builders.vIdentifier('hi'),
-              null,
-            ),
-          );
+          node.startTag.attributes.push(builders.vAttribute(builders.vIdentifier('hi'), null));
         }
       },
       leaveNode() {
@@ -180,10 +167,11 @@ const stringLiteralPlugin: CodemodPlugin = {
       },
     });
 
-    astHelpers.findAll(sfcAST, {
-      type: 'VElement',
-      name: 'custom',
-    })
+    astHelpers
+      .findAll(sfcAST, {
+        type: 'VElement',
+        name: 'custom',
+      })
       .forEach((element) => {
         if (element.children.length === 0 && element.startTag.selfClosing) {
           element.startTag.selfClosing = false;
@@ -340,22 +328,28 @@ describe('transform', () => {
   $variable= 1234
   color green
 `;
-    expect(transform(input, 'file.styl', [{
-      name: 'test',
-      type: 'codemod',
-      transform({ styleASTs }) {
-        for (const ast of styleASTs) {
-          ast.walkDecls('color', (decl) => {
-            decl.after(postcss.decl({
-              prop: 'background-color',
-              value: 'black',
-            }));
-          });
-        }
+    expect(
+      transform(input, 'file.styl', [
+        {
+          name: 'test',
+          type: 'codemod',
+          transform({ styleASTs }) {
+            for (const ast of styleASTs) {
+              ast.walkDecls('color', (decl) => {
+                decl.after(
+                  postcss.decl({
+                    prop: 'background-color',
+                    value: 'black',
+                  }),
+                );
+              });
+            }
 
-        return 1;
-      },
-    }]).code).toMatchInlineSnapshot(`
+            return 1;
+          },
+        },
+      ]).code,
+    ).toMatchInlineSnapshot(`
       "
       .className
         $variable= 1234
@@ -373,9 +367,10 @@ describe('transform', () => {
       transform({ scriptASTs, utils }) {
         let count = 0;
         for (const scriptAST of scriptASTs) {
-          utils.astHelpers.findAll(scriptAST, {
-            type: 'JSXElement',
-          })
+          utils.astHelpers
+            .findAll(scriptAST, {
+              type: 'JSXElement',
+            })
             .forEach((el) => {
               if (el.openingElement.name.type === 'JSXIdentifier') {
                 el.openingElement.name.name = 'div';
@@ -516,15 +511,8 @@ export default {};
           sfcAST.children.push(
             builders.vElement(
               'script',
-              builders.vStartTag([
-                builders.vAttribute(
-                  builders.vIdentifier('setup'),
-                  null,
-                ),
-              ], false),
-              [
-                builders.vText('\nconst { t } = useI18n();\n'),
-              ],
+              builders.vStartTag([builders.vAttribute(builders.vIdentifier('setup'), null)], false),
+              [builders.vText('\nconst { t } = useI18n();\n')],
             ),
           );
 
@@ -568,42 +556,31 @@ export default {};
           sfcAST.children.push(
             builders.vElement(
               'script',
-              builders.vStartTag([
-                builders.vAttribute(
-                  builders.vIdentifier('setup'),
-                  null,
-                ),
-              ], false),
+              builders.vStartTag([builders.vAttribute(builders.vIdentifier('setup'), null)], false),
               [],
             ),
           );
 
           scriptASTs.push(
             builders.program([
-              builders.variableDeclaration(
-                'const',
-                [
-                  builders.variableDeclarator(
-                    builders.objectPattern([
-                      (() => {
-                        const prop = builders.property(
-                          'init',
-                          builders.identifier('t'),
-                          builders.identifier('t'),
-                        );
+              builders.variableDeclaration('const', [
+                builders.variableDeclarator(
+                  builders.objectPattern([
+                    (() => {
+                      const prop = builders.property(
+                        'init',
+                        builders.identifier('t'),
+                        builders.identifier('t'),
+                      );
 
-                        prop.shorthand = true;
+                      prop.shorthand = true;
 
-                        return prop;
-                      })(),
-                    ]),
-                    builders.callExpression(
-                      builders.identifier('useI18n'),
-                      [],
-                    ),
-                  ),
-                ],
-              ),
+                      return prop;
+                    })(),
+                  ]),
+                  builders.callExpression(builders.identifier('useI18n'), []),
+                ),
+              ]),
             ]) as never,
           );
 
@@ -642,15 +619,13 @@ it('should add a new <script>', () => {
         builders.vText('\n\n'),
         builders.vElement('script', builders.vStartTag([], false), []),
       );
-      scriptASTs.push(builders.program([
-        builders.expressionStatement(
-          builders.binaryExpression(
-            '+',
-            builders.identifier('a'),
-            builders.identifier('b'),
+      scriptASTs.push(
+        builders.program([
+          builders.expressionStatement(
+            builders.binaryExpression('+', builders.identifier('a'), builders.identifier('b')),
           ),
-        ),
-      ]) as never);
+        ]) as never,
+      );
       return 1;
     },
   };
@@ -685,10 +660,7 @@ export default {
         for (const child of sfcAST.children) {
           if (child.type === 'VElement' && child.name === 'script') {
             child.startTag.attributes.push(
-              builders.vAttribute(
-                builders.vIdentifier('lang'),
-                builders.vLiteral('js'),
-              ),
+              builders.vAttribute(builders.vIdentifier('lang'), builders.vLiteral('js')),
             );
           }
         }

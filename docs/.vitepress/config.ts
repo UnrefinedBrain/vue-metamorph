@@ -12,18 +12,18 @@ export default defineConfig({
   cleanUrls: true,
 
   markdown: {
-
-    codeTransformers: [
-      transformerTwoslash(),
-    ],
+    codeTransformers: [transformerTwoslash()],
   },
 
   head: [
-    ['link', {
-      rel: 'icon',
-      type: 'image/x-icon',
-      href: '/favicon.ico',
-    }],
+    [
+      'link',
+      {
+        rel: 'icon',
+        type: 'image/x-icon',
+        href: '/favicon.ico',
+      },
+    ],
   ],
 
   themeConfig: {

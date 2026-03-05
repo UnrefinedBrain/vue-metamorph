@@ -11,18 +11,13 @@ describe('VEndTag', () => {
 
 describe('VDirectiveKey', () => {
   it('should print with no shorthand', () => {
-    const node = builders.vDirectiveKey(
-      builders.vIdentifier('foo', 'foo'),
-    );
+    const node = builders.vDirectiveKey(builders.vIdentifier('foo', 'foo'));
 
     expect(stringify(node)).toBe('v-foo');
   });
 
   it('should print with no shorthand, with a static argument', () => {
-    const node = builders.vDirectiveKey(
-      builders.vIdentifier('foo'),
-      builders.vIdentifier('bar'),
-    );
+    const node = builders.vDirectiveKey(builders.vIdentifier('foo'), builders.vIdentifier('bar'));
 
     expect(stringify(node)).toBe('v-foo:bar');
   });
@@ -37,14 +32,10 @@ describe('VDirectiveKey', () => {
   });
 
   it('should print with a static argument and modifiers', () => {
-    const node = builders.vDirectiveKey(
-      builders.vIdentifier('foo'),
-      builders.vIdentifier('bar'),
-      [
-        builders.vIdentifier('baz'),
-        builders.vIdentifier('qux'),
-      ],
-    );
+    const node = builders.vDirectiveKey(builders.vIdentifier('foo'), builders.vIdentifier('bar'), [
+      builders.vIdentifier('baz'),
+      builders.vIdentifier('qux'),
+    ]);
 
     expect(stringify(node)).toBe('v-foo:bar.baz.qux');
   });
@@ -102,10 +93,7 @@ describe('VAttribute', () => {
   describe('VDirective', () => {
     it('should print an attribute without a value', () => {
       const node = builders.vDirective(
-        builders.vDirectiveKey(
-          builders.vIdentifier('foo'),
-          null,
-        ),
+        builders.vDirectiveKey(builders.vIdentifier('foo'), null),
         null,
       );
 
@@ -114,12 +102,8 @@ describe('VAttribute', () => {
 
     it('should print an attribute with a value', () => {
       const node = builders.vDirective(
-        builders.vDirectiveKey(
-          builders.vIdentifier('foo'),
-        ),
-        builders.vExpressionContainer(
-          b.identifier('bar'),
-        ),
+        builders.vDirectiveKey(builders.vIdentifier('foo')),
+        builders.vExpressionContainer(b.identifier('bar')),
       );
 
       expect(stringify(node)).toBe('v-foo="bar"');
@@ -128,19 +112,13 @@ describe('VAttribute', () => {
 
   describe('VAttribute', () => {
     it('should print an attribute without a value', () => {
-      const node = builders.vAttribute(
-        builders.vIdentifier('foo'),
-        null,
-      );
+      const node = builders.vAttribute(builders.vIdentifier('foo'), null);
 
       expect(stringify(node)).toBe('foo');
     });
 
     it('should print an attribute with a value', () => {
-      const node = builders.vAttribute(
-        builders.vIdentifier('foo'),
-        builders.vLiteral('bar'),
-      );
+      const node = builders.vAttribute(builders.vIdentifier('foo'), builders.vLiteral('bar'));
 
       expect(stringify(node)).toBe('foo="bar"');
     });
@@ -177,14 +155,15 @@ describe('VElement', () => {
   it('should print a self-closing element', () => {
     const node = builders.vElement(
       'div',
-      builders.vStartTag([
-        builders.vDirective(
-          builders.vDirectiveKey(builders.vIdentifier('if')),
-          builders.vExpressionContainer(
-            b.identifier('someCondition'),
+      builders.vStartTag(
+        [
+          builders.vDirective(
+            builders.vDirectiveKey(builders.vIdentifier('if')),
+            builders.vExpressionContainer(b.identifier('someCondition')),
           ),
-        ),
-      ], true),
+        ],
+        true,
+      ),
       [],
     );
 
@@ -194,14 +173,15 @@ describe('VElement', () => {
   it('should print a void element', () => {
     const node = builders.vElement(
       'br',
-      builders.vStartTag([
-        builders.vDirective(
-          builders.vDirectiveKey(builders.vIdentifier('if')),
-          builders.vExpressionContainer(
-            b.identifier('someCondition'),
+      builders.vStartTag(
+        [
+          builders.vDirective(
+            builders.vDirectiveKey(builders.vIdentifier('if')),
+            builders.vExpressionContainer(b.identifier('someCondition')),
           ),
-        ),
-      ], true),
+        ],
+        true,
+      ),
       [],
     );
 
@@ -209,17 +189,9 @@ describe('VElement', () => {
   });
 
   it('should print an element with children', () => {
-    const node = builders.vElement(
-      'Foo',
-      builders.vStartTag([], false),
-      [
-        builders.vElement(
-          'span',
-          builders.vStartTag([], false),
-          [builders.vText('Hello')],
-        ),
-      ],
-    );
+    const node = builders.vElement('Foo', builders.vStartTag([], false), [
+      builders.vElement('span', builders.vStartTag([], false), [builders.vText('Hello')]),
+    ]);
 
     expect(stringify(node)).toBe('<Foo><span>Hello</span></Foo>');
   });
@@ -227,13 +199,10 @@ describe('VElement', () => {
 
 describe('VFilterSequenceExpression', () => {
   it('should print filter args', () => {
-    const filter = builders.vFilterSequenceExpression(
-      b.identifier('myValue'),
-      [
-        builders.vFilter(b.identifier('myFilter'), [b.identifier('arg1'), b.identifier('arg2')]),
-        builders.vFilter(b.identifier('myOtherFilter'), []),
-      ],
-    );
+    const filter = builders.vFilterSequenceExpression(b.identifier('myValue'), [
+      builders.vFilter(b.identifier('myFilter'), [b.identifier('arg1'), b.identifier('arg2')]),
+      builders.vFilter(b.identifier('myOtherFilter'), []),
+    ]);
 
     expect(stringify(filter)).toBe('myValue | myFilter(arg1, arg2) | myOtherFilter');
   });
@@ -252,10 +221,7 @@ describe('HtmlComment', () => {
   it('should print all comments', () => {
     const comment = builders.htmlComment(
       ' 1 ',
-      builders.htmlComment(
-        ' 2 ',
-        builders.htmlComment(' 3 '),
-      ),
+      builders.htmlComment(' 2 ', builders.htmlComment(' 3 ')),
     );
 
     expect(stringifyHtmlComment(comment)).toBe('<!-- 3 --><!-- 2 --><!-- 1 -->');

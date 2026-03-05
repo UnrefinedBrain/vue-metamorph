@@ -128,7 +128,12 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
     const stats: Record<string, number> = {};
 
     if (opts.listPlugins) {
-      process.stdout.write(`${options.plugins.flat().map((plugin) => plugin.name).join('\n')}\n`);
+      process.stdout.write(
+        `${options.plugins
+          .flat()
+          .map((plugin) => plugin.name)
+          .join('\n')}\n`,
+      );
       process.exit(0);
     }
 
@@ -150,13 +155,16 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
       },
     });
 
-    const plugins = options
-      .plugins
+    const plugins = options.plugins
       .flat()
       .filter((plugin) => micromatch.isMatch(plugin.name, opts.plugins));
 
-    const codemodPlugins = plugins.filter((plugin): plugin is CodemodPlugin => plugin.type === 'codemod');
-    const manualMigrationPlugins = plugins.filter((plugin): plugin is ManualMigrationPlugin => plugin.type === 'manual');
+    const codemodPlugins = plugins.filter(
+      (plugin): plugin is CodemodPlugin => plugin.type === 'codemod',
+    );
+    const manualMigrationPlugins = plugins.filter(
+      (plugin): plugin is ManualMigrationPlugin => plugin.type === 'manual',
+    );
     const manualMigrationReports: ManualMigrationReport[] = [];
 
     const errors: {
