@@ -46,6 +46,11 @@
     "docs:build": "pnpm build && vitepress build docs",
     "docs:preview": "vitepress preview docs"
   },
+  "pnpm": {
+    "overrides": {
+      "vue": "^3.5.18"
+    }
+  },
   "devDependencies": {
     "@babel/types": "^7.24.7",
     "@microsoft/api-documenter": "^7.25.3",
