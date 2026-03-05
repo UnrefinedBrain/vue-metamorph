@@ -94,7 +94,7 @@ describe('VLiteral', () => {
   it('should print the value', () => {
     const node = builders.vLiteral('foo');
 
-    expect(stringify(node)).toBe('foo');
+    expect(stringify(node)).toBe('"foo"');
   });
 });
 

@@ -86,7 +86,7 @@ export function stringifyVDirectiveKey(node: AST.VDirectiveKey): string {
 }
 
 export function stringifyVLiteral(node: AST.VLiteral): string {
-  return node.value;
+  return `"${node.value}"`;
 }
 
 export function stringifyVAttribute(node: AST.VAttribute | AST.VDirective): string {
@@ -95,7 +95,11 @@ export function stringifyVAttribute(node: AST.VAttribute | AST.VDirective): stri
     : node.key.rawName;
 
   if (node.value) {
-    str += `="${stringify(node.value)}"`;
+    if (node.value.type === 'VLiteral') {
+      str += `="${node.value.value}"`;
+    } else {
+      str += `="${stringify(node.value)}"`;
+    }
   }
 
   return str;
