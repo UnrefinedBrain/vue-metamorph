@@ -7,7 +7,7 @@ tsc
 rm dist/*.spec.d.ts*
 
 # bundle
-tsup
+tsdown
 
 api-extractor run \
   --local \

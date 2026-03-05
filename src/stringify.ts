@@ -71,8 +71,8 @@ export function stringifyVDirectiveKey(node: AST.VDirectiveKey): string {
         break;
       }
 
-      // @ts-expect-error We shouldn't hit this case if the types are correct
       default:
+        // @ts-expect-error We shouldn't hit this case if the types are correct
         throw new Error(`Unexpected argument type: ${node.argument.type}`);
     }
   }
