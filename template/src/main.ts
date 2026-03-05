@@ -5,9 +5,7 @@ import { helloWorldCodemod } from './plugins/hello-world.js';
 
 const cli = createVueMetamorphCli({
   // register plugins here!
-  plugins: [
-    helloWorldCodemod,
-  ],
+  plugins: [helloWorldCodemod],
 });
 
 process.on('SIGQUIT', cli.abort);
