@@ -64,6 +64,10 @@ export default defineConfig({
             text: 'API',
             link: '/api/vue-metamorph',
           },
+          {
+            text: 'Ecosystem',
+            link: '/guide/ecosystem',
+          },
         ],
       },
       {
