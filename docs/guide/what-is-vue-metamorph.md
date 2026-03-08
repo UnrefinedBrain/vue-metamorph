@@ -1,6 +1,6 @@
 # What is vue-metamorph?
 
-vue-metamorph is a codemod framework for JavaScript, TypeScript, and Vue files. It provides a way to reliably make large-scale changes to a codebase by manipulating Abstract Syntax Trees.
+vue-metamorph is a codemod framework for JavaScript, TypeScript, and Vue files. It provides a way to reliably make large-scale changes to a codebase by manipulating abstract syntax trees.
 
 ## The Basics
 
@@ -14,7 +14,7 @@ While regex is a very powerful find-and-replace tool, it might not be the best c
 
 ## Comparison to jscodeshift
 
-Similar to [jscodeshift](https://github.com/facebook/jscodeshift), vue-metamorph provides a wrapper around [recast](https://github.com/benjamn/recast). However, since recast and jscodeshift are limited to working only with ESTree-based ASTs, vue-metamorph also provides a similar mechanism for working the the `<template>` AST in a Vue SFC.
+Similar to [jscodeshift](https://github.com/facebook/jscodeshift), vue-metamorph provides a wrapper around [recast](https://github.com/benjamn/recast). However, since recast and jscodeshift are limited to working only with ESTree-based ASTs, vue-metamorph also provides a similar mechanism for working with the `<template>` AST in a Vue SFC.
 
 ## Comparison to vue-codemod
 

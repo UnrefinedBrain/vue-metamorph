@@ -18,7 +18,7 @@ features:
     details: Easily and reliably make large-scale changes to your codebase by mutating ASTs
   - title: Supports multiple file types
     icon: 🗃️
-    details: Transform Vue SFC, JavaScript, TypeScript, CSS, SCSS, SASS, and LESS files
+    details: Transform Vue SFC, JavaScript, TypeScript, CSS, SCSS, SASS, LESS, and Stylus files
   - title: Built-in CLI
     icon: 🚀
     details: Run your codemods against many files with the built-in CLI, or use the codemod API directly

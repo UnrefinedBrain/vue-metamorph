@@ -1,13 +1,13 @@
 # CLI Options
 
-vue-metamorph provides a CLI codemod runner to faciliate running codemods against many files.
+vue-metamorph provides a CLI codemod runner to facilitate running codemods against many files.
 
 ## Options
 
 | Option | Description | Default |
 | - | - | - |
 | --help | Print available options | N/A |
-| --list-plugins | Lists all registered plugins and exists | N/A |
+| --list-plugins | Lists all registered plugins and exits | N/A |
 | --files &lt;glob&gt; | Run transforms against these files using a [glob](https://www.npmjs.com/package/glob) pattern | `'**/src/**/*'` |
 | --plugins &lt;glob&gt; | Only run plugins matching these [micromatch](https://github.com/micromatch/micromatch) patterns. This option can be passed multiple times to specify multiple patterns | `'*'` |
 
