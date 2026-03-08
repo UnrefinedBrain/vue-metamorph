@@ -78,6 +78,10 @@ export default defineConfig({
             link: '/guide/writing-codemods',
           },
           {
+            text: 'Helpers and Builders',
+            link: '/guide/helpers-and-builders',
+          },
+          {
             text: 'Manual Migrations',
             link: '/guide/manual-migrations',
           },
