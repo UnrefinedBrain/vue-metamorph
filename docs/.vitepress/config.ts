@@ -82,6 +82,10 @@ export default defineConfig({
             link: '/guide/helpers-and-builders',
           },
           {
+            text: 'SFC AST Reference',
+            link: '/guide/sfc-ast-reference',
+          },
+          {
             text: 'Manual Migrations',
             link: '/guide/manual-migrations',
           },
@@ -93,5 +97,11 @@ export default defineConfig({
       { icon: 'npm', link: 'https://npmjs.com/package/vue-metamorph' },
       { icon: 'github', link: 'https://github.com/UnrefinedBrain/vue-metamorph' },
     ],
+  },
+
+  vite: {
+    server: {
+      allowedHosts: true,
+    },
   },
 });
