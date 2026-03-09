@@ -208,6 +208,164 @@ describe('VFilterSequenceExpression', () => {
   });
 });
 
+describe('VText with leading comment', () => {
+  it('should print the comment before the text', () => {
+    const comment = builders.htmlComment(' before ');
+    const node = builders.vText('hello', comment);
+    expect(stringify(node)).toBe('<!-- before -->hello');
+  });
+});
+
+describe('VDocumentFragment', () => {
+  it('should stringify all children', () => {
+    const doc = builders.vDocumentFragment([
+      builders.vElement('div', builders.vStartTag([], false), [builders.vText('A')]),
+      builders.vElement('span', builders.vStartTag([], false), [builders.vText('B')]),
+    ]);
+    expect(stringify(doc)).toBe('<div>A</div><span>B</span>');
+  });
+
+  it('should stringify an empty fragment', () => {
+    const doc = builders.vDocumentFragment([]);
+    expect(stringify(doc)).toBe('');
+  });
+});
+
+describe('VForExpression', () => {
+  it('should stringify a single-variable v-for', () => {
+    const node = builders.vForExpression([b.identifier('item')], b.identifier('items'));
+    expect(stringify(node)).toBe('item in items');
+  });
+
+  it('should stringify a multi-variable v-for with parentheses', () => {
+    const node = builders.vForExpression(
+      [b.identifier('item'), b.identifier('index')],
+      b.identifier('items'),
+    );
+    expect(stringify(node)).toBe('(item, index) in items');
+  });
+});
+
+describe('VOnExpression', () => {
+  it('should stringify a v-on expression with a body', () => {
+    const node = builders.vOnExpression([
+      b.expressionStatement(b.callExpression(b.identifier('doSomething'), [])),
+    ]);
+    expect(stringify(node)).toBe('doSomething();');
+  });
+
+  it('should stringify a v-on expression with an empty body', () => {
+    const node = builders.vOnExpression([]);
+    expect(stringify(node)).toBe('');
+  });
+});
+
+describe('VSlotScopeExpression', () => {
+  it('should stringify a slot scope with params', () => {
+    const node: import('./ast').VSlotScopeExpression = {
+      type: 'VSlotScopeExpression',
+      params: [b.identifier('slotProps')],
+      // @ts-expect-error Parent not set
+      parent: undefined,
+    };
+    expect(stringify(node)).toBe('slotProps');
+  });
+
+  it('should stringify a slot scope with no params', () => {
+    const node: import('./ast').VSlotScopeExpression = {
+      type: 'VSlotScopeExpression',
+      params: [],
+      // @ts-expect-error Parent not set
+      parent: undefined,
+    };
+    expect(stringify(node)).toBe('');
+  });
+});
+
+describe('VGenericExpression', () => {
+  it('should stringify generic params', () => {
+    const param = b.tsTypeParameter('T');
+    param.constraint = b.tsStringKeyword();
+    const node: import('./ast').VGenericExpression = {
+      type: 'VGenericExpression',
+      params: [param],
+      rawParams: ['T extends string'],
+      // @ts-expect-error Parent not set
+      parent: undefined,
+    };
+    expect(stringify(node)).toContain('T');
+  });
+});
+
+describe('VExpressionContainer', () => {
+  it('should stringify a null expression as empty', () => {
+    const node = builders.vExpressionContainer(null);
+    expect(stringify(node)).toBe('');
+  });
+
+  it('should stringify a VForExpression child', () => {
+    const forExpr = builders.vForExpression([b.identifier('item')], b.identifier('items'));
+    const container = builders.vExpressionContainer(forExpr);
+    expect(stringify(container)).toBe('item in items');
+  });
+
+  it('should stringify a VFilterSequenceExpression child', () => {
+    const filter = builders.vFilterSequenceExpression(b.identifier('val'), [
+      builders.vFilter(b.identifier('upper'), []),
+    ]);
+    const container = builders.vExpressionContainer(filter);
+    expect(stringify(container)).toBe('val | upper');
+  });
+
+  it('should stringify a regular expression using recast', () => {
+    const container = builders.vExpressionContainer(
+      b.binaryExpression('+', b.identifier('a'), b.identifier('b')),
+    );
+    expect(stringify(container)).toBe('a + b');
+  });
+});
+
+describe('VElement with expression container children', () => {
+  it('should wrap expression containers in {{ }}', () => {
+    const node = builders.vElement('span', builders.vStartTag([], false), [
+      builders.vText('Hello '),
+      builders.vExpressionContainer(b.identifier('name')),
+    ]);
+    expect(stringify(node)).toBe('<span>Hello {{ name }}</span>');
+  });
+
+  it('should print leading comment before expression container', () => {
+    const comment = builders.htmlComment(' expr ');
+    const node = builders.vElement('span', builders.vStartTag([], false), [
+      builders.vExpressionContainer(b.identifier('x'), comment),
+    ]);
+    expect(stringify(node)).toBe('<span><!-- expr -->{{ x }}</span>');
+  });
+});
+
+describe('VStartTag as void element', () => {
+  it('should not print the slash for a void element even if selfClosing=true', () => {
+    const node = builders.vElement(
+      'input',
+      builders.vStartTag(
+        [builders.vAttribute(builders.vIdentifier('type'), builders.vLiteral('text'))],
+        true,
+      ),
+      [],
+    );
+    // void elements don't get the '/' even when selfClosing is true
+    expect(stringify(node)).toBe('<input type="text">');
+  });
+});
+
+describe('VEndTag with leading comment', () => {
+  it('should print the leading comment', () => {
+    const comment = builders.htmlComment(' end comment ');
+    const endTag = builders.vEndTag(comment);
+    expect(stringify(endTag)).toBe('<!-- end comment -->');
+  });
+});
+
 describe('HtmlComment', () => {
   it('should print an empty string if null', () => {
     expect(stringifyHtmlComment(null)).toBe('');

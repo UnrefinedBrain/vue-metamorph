@@ -606,41 +606,40 @@ export default {};
       </script>"
     `);
   });
-});
 
-it('should add a new <script>', () => {
-  const input = '<template><div /></template>';
+  it('should add a new <script>', () => {
+    const input = '<template><div /></template>';
 
-  const cm: CodemodPlugin = {
-    type: 'codemod',
-    name: 'new-script',
-    transform({ sfcAST, scriptASTs, utils: { builders } }) {
-      sfcAST?.children.push(
-        builders.vText('\n\n'),
-        builders.vElement('script', builders.vStartTag([], false), []),
-      );
-      scriptASTs.push(
-        builders.program([
-          builders.expressionStatement(
-            builders.binaryExpression('+', builders.identifier('a'), builders.identifier('b')),
-          ),
-        ]) as never,
-      );
-      return 1;
-    },
-  };
+    const cm: CodemodPlugin = {
+      type: 'codemod',
+      name: 'new-script',
+      transform({ sfcAST, scriptASTs, utils: { builders } }) {
+        sfcAST?.children.push(
+          builders.vText('\n\n'),
+          builders.vElement('script', builders.vStartTag([], false), []),
+        );
+        scriptASTs.push(
+          builders.program([
+            builders.expressionStatement(
+              builders.binaryExpression('+', builders.identifier('a'), builders.identifier('b')),
+            ),
+          ]) as never,
+        );
+        return 1;
+      },
+    };
 
-  expect(transform(input, 'file.vue', [cm]).code).toMatchInlineSnapshot(`
-    "<template><div /></template>
+    expect(transform(input, 'file.vue', [cm]).code).toMatchInlineSnapshot(`
+      "<template><div /></template>
 
-    <script>
-    a + b;
-    </script>"
-  `);
-});
+      <script>
+      a + b;
+      </script>"
+    `);
+  });
 
-it('should add a lang to a <script>', () => {
-  const input = `
+  it('should add a lang to a <script>', () => {
+    const input = `
 <template>
   <div />
 </template>
@@ -652,34 +651,435 @@ export default {
 </script>
 `;
 
-  const cm: CodemodPlugin = {
-    type: 'codemod',
-    name: 'add lang',
-    transform({ sfcAST, utils: { builders } }) {
-      if (sfcAST) {
-        for (const child of sfcAST.children) {
-          if (child.type === 'VElement' && child.name === 'script') {
-            child.startTag.attributes.push(
-              builders.vAttribute(builders.vIdentifier('lang'), builders.vLiteral('js')),
-            );
+    const cm: CodemodPlugin = {
+      type: 'codemod',
+      name: 'add lang',
+      transform({ sfcAST, utils: { builders } }) {
+        if (sfcAST) {
+          for (const child of sfcAST.children) {
+            if (child.type === 'VElement' && child.name === 'script') {
+              child.startTag.attributes.push(
+                builders.vAttribute(builders.vIdentifier('lang'), builders.vLiteral('js')),
+              );
+            }
           }
         }
-      }
-      return 1;
-    },
-  };
-
-  expect(transform(input, 'file.vue', [cm]).code).toMatchInlineSnapshot(`
-    "
-    <template>
-      <div />
-    </template>
-
-    <script lang="js">
-    export default {
-
+        return 1;
+      },
     };
-    </script>
-    "
-  `);
+
+    expect(transform(input, 'file.vue', [cm]).code).toMatchInlineSnapshot(`
+      "
+      <template>
+        <div />
+      </template>
+
+      <script lang="js">
+      export default {
+
+      };
+      </script>
+      "
+    `);
+  });
+
+  describe('file type routing', () => {
+    it('should handle .ts files', () => {
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'test',
+        transform({ scriptASTs }) {
+          expect(scriptASTs).toHaveLength(1);
+          return 0;
+        },
+      };
+      const result = transform('const x = 1;', 'file.ts', [plugin]);
+      expect(result.code).toContain('const x = 1');
+    });
+
+    it('should handle .tsx files with JSX', () => {
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'test',
+        transform() {
+          return 0;
+        },
+      };
+      const result = transform('const el = <div>hi</div>;', 'file.tsx', [plugin]);
+      expect(result.code).toContain('<div>');
+    });
+
+    it('should handle .css files', () => {
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'test',
+        transform({ styleASTs }) {
+          expect(styleASTs).toHaveLength(1);
+          return 0;
+        },
+      };
+      const result = transform('.foo { color: red; }', 'file.css', [plugin]);
+      expect(result.code).toContain('color: red');
+    });
+
+    it('should handle .scss files', () => {
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'test',
+        transform({ styleASTs }) {
+          expect(styleASTs).toHaveLength(1);
+          return 0;
+        },
+      };
+      const result = transform('$var: red; .foo { color: $var; }', 'file.scss', [plugin]);
+      expect(result.code).toContain('$var');
+    });
+
+    it('should route .less files to CSS transform', () => {
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'test',
+        transform({ styleASTs }) {
+          expect(styleASTs).toHaveLength(1);
+          return 0;
+        },
+      };
+      const result = transform('@var: red; .foo { color: @var; }', 'file.less', [plugin]);
+      expect(result.code).toContain('@var');
+    });
+  });
+
+  describe('Vue transforms', () => {
+    it('should handle Vue file with no template', () => {
+      const input = `<script>
+export default { name: 'NoTemplate' };
+</script>`;
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'test',
+        transform({ scriptASTs }) {
+          expect(scriptASTs).toHaveLength(1);
+          return 0;
+        },
+      };
+      const result = transform(input, 'file.vue', [plugin]);
+      expect(result.code).toContain('NoTemplate');
+    });
+
+    it('should pass opts to codemods', () => {
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'test',
+        transform({ opts }) {
+          expect(opts.myOption).toBe('hello');
+          return 0;
+        },
+      };
+      transform('const x = 1;', 'file.js', [plugin], { myOption: 'hello' });
+    });
+
+    it('should collect stats from multiple plugins', () => {
+      const plugin1: CodemodPlugin = {
+        type: 'codemod',
+        name: 'plugin-1',
+        transform: () => 3,
+      };
+      const plugin2: CodemodPlugin = {
+        type: 'codemod',
+        name: 'plugin-2',
+        transform: () => 7,
+      };
+      const result = transform('const x = 1;', 'file.js', [plugin1, plugin2]);
+      expect(result.stats).toEqual([
+        ['plugin-1', 3],
+        ['plugin-2', 7],
+      ]);
+    });
+
+    it('should handle empty plugin list', () => {
+      const result = transform('const x = 1;', 'file.js', []);
+      expect(result.code).toContain('const x = 1');
+      expect(result.stats).toEqual([]);
+    });
+
+    it('should pass filename to codemods', () => {
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'test',
+        transform({ filename }) {
+          expect(filename).toBe('src/MyComponent.vue');
+          return 0;
+        },
+      };
+      transform('<template><div /></template>', 'src/MyComponent.vue', [plugin]);
+    });
+
+    it('should handle Vue file with only a style block', () => {
+      const input = `<style lang="css">
+.foo { color: red; }
+</style>`;
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'test',
+        transform({ styleASTs }) {
+          for (const ast of styleASTs) {
+            ast.walkDecls('color', (decl) => {
+              decl.value = 'blue';
+            });
+          }
+          return 1;
+        },
+      };
+      const result = transform(input, 'file.vue', [plugin]);
+      expect(result.code).toContain('color: blue');
+    });
+
+    it('should provide utils in the context', () => {
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'test',
+        transform({ utils }) {
+          expect(utils.builders).toBeDefined();
+          expect(utils.astHelpers).toBeDefined();
+          expect(utils.traverseScriptAST).toBeDefined();
+          expect(utils.traverseTemplateAST).toBeDefined();
+          return 0;
+        },
+      };
+      transform('const x = 1;', 'file.js', [plugin]);
+    });
+
+    it('should handle multiple style blocks with different langs', () => {
+      const input = `<template><div /></template>
+<style lang="css">
+.a { color: red; }
+</style>
+<style lang="scss">
+.b { color: blue; }
+</style>`;
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'test',
+        transform({ styleASTs }) {
+          expect(styleASTs).toHaveLength(2);
+          return 0;
+        },
+      };
+      transform(input, 'file.vue', [plugin]);
+    });
+  });
+
+  describe('no-op transforms', () => {
+    it('should return identical code when no codemods make changes (JS)', () => {
+      const input = 'const x = 1;\n';
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'noop',
+        transform: () => 0,
+      };
+      const result = transform(input, 'file.js', [plugin]);
+      expect(result.code).toBe('const x = 1;\n');
+    });
+
+    it('should return identical code when no codemods make changes (Vue)', () => {
+      const input = `<template>
+  <div>Hello</div>
+</template>
+
+<script>
+export default {};
+</script>
+`;
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'noop',
+        transform: () => 0,
+      };
+      const result = transform(input, 'file.vue', [plugin]);
+      expect(result.code).toBe(input);
+    });
+
+    it('should return identical code when no codemods make changes (CSS)', () => {
+      const input = '.foo { color: red; }';
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'noop',
+        transform: () => 0,
+      };
+      const result = transform(input, 'file.css', [plugin]);
+      expect(result.code).toContain('color: red');
+    });
+  });
+
+  describe('multiple codemods mutating the same file', () => {
+    it('should apply sequential codemods in order (JS)', () => {
+      const plugin1: CodemodPlugin = {
+        type: 'codemod',
+        name: 'add-import',
+        transform({ scriptASTs, utils: { astHelpers } }) {
+          if (scriptASTs[0]) {
+            astHelpers.createNamedImport(scriptASTs[0], 'vue', 'ref');
+          }
+          return 1;
+        },
+      };
+      const plugin2: CodemodPlugin = {
+        type: 'codemod',
+        name: 'add-another-import',
+        transform({ scriptASTs, utils: { astHelpers } }) {
+          if (scriptASTs[0]) {
+            astHelpers.createNamedImport(scriptASTs[0], 'vue', 'computed');
+          }
+          return 1;
+        },
+      };
+      const result = transform('const x = 1;', 'file.js', [plugin1, plugin2]);
+      expect(result.code).toContain('ref');
+      expect(result.code).toContain('computed');
+      expect(result.stats).toEqual([
+        ['add-import', 1],
+        ['add-another-import', 1],
+      ]);
+    });
+
+    it('should apply sequential codemods on Vue template', () => {
+      const input = `<template>
+  <div class="a">Hello</div>
+</template>
+<script>
+export default {};
+</script>
+`;
+      const plugin1: CodemodPlugin = {
+        type: 'codemod',
+        name: 'rename-div',
+        transform({ sfcAST, utils: { astHelpers } }) {
+          if (sfcAST) {
+            astHelpers.findAll(sfcAST, { type: 'VElement', name: 'div' }).forEach((el) => {
+              el.rawName = 'section';
+              el.name = 'section';
+            });
+          }
+          return 1;
+        },
+      };
+      const plugin2: CodemodPlugin = {
+        type: 'codemod',
+        name: 'add-attr',
+        transform({ sfcAST, utils: { astHelpers, builders } }) {
+          if (sfcAST) {
+            astHelpers.findAll(sfcAST, { type: 'VElement', name: 'section' }).forEach((el) => {
+              el.startTag.attributes.push(
+                builders.vAttribute(builders.vIdentifier('data-v'), null),
+              );
+            });
+          }
+          return 1;
+        },
+      };
+      const result = transform(input, 'file.vue', [plugin1, plugin2]);
+      expect(result.code).toContain('<section');
+      expect(result.code).toContain('data-v');
+      expect(result.code).not.toContain('<div');
+    });
+  });
+
+  describe('template-only Vue file', () => {
+    it('should handle template-only Vue file (no script, no style)', () => {
+      const input = `<template>
+  <div>Hello</div>
+</template>
+`;
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'test',
+        transform({ sfcAST, scriptASTs, styleASTs }) {
+          expect(sfcAST).not.toBeNull();
+          expect(scriptASTs).toHaveLength(0);
+          expect(styleASTs).toHaveLength(0);
+          return 0;
+        },
+      };
+      const result = transform(input, 'file.vue', [plugin]);
+      expect(result.code).toContain('<div>Hello</div>');
+    });
+
+    it('should be able to modify a template-only Vue file', () => {
+      const input = `<template>
+  <div>Hello</div>
+</template>
+`;
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'test',
+        transform({ sfcAST, utils: { astHelpers } }) {
+          if (sfcAST) {
+            astHelpers.findAll(sfcAST, { type: 'VElement', name: 'div' }).forEach((el) => {
+              el.rawName = 'span';
+            });
+          }
+          return 1;
+        },
+      };
+      const result = transform(input, 'file.vue', [plugin]);
+      expect(result.code).toContain('<span>Hello</span>');
+      expect(result.code).not.toContain('<div>');
+    });
+  });
+
+  describe('CRLF preservation', () => {
+    it('should handle CRLF in JS files', () => {
+      const input = 'const x = 1;\r\nconst y = 2;\r\n';
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'test',
+        transform: () => 0,
+      };
+      const result = transform(input, 'file.js', [plugin]);
+      expect(result.code).toBeDefined();
+    });
+  });
+
+  describe('CSS transforms', () => {
+    it('should transform CSS declarations', () => {
+      const input = '.foo { color: red; }';
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'test',
+        transform({ styleASTs }) {
+          for (const ast of styleASTs) {
+            ast.walkDecls('color', (decl) => {
+              decl.value = 'blue';
+            });
+          }
+          return 1;
+        },
+      };
+      const result = transform(input, 'file.css', [plugin]);
+      expect(result.code).toContain('color: blue');
+    });
+
+    it('should collect stats from CSS transforms', () => {
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'css-plugin',
+        transform: () => 5,
+      };
+      const result = transform('.foo { color: red; }', 'file.css', [plugin]);
+      expect(result.stats).toEqual([['css-plugin', 5]]);
+    });
+
+    it('should pass empty scriptASTs and null sfcAST for CSS files', () => {
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'test',
+        transform({ scriptASTs, sfcAST }) {
+          expect(scriptASTs).toEqual([]);
+          expect(sfcAST).toBeNull();
+          return 0;
+        },
+      };
+      transform('.foo { color: red; }', 'file.css', [plugin]);
+    });
+  });
 });

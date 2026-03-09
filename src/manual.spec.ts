@@ -324,6 +324,120 @@ console.log('')`,
     }
   });
 
+  it('should find manual migrations in CSS files', () => {
+    const res = findManualMigrations(`.foo { color: red; }\n.bar { color: blue; }`, 'file.css', [
+      {
+        name: 'no-color',
+        type: 'manual',
+        find({ styleASTs, scriptASTs, sfcAST, report }) {
+          expect(scriptASTs).toEqual([]);
+          expect(sfcAST).toBeNull();
+          expect(styleASTs).toHaveLength(1);
+          for (const style of styleASTs) {
+            style.walkDecls('color', (decl) => {
+              report(decl, 'Avoid color');
+            });
+          }
+        },
+      },
+    ]);
+
+    expect(res).toHaveLength(2);
+    expect(res[0]!.message).toBe('Avoid color');
+    expect(res[0]!.pluginName).toBe('no-color');
+    expect(res[1]!.message).toBe('Avoid color');
+  });
+
+  it('should find manual migrations in SCSS files', () => {
+    const res = findManualMigrations('$var: red;\n.foo { color: $var; }', 'file.scss', [
+      {
+        name: 'no-color',
+        type: 'manual',
+        find({ styleASTs, report }) {
+          for (const style of styleASTs) {
+            style.walkDecls('color', (decl) => {
+              report(decl, 'Avoid color');
+            });
+          }
+        },
+      },
+    ]);
+
+    expect(res).toHaveLength(1);
+    expect(res[0]!.file).toBe('file.scss');
+  });
+
+  it('should pass opts to manual migration plugins', () => {
+    findManualMigrations(
+      'const x = 1;',
+      'file.js',
+      [
+        {
+          name: 'test',
+          type: 'manual',
+          find({ opts }) {
+            expect(opts.myOption).toBe('hello');
+          },
+        },
+      ],
+      { myOption: 'hello' },
+    );
+  });
+
+  it('should collect reports from multiple plugins', () => {
+    const res = findManualMigrations('const x = 1;\nconst y = 2;', 'file.js', [
+      {
+        name: 'plugin-a',
+        type: 'manual',
+        find({ scriptASTs, report, utils: { astHelpers } }) {
+          astHelpers
+            .findAll(scriptASTs[0]!, { type: 'VariableDeclaration' })
+            .forEach((node) => report(node, 'from A'));
+        },
+      },
+      {
+        name: 'plugin-b',
+        type: 'manual',
+        find({ scriptASTs, report, utils: { astHelpers } }) {
+          astHelpers
+            .findAll(scriptASTs[0]!, { type: 'VariableDeclaration' })
+            .forEach((node) => report(node, 'from B'));
+        },
+      },
+    ]);
+
+    expect(res).toHaveLength(4);
+    expect(res.filter((r) => r.pluginName === 'plugin-a')).toHaveLength(2);
+    expect(res.filter((r) => r.pluginName === 'plugin-b')).toHaveLength(2);
+  });
+
+  it('should handle nodes with range but no loc (range fallback)', () => {
+    const res = findManualMigrations('<template>\n  <div>Hello</div>\n</template>', 'file.vue', [
+      {
+        name: 'test',
+        type: 'manual',
+        find({ sfcAST, report, utils: { astHelpers } }) {
+          if (sfcAST) {
+            const text = astHelpers.findFirst(sfcAST, {
+              type: 'VText',
+              value: 'Hello',
+            });
+            if (text) {
+              // Set loc to null to exercise the range fallback path
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              (text as any).loc = null;
+              report(text, 'found text');
+            }
+          }
+        },
+      },
+    ]);
+
+    expect(res).toHaveLength(1);
+    expect(res[0]!.message).toBe('found text');
+    expect(res[0]!.snippet).toBeDefined();
+  });
+
   it('edge case 1', () => {
     const code = 'export default someCall();\nexport default someCall(\n1,\n2,\n3);';
 
