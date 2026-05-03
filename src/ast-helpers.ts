@@ -245,8 +245,8 @@ export function createDefaultImport(
     // case 2: existing import, but with no specifiers
     decl.specifiers = [newSpecifier];
   } else if (decl && decl.specifiers) {
-    let found = false;
-    for (const specifier of decl.specifiers!) {
+    let existingDefaultName: string | null = null;
+    for (const specifier of decl.specifiers) {
       if (specifier.type !== 'ImportDefaultSpecifier') {
         continue;
       }
@@ -255,13 +255,18 @@ export function createDefaultImport(
         continue;
       }
 
-      if (specifier.local.name === importName) {
-        found = true;
-      }
+      existingDefaultName = specifier.local.name;
     }
 
-    if (!found) {
+    if (existingDefaultName === null) {
       decl.specifiers.push(newSpecifier);
+    } else if (existingDefaultName !== importName) {
+      // An ESM ImportDeclaration may have at most one default specifier, and
+      // pushing a second one produces invalid JS. Surface the conflict so the
+      // codemod author can resolve it explicitly.
+      throw new Error(
+        `Cannot add default import '${importName}' from '${moduleSpecifier}': a different default import '${existingDefaultName}' already exists.`,
+      );
     }
   }
 }

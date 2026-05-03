@@ -61,6 +61,16 @@ describe('createDefaultImport', () => {
       "
     `);
   });
+
+  it('should throw if a different default import already exists', () => {
+    const input = `
+    import Foo from 'vue';
+    const a = 1 + 1;`;
+
+    expect(() => transform(input, 'file.js', [codemod])).toThrowError(
+      /Cannot add default import 'Vue' from 'vue'.*'Foo'/,
+    );
+  });
 });
 
 describe('createNamedImport with localName', () => {
