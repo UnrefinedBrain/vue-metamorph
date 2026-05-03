@@ -106,7 +106,25 @@ type ProgramOptions = {
 };
 
 /**
- * Creates a CLI instance
+ * Creates a CLI runner that globs files and runs codemod/manual-migration plugins against them.
+ *
+ * Parses `process.argv` for `--files <glob>`, `--plugins <glob...>`, and `--list-plugins` options.
+ * Returns an object with `run()`, `abort()`, and `opts()` methods.
+ *
+ * @example
+ * ```ts
+ * import { createVueMetamorphCli } from 'vue-metamorph';
+ *
+ * const { run, abort } = createVueMetamorphCli({
+ *   plugins: [myCodemod, myManualMigration],
+ *   onProgress({ totalFiles, filesProcessed, stats, done }) {
+ *     console.log(`${filesProcessed}/${totalFiles} files processed`);
+ *   },
+ * });
+ *
+ * run();
+ * ```
+ *
  * @public
  */
 export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {

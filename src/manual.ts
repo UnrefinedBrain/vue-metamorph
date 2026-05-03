@@ -130,12 +130,40 @@ export type ManualMigrationReport = {
 };
 
 /**
- * Finds manual migration locations in a file
- * @param code - Source code
- * @param filename - The file name
- * @param plugins - Manual migration plugins
- * @param opts - CLI Options
- * @returns List of reports
+ * Runs manual migration plugins against source code and returns reports
+ * identifying nodes that require human attention. Does not modify the code.
+ *
+ * @example
+ * ```ts
+ * import { findManualMigrations, type ManualMigrationPlugin } from 'vue-metamorph';
+ *
+ * const plugin: ManualMigrationPlugin = {
+ *   type: 'manual',
+ *   name: 'find-deprecated-api',
+ *   find({ scriptASTs, report, utils: { traverseScriptAST } }) {
+ *     for (const ast of scriptASTs) {
+ *       traverseScriptAST(ast, {
+ *         visitCallExpression(path) {
+ *           if (path.node.callee.type === 'Identifier'
+ *             && path.node.callee.name === 'deprecatedFn') {
+ *             report(path.node, 'Replace deprecatedFn with newFn');
+ *           }
+ *           return this.traverse(path);
+ *         },
+ *       });
+ *     }
+ *   },
+ * };
+ *
+ * const reports = findManualMigrations(code, 'file.vue', [plugin]);
+ * // Each report: { message, file, snippet, pluginName, lineStart, lineEnd, columnStart, columnEnd }
+ * ```
+ *
+ * @param code - Source code string
+ * @param filename - The file name (determines parser selection)
+ * @param plugins - Manual migration plugins to run
+ * @param opts - Additional options passed through to plugins
+ * @returns Array of reports, each identifying a node and message
  * @public
  */
 export function findManualMigrations(

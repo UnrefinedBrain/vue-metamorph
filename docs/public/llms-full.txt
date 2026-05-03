@@ -1,0 +1,503 @@
+# vue-metamorph
+
+> Codemod framework for Vue projects. Transform source code reliably at scale using ASTs instead of regex.
+
+vue-metamorph parses Vue SFC, JavaScript, TypeScript, CSS, SCSS, SASS, LESS, and Stylus files into ASTs. You write plugins that traverse and mutate these ASTs, and vue-metamorph detects your changes and applies them back to the source code.
+
+## Installation
+
+```bash
+# Scaffold a new project
+npx vue-metamorph my-codemod-name
+
+# Or install in an existing project
+npm install -D vue-metamorph
+```
+
+## Plugin Types
+
+### CodemodPlugin
+
+Mutates ASTs to transform code. Returns the number of transforms applied (used for stats).
+
+```ts
+import type { CodemodPlugin } from 'vue-metamorph';
+
+const myCodemod: CodemodPlugin = {
+  type: 'codemod',
+  name: 'my-transform',
+  transform({ scriptASTs, sfcAST, styleASTs, filename, utils }) {
+    let count = 0;
+    // Mutate the ASTs here. vue-metamorph detects changes automatically.
+    return count;
+  }
+};
+```
+
+### ManualMigrationPlugin
+
+Finds nodes that need human attention. Do NOT mutate the AST in manual migrations.
+
+```ts
+import type { ManualMigrationPlugin } from 'vue-metamorph';
+
+const myManualMigration: ManualMigrationPlugin = {
+  type: 'manual',
+  name: 'find-deprecated-api',
+  find({ scriptASTs, sfcAST, styleASTs, filename, report, utils }) {
+    // Call report(node, message) for each node needing attention
+  }
+};
+```
+
+### Plugin Context
+
+Both plugin types receive a context object with:
+
+- `scriptASTs: VueProgram[]` - For .vue files, one Program AST per `<script>` block. For JS/TS files, a single-element array.
+- `sfcAST: VDocumentFragment | null` - The Vue template AST. Null for non-.vue files.
+- `styleASTs: postcss.Root[]` - PostCSS ASTs for `<style>` blocks or standalone CSS files.
+- `filename: string` - Absolute path of the file being processed.
+- `utils` - Object containing `builders`, `astHelpers`, `traverseScriptAST`, and `traverseTemplateAST`.
+- `opts: Record<string, any>` - CLI options passed through.
+
+`VueProgram` extends ESTree's `Program` with an `isScriptSetup: boolean` property indicating whether it represents a `<script setup>` block.
+
+## Core API
+
+### transform(code, filename, plugins, opts?)
+
+Parses source code, runs codemod plugins against it, and returns transformed code.
+
+```ts
+import { transform } from 'vue-metamorph';
+
+const result = transform(sourceCode, 'file.vue', [myCodemod]);
+result.code;  // transformed source code
+result.stats; // array of [pluginName, transformCount] tuples
+```
+
+The filename determines how code is parsed:
+- `.vue` - Parsed as Vue SFC (template + scripts + styles)
+- `.js`, `.jsx`, `.ts`, `.tsx` - Parsed as JavaScript/TypeScript
+- `.css`, `.scss`, `.sass`, `.less`, `.styl` - Parsed as CSS
+
+### findManualMigrations(code, filename, plugins, opts?)
+
+Runs manual migration plugins and returns reports.
+
+```ts
+import { findManualMigrations } from 'vue-metamorph';
+
+const reports = findManualMigrations(sourceCode, 'file.vue', [myManualMigration]);
+// Each report has: message, file, snippet, pluginName, lineStart, lineEnd, columnStart, columnEnd
+```
+
+### createVueMetamorphCli(options)
+
+Creates a CLI runner with file globbing and progress reporting.
+
+```ts
+import { createVueMetamorphCli } from 'vue-metamorph';
+
+const { run, abort } = createVueMetamorphCli({
+  plugins: [myCodemod, myManualMigration],
+  silent: false,
+  onProgress({ totalFiles, filesProcessed, stats, done, errors, manualMigrations }) {
+    // called after each file is processed
+  },
+});
+
+run(); // parses process.argv for --files and --plugins options
+```
+
+CLI options: `--files <glob>` (default: `'**/src/**/*'`), `--plugins <glob...>` (default: `'*'`), `--list-plugins`.
+
+## AST Helpers
+
+Available via `utils.astHelpers` in plugin context, or importable directly:
+
+```ts
+import { astHelpers } from 'vue-metamorph';
+```
+
+### findFirst(ast, matcher)
+
+Finds the first node matching a partial object pattern. Uses deep partial matching (lodash `isMatch`). Works with both script ASTs (ESTree) and template ASTs (vue-eslint-parser).
+
+```ts
+// Find the first <div> in the template
+astHelpers.findFirst(sfcAST, { type: 'VElement', name: 'div' });
+
+// Find the first call to console.log in a script
+astHelpers.findFirst(scriptAST, {
+  type: 'CallExpression',
+  callee: {
+    type: 'MemberExpression',
+    object: { type: 'Identifier', name: 'console' },
+    property: { type: 'Identifier', name: 'log' },
+  },
+});
+```
+
+Returns the matching node, or `null`.
+
+### findAll(ast, matcher)
+
+Same as `findFirst` but returns an array of all matching nodes.
+
+```ts
+// Find all <MyComponent> elements
+astHelpers.findAll(sfcAST, { type: 'VElement', name: 'MyComponent' });
+
+// Find all v-if directives
+astHelpers.findAll(sfcAST, {
+  type: 'VAttribute',
+  directive: true,
+  key: { type: 'VDirectiveKey', name: { name: 'if' } },
+});
+
+// Find all @click handlers
+astHelpers.findAll(sfcAST, {
+  type: 'VAttribute',
+  directive: true,
+  key: {
+    type: 'VDirectiveKey',
+    name: { name: 'on' },
+    argument: { type: 'VIdentifier', name: 'click' },
+  },
+});
+
+// Find all static class attributes
+astHelpers.findAll(sfcAST, {
+  type: 'VAttribute',
+  directive: false,
+  key: { name: 'class' },
+});
+```
+
+### findImportDeclaration(ast, moduleSpecifier)
+
+Finds an existing import declaration for a module in a script AST.
+
+```ts
+const vueImport = astHelpers.findImportDeclaration(scriptAST, 'vue');
+// Returns the ImportDeclaration node, or null
+```
+
+### createNamedImport(ast, moduleSpecifier, importName, localName?)
+
+Adds a named import. Merges into existing import declarations for the same module. Skips duplicates.
+
+```ts
+// import { defineComponent } from 'vue';
+astHelpers.createNamedImport(scriptAST, 'vue', 'defineComponent');
+
+// import { map as lodashMap } from 'lodash-es';
+astHelpers.createNamedImport(scriptAST, 'lodash-es', 'map', 'lodashMap');
+```
+
+### createDefaultImport(ast, moduleSpecifier, importName)
+
+Adds a default import. Same merging/dedup logic as createNamedImport.
+
+```ts
+// import Vue from 'vue';
+astHelpers.createDefaultImport(scriptAST, 'vue', 'Vue');
+```
+
+### createNamespaceImport(ast, moduleSpecifier, namespaceName)
+
+Adds a namespace import. Same merging/dedup logic as createNamedImport.
+
+```ts
+// import * as _ from 'lodash-es';
+astHelpers.createNamespaceImport(scriptAST, 'lodash-es', '_');
+```
+
+### findVueComponentOptions(ast, isSfc)
+
+Finds Options API object expressions: `defineComponent()`, `Vue.extend()`, `Vue.component()`, `Vue.mixin()`, `new Vue()`, and (when isSfc=true) the default export.
+
+```ts
+for (const scriptAST of scriptASTs) {
+  const options = astHelpers.findVueComponentOptions(scriptAST, sfcAST !== null);
+  for (const obj of options) {
+    // obj is an ObjectExpression node
+  }
+}
+```
+
+## AST Traversal
+
+### traverseScriptAST(ast, visitors)
+
+Alias for the ast-types `visit` function. Traverses ESTree/Babel AST nodes.
+
+```ts
+const { traverseScriptAST } = utils;
+
+traverseScriptAST(scriptAST, {
+  visitCallExpression(path) {
+    // path.node is the CallExpression
+    // Mutate path.node to make changes
+    return this.traverse(path); // continue traversal
+  }
+});
+```
+
+Visitor methods are named `visit<NodeType>`. You must either call `this.traverse(path)` to continue into children, or `return false` to skip children.
+
+### traverseTemplateAST(ast, visitors)
+
+Alias for vue-eslint-parser's `traverseNodes`. Traverses Vue template AST nodes.
+
+```ts
+const { traverseTemplateAST } = utils;
+
+traverseTemplateAST(sfcAST, {
+  enterNode(node) {
+    // called when entering each node
+  },
+  leaveNode(node) {
+    // called when leaving each node
+  },
+});
+```
+
+## Template Builders
+
+Available via `utils.builders` in plugin context. After inserting new nodes, call `builders.setParents(sfcAST)` to fix parent references.
+
+### vElement(name, startTag, children, namespace?)
+
+Creates an HTML element or Vue component node. End tag is created automatically.
+
+```ts
+// <div class="container">Hello</div>
+builders.vElement(
+  'div',
+  builders.vStartTag([
+    builders.vAttribute(builders.vIdentifier('class'), builders.vLiteral('container')),
+  ], false),
+  [builders.vText('Hello')],
+);
+```
+
+### vStartTag(attributes, selfClosing, leadingComment?)
+
+Creates a start tag with attributes and/or directives.
+
+### vAttribute(key, value)
+
+Creates a static attribute.
+
+```ts
+// class="active"
+builders.vAttribute(builders.vIdentifier('class'), builders.vLiteral('active'));
+
+// disabled (boolean attribute, no value)
+builders.vAttribute(builders.vIdentifier('disabled'), null);
+```
+
+### vDirective(key, value)
+
+Creates a Vue directive. Note: AST type is `'VAttribute'` with `directive: true`.
+
+```ts
+// v-if="visible"
+builders.vDirective(
+  builders.vDirectiveKey(builders.vIdentifier('if')),
+  builders.vExpressionContainer(builders.identifier('visible')),
+);
+
+// :key="item.id"
+builders.vDirective(
+  builders.vDirectiveKey(
+    builders.vIdentifier('bind', ':'),
+    builders.vIdentifier('key'),
+  ),
+  builders.vExpressionContainer(
+    builders.memberExpression(builders.identifier('item'), builders.identifier('id')),
+  ),
+);
+```
+
+### vDirectiveKey(name, argument?, modifiers?)
+
+Creates the key part of a directive: `v-name:argument.modifier1.modifier2`.
+
+### vExpressionContainer(expression, leadingComment?)
+
+Creates an expression container (`{{ }}` or directive value).
+
+### vIdentifier(name, rawName?)
+
+Creates an identifier for attribute/directive names. `rawName` controls what gets printed.
+
+```ts
+builders.vIdentifier('bind', ':');  // name is 'bind', prints as ':'
+builders.vIdentifier('on', '@');    // name is 'on', prints as '@'
+builders.vIdentifier('slot', '#'); // name is 'slot', prints as '#'
+```
+
+### vLiteral(value)
+
+Creates a string literal for static attribute values.
+
+### vText(value, leadingComment?)
+
+Creates a text node.
+
+### vForExpression(left, right)
+
+Creates a `v-for` expression: `left in right`.
+
+### vOnExpression(body)
+
+Creates a `v-on` expression with multiple statements.
+
+### vFilterSequenceExpression(expression, filters) / vFilter(callee, args)
+
+Creates Vue 2 filter syntax nodes.
+
+### vDocumentFragment(children)
+
+Creates a root document fragment node.
+
+### htmlComment(value, leadingComment?)
+
+Creates an HTML comment node.
+
+### setParents(node)
+
+Traverses a node tree and sets `parent` references on all descendants. Call after inserting new nodes.
+
+## Script Builders
+
+`utils.builders` also includes all ast-types builders for creating JavaScript/TypeScript AST nodes:
+
+```ts
+builders.literal('hello');           // string literal
+builders.identifier('myVar');        // identifier
+builders.callExpression(callee, args); // function call
+builders.memberExpression(obj, prop);  // property access
+builders.binaryExpression('+', left, right);
+builders.importDeclaration(specifiers, source);
+// ... and all other ESTree node types
+```
+
+See ast-types documentation and AST Explorer (with @babel/parser) for the full list.
+
+## SFC Template AST Node Types
+
+The template AST uses vue-eslint-parser node types:
+
+- **VDocumentFragment** - Root node. `sfcAST` points to this. Children: VElement, VText, VExpressionContainer.
+- **VElement** - HTML element or Vue component. Has `name`, `startTag`, `children`, `endTag`.
+- **VStartTag** - Opening tag with `attributes` array (VAttribute or VDirective) and `selfClosing` boolean.
+- **VAttribute** - Static attribute (`directive: false`). Has `key: VIdentifier` and `value: VLiteral | null`.
+- **VDirective** - Vue directive (`directive: true`, type is still `'VAttribute'`). Has `key: VDirectiveKey` and `value: VExpressionContainer | null`.
+- **VDirectiveKey** - Directive name/argument/modifiers. `name: VIdentifier`, `argument: VIdentifier | VExpressionContainer | null`, `modifiers: VIdentifier[]`.
+- **VExpressionContainer** - Wraps JS expressions in directive values and `{{ }}` interpolations.
+- **VIdentifier** - Attribute/directive names. `name` is normalized, `rawName` is as-written (e.g. `':'` for v-bind shorthand).
+- **VLiteral** - Static attribute value string.
+- **VText** - Plain text content.
+- **VEndTag** - Closing tag.
+- **HtmlComment** - HTML comment.
+
+Directive shorthand mapping:
+
+| Syntax | `key.name.name` | `key.name.rawName` |
+| --- | --- | --- |
+| `v-if` | `'if'` | `'if'` |
+| `v-for` | `'for'` | `'for'` |
+| `v-model` | `'model'` | `'model'` |
+| `:prop` | `'bind'` | `':'` |
+| `@click` | `'on'` | `'@'` |
+| `#default` | `'slot'` | `'#'` |
+
+Special expression types inside VExpressionContainer:
+- **VForExpression** - `left` (patterns) `in` `right` (collection)
+- **VOnExpression** - Multiple statements in `body`
+- **VSlotScopeExpression** - Slot scope `params`
+- **VFilterSequenceExpression** / **VFilter** - Vue 2 filter syntax
+
+## Testing Codemods
+
+Use the `transform` function directly for test-driven development:
+
+```ts
+import { transform } from 'vue-metamorph';
+
+it('should remove all v-ifs', () => {
+  const input = `
+<template>
+  <div v-if="condition">Hello</div>
+</template>
+`;
+
+  const expected = `
+<template>
+  <div>Hello</div>
+</template>
+`;
+
+  expect(transform(input, 'file.vue', [myCodemod]).code).toBe(expected);
+});
+```
+
+## Complete Example: Rename a Component
+
+```ts
+import { transform, type CodemodPlugin } from 'vue-metamorph';
+
+const renameComponent: CodemodPlugin = {
+  type: 'codemod',
+  name: 'rename-old-button-to-new-button',
+  transform({ scriptASTs, sfcAST, utils: { astHelpers, builders, traverseScriptAST } }) {
+    let count = 0;
+
+    // Rename in template
+    if (sfcAST) {
+      const elements = astHelpers.findAll(sfcAST, { type: 'VElement', name: 'OldButton' });
+      for (const el of elements) {
+        el.rawName = 'NewButton';
+        el.name = 'NewButton';
+        count++;
+      }
+    }
+
+    // Rename in imports
+    for (const scriptAST of scriptASTs) {
+      traverseScriptAST(scriptAST, {
+        visitImportDeclaration(path) {
+          if (path.node.source.value === '@/components/OldButton.vue') {
+            path.node.source.value = '@/components/NewButton.vue';
+            count++;
+          }
+          return this.traverse(path);
+        }
+      });
+    }
+
+    return count;
+  }
+};
+```
+
+## AST Explorer
+
+Use [AST Explorer](https://astexplorer.net) to visualize the AST for any code snippet.
+
+| Source Type | Parser |
+| --- | --- |
+| Vue SFC `<template>` | `vue-eslint-parser` / `@babel/parser` |
+| Vue SFC `<script>` | `@babel/parser` |
+| Vue SFC `<style>` | `postcss` |
+| JavaScript / TypeScript | `@babel/parser` |
+| CSS / SCSS / LESS | `postcss` with appropriate parser |
+
+## Code Formatting Note
+
+vue-metamorph produces syntactically correct code but does not format it. Run a formatter (eslint, prettier, etc.) after transformation.

@@ -291,12 +291,48 @@ function transformCssFile(
 }
 
 /**
- * Runs codemods against source code
- * @param code - Source code
- * @param filename - The file name, used to determine whether to parse as JS/TS, or as a .vue SFC
- * @param plugins - List of codemod plugins
- * @param opts - CLI Options
- * @returns New source code
+ * Parses source code into ASTs, runs codemod plugins against them, and returns
+ * the transformed source code. This is the core function of vue-metamorph.
+ *
+ * The filename determines how code is parsed:
+ * - `.vue` — Parsed as a Vue SFC (template + scripts + styles)
+ * - `.js`, `.jsx`, `.ts`, `.tsx` — Parsed as JavaScript/TypeScript
+ * - `.css`, `.scss`, `.sass`, `.less`, `.styl` — Parsed as CSS
+ *
+ * @example
+ * ```ts
+ * import { transform, type CodemodPlugin } from 'vue-metamorph';
+ *
+ * const myPlugin: CodemodPlugin = {
+ *   type: 'codemod',
+ *   name: 'my-transform',
+ *   transform({ scriptASTs, utils: { traverseScriptAST } }) {
+ *     let count = 0;
+ *     for (const ast of scriptASTs) {
+ *       traverseScriptAST(ast, {
+ *         visitLiteral(path) {
+ *           if (typeof path.node.value === 'string') {
+ *             path.node.value = 'Hello, world!';
+ *             count++;
+ *           }
+ *           return this.traverse(path);
+ *         },
+ *       });
+ *     }
+ *     return count;
+ *   },
+ * };
+ *
+ * const result = transform(sourceCode, 'file.vue', [myPlugin]);
+ * result.code;  // transformed source code
+ * result.stats; // [['my-transform', 3]]
+ * ```
+ *
+ * @param code - Source code string
+ * @param filename - The file name (determines parser selection)
+ * @param plugins - List of codemod plugins to run
+ * @param opts - Additional options passed through to plugins
+ * @returns Object with `code` (transformed source) and `stats` (per-plugin transform counts)
  * @public
  */
 export function transform(

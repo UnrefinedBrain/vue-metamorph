@@ -18,9 +18,19 @@ export function setParents(node: AST.Node) {
 }
 
 /**
- * Creates a new VAttribute node
- * @param key - A VIdentifier node
- * @param value - A VLiteral node, or null
+ * Creates a new VAttribute node (a static HTML attribute, not a directive).
+ *
+ * @example
+ * ```ts
+ * // class="active"
+ * vAttribute(vIdentifier('class'), vLiteral('active'));
+ *
+ * // disabled (boolean attribute, no value)
+ * vAttribute(vIdentifier('disabled'), null);
+ * ```
+ *
+ * @param key - A VIdentifier node for the attribute name
+ * @param value - A VLiteral node for the value, or null for boolean attributes
  * @returns A new VAttribute node
  * @public
  */
@@ -39,9 +49,27 @@ export function vAttribute(
 }
 
 /**
- * Creates a new VDirective node
+ * Creates a new VDirective node (a Vue directive like `v-if`, `:prop`, `@click`).
  *
- * Note that VDirective has the type 'VAttribute', with `directive: true`
+ * Note: VDirective has the AST type `'VAttribute'` with `directive: true`.
+ *
+ * @example
+ * ```ts
+ * // v-if="visible"
+ * vDirective(
+ *   vDirectiveKey(vIdentifier('if')),
+ *   vExpressionContainer(builders.identifier('visible')),
+ * );
+ *
+ * // :key="item.id"
+ * vDirective(
+ *   vDirectiveKey(vIdentifier('bind', ':'), vIdentifier('key')),
+ *   vExpressionContainer(
+ *     builders.memberExpression(builders.identifier('item'), builders.identifier('id')),
+ *   ),
+ * );
+ * ```
+ *
  * @param key - The VDirectiveKey node
  * @param value - A VExpressionContainer node, or null
  * @returns A new VDirective node
@@ -123,11 +151,31 @@ export function vEndTag(leadingComment?: AST.HtmlComment): AST.VEndTag {
 }
 
 /**
- * Creates a new VElement node
- * @param name - The name of the element (Ex. `div` or `MyComponent`)
+ * Creates a new VElement node. An end tag is created automatically unless
+ * the tag is self-closing or a void element (e.g. `br`, `img`).
+ *
+ * @example
+ * ```ts
+ * // <div class="container">Hello</div>
+ * vElement(
+ *   'div',
+ *   vStartTag([
+ *     vAttribute(vIdentifier('class'), vLiteral('container')),
+ *   ], false),
+ *   [vText('Hello')],
+ * );
+ *
+ * // <br /> (void element)
+ * vElement('br', vStartTag([], false), []);
+ *
+ * // <MyComponent />
+ * vElement('MyComponent', vStartTag([], true), []);
+ * ```
+ *
+ * @param name - The tag name (e.g. `'div'` or `'MyComponent'`)
  * @param startTag - A VStartTag node
- * @param children - Child elements, if the VStartTag is not self-closing
- * @param namespace - The element's namespace
+ * @param children - Child nodes (VElement, VText, VExpressionContainer)
+ * @param namespace - The element's namespace (defaults to HTML)
  * @returns A new VElement node
  * @public
  */
@@ -151,9 +199,23 @@ export function vElement(
 }
 
 /**
- * Creates a new VExpressionContainer node
- * @param expression - The expression in the container
- * @param leadingComment - If the VExpressionContainer is a child of a VElement, a HTML comment to print directly before this node, if any
+ * Creates a new VExpressionContainer node. Used for `{{ }}` text interpolation
+ * and directive values.
+ *
+ * @example
+ * ```ts
+ * // {{ message }}
+ * vExpressionContainer(builders.identifier('message'));
+ *
+ * // Used in a directive: v-if="show"
+ * vDirective(
+ *   vDirectiveKey(vIdentifier('if')),
+ *   vExpressionContainer(builders.identifier('show')),
+ * );
+ * ```
+ *
+ * @param expression - The JavaScript expression node
+ * @param leadingComment - If the container is a child of a VElement, a HTML comment to print before this node
  * @returns A new VExpressionContainer node
  * @public
  */
@@ -197,10 +259,20 @@ export function vForExpression(
 }
 
 /**
- * Creates a new VIdentifier node
+ * Creates a new VIdentifier node for attribute names, directive names, arguments,
+ * and modifiers. The optional `rawName` controls what gets printed, which is
+ * useful for directive shorthands.
  *
- * @param name - The identifier name
- * @param rawName - If the name should differ from what gets stringified, the value to print
+ * @example
+ * ```ts
+ * vIdentifier('class');          // prints: class
+ * vIdentifier('bind', ':');      // name is 'bind', prints as ':'
+ * vIdentifier('on', '@');        // name is 'on', prints as '@'
+ * vIdentifier('slot', '#');      // name is 'slot', prints as '#'
+ * ```
+ *
+ * @param name - The normalized identifier name
+ * @param rawName - The value to print (defaults to `name`)
  * @returns A new VIdentifier node
  * @public
  */

@@ -1,0 +1,34 @@
+# vue-metamorph
+
+> Codemod framework for Vue projects. Transform source code reliably at scale using ASTs instead of regex.
+
+vue-metamorph parses Vue SFC, JavaScript, TypeScript, CSS, SCSS, SASS, LESS, and Stylus files into ASTs. You write plugins that traverse and mutate these ASTs, and vue-metamorph detects your changes and applies them back to the source code.
+
+## Core Concepts
+
+- **CodemodPlugin**: A plugin that mutates ASTs to transform code. Returns the number of transforms applied.
+- **ManualMigrationPlugin**: A plugin that finds nodes requiring human attention without mutating the AST.
+- **transform(code, filename, plugins, opts)**: The core function. Parses code, runs plugins, returns transformed code.
+- **createVueMetamorphCli(options)**: Creates a CLI runner that globs files and runs plugins against them.
+
+## Quick Start
+
+```bash
+npx vue-metamorph my-codemod-name
+```
+
+Or install in an existing project:
+
+```bash
+npm install -D vue-metamorph
+```
+
+## Docs
+
+- [Installation](https://vue-metamorph.dev/guide/installation): Install or scaffold a new project
+- [Writing Codemods](https://vue-metamorph.dev/guide/writing-codemods): Tutorial with examples
+- [Helpers and Builders](https://vue-metamorph.dev/guide/helpers-and-builders): API reference for AST helpers and node builders
+- [SFC AST Reference](https://vue-metamorph.dev/guide/sfc-ast-reference): Vue template AST node type reference
+- [Manual Migrations](https://vue-metamorph.dev/guide/manual-migrations): Finding nodes that need human attention
+- [CLI](https://vue-metamorph.dev/guide/cli): CLI options and programmatic API
+- [API Reference](https://vue-metamorph.dev/api/vue-metamorph): Auto-generated API docs

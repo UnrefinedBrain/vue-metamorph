@@ -13,9 +13,27 @@ type Matcher<T> = T extends { type: string }
   : T;
 
 /**
- * Finds the first node in an AST that matches a partial node
+ * Finds the first node in an AST that matches a partial node using deep partial matching.
+ * Works with both script ASTs (ESTree) and template ASTs (vue-eslint-parser).
+ *
+ * @example
+ * ```ts
+ * // Find the first <div> in the template
+ * const div = findFirst(sfcAST, { type: 'VElement', name: 'div' });
+ *
+ * // Find the first console.log call in a script
+ * const log = findFirst(scriptAST, {
+ *   type: 'CallExpression',
+ *   callee: {
+ *     type: 'MemberExpression',
+ *     object: { type: 'Identifier', name: 'console' },
+ *     property: { type: 'Identifier', name: 'log' },
+ *   },
+ * });
+ * ```
+ *
  * @param ast - The node to traverse
- * @param matcher - Partial object to match against
+ * @param matcher - Partial object to match against (uses lodash isMatch)
  * @returns The first matching node, or null if no matching node was found
  * @public
  */
@@ -53,10 +71,28 @@ export function findFirst<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
 }
 
 /**
- * Finds all nodes in an AST that match a partial node
+ * Finds all nodes in an AST that match a partial node using deep partial matching.
+ * Works with both script ASTs (ESTree) and template ASTs (vue-eslint-parser).
+ *
+ * @example
+ * ```ts
+ * // Find all <MyComponent> elements in the template
+ * const els = findAll(sfcAST, { type: 'VElement', name: 'MyComponent' });
+ *
+ * // Find all v-if directives
+ * const vIfs = findAll(sfcAST, {
+ *   type: 'VAttribute',
+ *   directive: true,
+ *   key: { type: 'VDirectiveKey', name: { name: 'if' } },
+ * });
+ *
+ * // Find all call expressions in a script
+ * const calls = findAll(scriptAST, { type: 'CallExpression' });
+ * ```
+ *
  * @param ast - The node to traverse
- * @param matcher - Partial object to match against
- * @returns - All matching nodes
+ * @param matcher - Partial object to match against (uses lodash isMatch)
+ * @returns All matching nodes
  * @public
  */
 export function findAll<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
@@ -89,9 +125,18 @@ export function findAll<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
 }
 
 /**
- * Finds an existing import declaration for a module
+ * Finds an existing import declaration for a module in a script AST.
+ *
+ * @example
+ * ```ts
+ * const vueImport = findImportDeclaration(scriptAST, 'vue');
+ * if (vueImport) {
+ *   // An `import ... from 'vue'` declaration exists
+ * }
+ * ```
+ *
  * @param ast - The script AST
- * @param moduleSpecifier - The module name
+ * @param moduleSpecifier - The module name (e.g. `'vue'`, `'lodash-es'`)
  * @returns The ImportDeclaration node if one was found, or null
  * @public
  */
@@ -109,12 +154,22 @@ export function findImportDeclaration(
 }
 
 /**
- * Inserts a named import at the top of a script, or inserts a named import on
- * an existing import declaration for the moduleSpecifier
+ * Adds a named import to a script AST. If an import declaration for the module
+ * already exists, the new specifier is merged into it. Duplicate imports are skipped.
+ *
+ * @example
+ * ```ts
+ * // import { defineComponent } from 'vue';
+ * createNamedImport(scriptAST, 'vue', 'defineComponent');
+ *
+ * // import { map as lodashMap } from 'lodash-es';
+ * createNamedImport(scriptAST, 'lodash-es', 'map', 'lodashMap');
+ * ```
+ *
  * @param ast - The script AST
- * @param moduleSpecifier - The module name to import from
- * @param importName - The name of the import
- * @param localName - (optional) The local name of the named import
+ * @param moduleSpecifier - The module name to import from (e.g. `'vue'`)
+ * @param importName - The exported name of the import
+ * @param localName - The local alias (defaults to `importName`)
  * @public
  */
 export function createNamedImport(
@@ -161,11 +216,18 @@ export function createNamedImport(
 }
 
 /**
- * Inserts a default import at the top of a script, or inserts a default import
- * on an existing import declaration for the moduleSpecifier
+ * Adds a default import to a script AST. If an import declaration for the module
+ * already exists, the default specifier is merged into it. Duplicate imports are skipped.
+ *
+ * @example
+ * ```ts
+ * // import Vue from 'vue';
+ * createDefaultImport(scriptAST, 'vue', 'Vue');
+ * ```
+ *
  * @param ast - The script AST
- * @param moduleSpecifier - The module name to import from
- * @param importName - The name of the default import
+ * @param moduleSpecifier - The module name to import from (e.g. `'vue'`)
+ * @param importName - The local name for the default import
  * @public
  */
 export function createDefaultImport(
@@ -205,10 +267,18 @@ export function createDefaultImport(
 }
 
 /**
- * Inserts a namespaced import at the top of a script
+ * Adds a namespace (star) import to a script AST. If an import declaration for
+ * the module already exists, the namespace specifier is merged into it. Duplicate imports are skipped.
+ *
+ * @example
+ * ```ts
+ * // import * as _ from 'lodash-es';
+ * createNamespaceImport(scriptAST, 'lodash-es', '_');
+ * ```
+ *
  * @param ast - The script AST
- * @param moduleSpecifier - The module name to import from
- * @param namespaceName - The name of the namespace in the module
+ * @param moduleSpecifier - The module name to import from (e.g. `'lodash-es'`)
+ * @param namespaceName - The local name for the namespace import
  * @public
  */
 export function createNamespaceImport(
@@ -248,10 +318,25 @@ export function createNamespaceImport(
 }
 
 /**
- * Finds the Options API objects passed to Vue.extend(), Vue.component(),
- * Vue.mixin(), defineComponent(), or new Vue()
+ * Finds all Vue Options API object expressions in a script AST.
+ *
+ * Detects objects passed to `defineComponent()`, `Vue.extend()`, `Vue.component()`,
+ * `Vue.mixin()`, and `new Vue()`. When `isSfc` is true, also treats the default export
+ * as an options object.
+ *
+ * @example
+ * ```ts
+ * for (const scriptAST of scriptASTs) {
+ *   const options = findVueComponentOptions(scriptAST, sfcAST !== null);
+ *   for (const obj of options) {
+ *     // obj is an ObjectExpression — the { ... } passed to defineComponent(), etc.
+ *   }
+ * }
+ * ```
+ *
  * @param ast - The script AST
  * @param isSfc - If true, treat the default export as an options api object
+ * @returns Array of ObjectExpression nodes
  * @public
  */
 export function findVueComponentOptions(

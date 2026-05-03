@@ -7,7 +7,12 @@ import * as AST from './ast';
 export * as astHelpers from './ast-helpers';
 
 /**
- * AST Node builders
+ * Combined AST node builders for both script (ESTree/Babel) and template (Vue SFC) nodes.
+ *
+ * Script builders create JavaScript/TypeScript AST nodes (e.g. `builders.identifier()`,
+ * `builders.callExpression()`). Template builders create Vue template AST nodes
+ * (e.g. `builders.vElement()`, `builders.vDirective()`).
+ *
  * @public
  */
 const builders = {
