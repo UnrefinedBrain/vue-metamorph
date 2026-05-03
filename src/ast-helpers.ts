@@ -201,10 +201,12 @@ export function createNamedImport(
         continue;
       }
 
-      if (
-        specifier.imported.name === importName &&
-        (localName === importName || specifier.local?.name === localName)
-      ) {
+      // The effective local binding name of an existing specifier is its
+      // alias if present, otherwise the imported name itself. Comparing
+      // against this avoids matching `{ ref as myRef }` when the caller
+      // asked for an unaliased `ref` binding.
+      const effectiveLocalName = specifier.local?.name ?? specifier.imported.name;
+      if (specifier.imported.name === importName && effectiveLocalName === localName) {
         found = true;
       }
     }
@@ -297,29 +299,49 @@ export function createNamespaceImport(
   if (!decl) {
     // case 1: no existing import for this module
     ast.body.unshift(builders.importDeclaration([newSpecifier], builders.literal(moduleSpecifier)));
-  } else if (decl && !decl.specifiers) {
+    return;
+  }
+
+  if (!decl.specifiers) {
     // case 2: existing import, but with no specifiers
     decl.specifiers = [newSpecifier];
-  } else if (decl && decl.specifiers) {
-    let found = false;
-    for (const specifier of decl.specifiers!) {
-      if (specifier.type !== 'ImportNamespaceSpecifier') {
-        continue;
-      }
+    return;
+  }
 
-      if (!specifier.name || specifier.name.type !== 'Identifier') {
-        continue;
+  let existingNamespaceName: string | null = null;
+  let hasNamedSpecifier = false;
+  for (const specifier of decl.specifiers) {
+    if (specifier.type === 'ImportNamespaceSpecifier') {
+      if (specifier.local?.type === 'Identifier') {
+        existingNamespaceName = specifier.local.name;
       }
-
-      if (specifier.name.name === namespaceName) {
-        found = true;
-      }
-    }
-
-    if (!found) {
-      decl.specifiers.push(newSpecifier);
+    } else if (specifier.type === 'ImportSpecifier') {
+      hasNamedSpecifier = true;
     }
   }
+
+  if (existingNamespaceName !== null) {
+    if (existingNamespaceName === namespaceName) {
+      return;
+    }
+    throw new Error(
+      `Cannot add namespace import '${namespaceName}' from '${moduleSpecifier}': a different namespace import '${existingNamespaceName}' already exists.`,
+    );
+  }
+
+  if (hasNamedSpecifier) {
+    // ESM forbids combining a NameSpaceImport with NamedImports in one
+    // declaration, so we emit a sibling declaration instead.
+    const idx = ast.body.indexOf(decl);
+    ast.body.splice(
+      idx === -1 ? 0 : idx,
+      0,
+      builders.importDeclaration([newSpecifier], builders.literal(moduleSpecifier)),
+    );
+    return;
+  }
+
+  decl.specifiers.push(newSpecifier);
 }
 
 /**

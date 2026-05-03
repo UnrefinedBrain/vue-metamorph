@@ -161,10 +161,38 @@ describe('createNamespaceImport', () => {
     import { defineComponent } from 'vue';
     const a = 1 + 1;`;
 
-    // namespace specifier gets appended alongside existing named specifiers
-    const result = transform(input, 'file.js', [codemod]);
-    expect(result.code).toContain('* as Vue');
-    expect(result.code).toContain('defineComponent');
+    // ESM allows a namespace specifier alongside named specifiers as long as
+    // they're in separate import declarations, but not in the same one. Adding
+    // it to the existing decl is invalid; the helper splits it into a second
+    // declaration.
+    expect(transform(input, 'file.js', [codemod]).code).toMatchInlineSnapshot(`
+      "import * as Vue from 'vue';
+      import { defineComponent } from 'vue';
+      const a = 1 + 1;
+      "
+    `);
+  });
+
+  it('should do nothing if the same namespace import already exists', () => {
+    const input = `
+    import * as Vue from 'vue';
+    const a = 1 + 1;`;
+
+    expect(transform(input, 'file.js', [codemod]).code).toMatchInlineSnapshot(`
+      "import * as Vue from 'vue';
+      const a = 1 + 1;
+      "
+    `);
+  });
+
+  it('should throw if a different namespace import already exists', () => {
+    const input = `
+    import * as Foo from 'vue';
+    const a = 1 + 1;`;
+
+    expect(() => transform(input, 'file.js', [codemod])).toThrowError(
+      /Cannot add namespace import 'Vue' from 'vue'.*'Foo'/,
+    );
   });
 });
 
@@ -222,6 +250,47 @@ describe('createNamedImport', () => {
 
     expect(transform(input, 'file.js', [codemod]).code).toMatchInlineSnapshot(`
       "import { defineComponent } from 'vue';
+      const a = 1 + 1;
+      "
+    `);
+  });
+});
+
+describe('createNamedImport without localName', () => {
+  const codemod: CodemodPlugin = {
+    type: 'codemod',
+    name: '',
+    transform({ scriptASTs }) {
+      if (scriptASTs[0]) {
+        astHelpers.createNamedImport(scriptASTs[0], 'vue', 'ref');
+      }
+
+      return 1;
+    },
+  };
+
+  it('should add an unaliased import even when an aliased version already exists', () => {
+    const input = `
+    import { ref as myRef } from 'vue';
+    const a = 1 + 1;`;
+
+    // The existing aliased import does not create a `ref` binding, so the
+    // helper must still add the unaliased specifier; otherwise downstream
+    // `ref(...)` calls would be undefined at runtime.
+    expect(transform(input, 'file.js', [codemod]).code).toMatchInlineSnapshot(`
+      "import { ref as myRef, ref } from 'vue';
+      const a = 1 + 1;
+      "
+    `);
+  });
+
+  it('should not duplicate an unaliased import that already exists', () => {
+    const input = `
+    import { ref } from 'vue';
+    const a = 1 + 1;`;
+
+    expect(transform(input, 'file.js', [codemod]).code).toMatchInlineSnapshot(`
+      "import { ref } from 'vue';
       const a = 1 + 1;
       "
     `);
