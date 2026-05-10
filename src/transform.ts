@@ -1,7 +1,7 @@
 import MagicString from 'magic-string';
 import { cloneDeep, get, uniqWith, isEqual } from 'lodash-es';
 import * as recast from 'recast-x';
-import deepDiff from 'deep-diff';
+import deepDiff from './vendor/deep-diff/index.js';
 import * as AST from './ast';
 import { utils, type CodemodPlugin } from './types';
 import { setParents, vText } from './builders';
