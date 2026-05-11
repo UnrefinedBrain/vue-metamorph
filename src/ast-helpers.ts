@@ -43,7 +43,7 @@ export function findFirst<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
 ): (AST.Node & { type: M['type'] }) | null {
   let matchingNode: AST.Node | namedTypes.Node | null = null;
 
-  if (ast.type.startsWith('V')) {
+  if (AST.TEMPLATE_NODE_TYPES.has(ast.type)) {
     AST.traverseNodes(ast as AST.Node, {
       enterNode(node) {
         if (!matchingNode && isMatch(node, matcher)) {
@@ -101,7 +101,7 @@ export function findAll<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
 ): (AST.Node & { type: M['type'] })[] {
   const matchingNodes: (AST.Node | namedTypes.Node)[] = [];
 
-  if (ast.type.startsWith('V')) {
+  if (AST.TEMPLATE_NODE_TYPES.has(ast.type)) {
     AST.traverseNodes(ast as AST.Node, {
       enterNode(node) {
         if (isMatch(node, matcher)) {

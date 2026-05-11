@@ -67,6 +67,25 @@ describe('findFirst', () => {
       const result = findFirst(ast, { type: 'VariableDeclaration', kind: 'let' });
       expect(result).not.toBeNull();
     });
+
+    it('finds descendants when handed a VariableDeclaration as the root', () => {
+      const ast = parseTs('const x = 42;', false);
+      const decl = findFirst(ast, { type: 'VariableDeclaration' });
+      expect(decl).not.toBeNull();
+
+      const ident = findFirst(decl!, { type: 'Identifier', name: 'x' });
+      expect(ident).not.toBeNull();
+      expect(ident!.type).toBe('Identifier');
+    });
+
+    it('finds descendants when handed a VariableDeclarator as the root', () => {
+      const ast = parseTs('const x = 42;', false);
+      const declarator = findFirst(ast, { type: 'VariableDeclarator' });
+      expect(declarator).not.toBeNull();
+
+      const literal = findFirst(declarator!, { type: 'Literal' });
+      expect(literal).not.toBeNull();
+    });
   });
 });
 
@@ -123,6 +142,18 @@ describe('findAll', () => {
       const ast = parseTs(code, false);
       const results = findAll(ast, { type: 'ReturnStatement' });
       expect(results).toHaveLength(2);
+    });
+
+    it('finds descendants when handed a VariableDeclaration as the root', () => {
+      const ast = parseTs('const { a, b } = obj;', false);
+      const decl = findFirst(ast, { type: 'VariableDeclaration' });
+      expect(decl).not.toBeNull();
+
+      const idents = findAll(decl!, { type: 'Identifier' });
+      const names = idents.map((n) => (n as { name: string }).name);
+      expect(names).toContain('a');
+      expect(names).toContain('b');
+      expect(names).toContain('obj');
     });
   });
 });

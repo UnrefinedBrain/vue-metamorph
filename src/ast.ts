@@ -166,6 +166,28 @@ export type VNode =
   | VGenericExpression;
 
 /**
+ * @public
+ */
+export const TEMPLATE_NODE_TYPES: ReadonlySet<string> = new Set([
+  'VAttribute',
+  'VDirectiveKey',
+  'VDocumentFragment',
+  'VElement',
+  'VEndTag',
+  'VExpressionContainer',
+  'VFilter',
+  'VFilterSequenceExpression',
+  'VForExpression',
+  'VGenericExpression',
+  'VIdentifier',
+  'VLiteral',
+  'VOnExpression',
+  'VSlotScopeExpression',
+  'VStartTag',
+  'VText',
+]);
+
+/**
  * Text nodes.
  * @public
  */
