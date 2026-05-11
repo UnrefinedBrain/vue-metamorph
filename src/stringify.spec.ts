@@ -258,6 +258,14 @@ describe('VOnExpression', () => {
     const node = builders.vOnExpression([]);
     expect(stringify(node)).toBe('');
   });
+
+  it('should stringify a v-on expression with multiple statements', () => {
+    const node = builders.vOnExpression([
+      b.expressionStatement(b.callExpression(b.identifier('a'), [])),
+      b.expressionStatement(b.callExpression(b.identifier('b'), [])),
+    ]);
+    expect(stringify(node)).toBe('a(); b();');
+  });
 });
 
 describe('VSlotScopeExpression', () => {

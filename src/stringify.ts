@@ -203,7 +203,7 @@ export function stringifyVForExpression(node: AST.VForExpression): string {
 }
 
 export function stringifyVOnExpression(node: AST.VOnExpression): string {
-  return node.body[0] ? stringifyWithRecast(node.body[0]) : '';
+  return node.body.map(stringifyWithRecast).join(' ');
 }
 
 export function stringifyVSlotScopeExpression(node: AST.VSlotScopeExpression): string {

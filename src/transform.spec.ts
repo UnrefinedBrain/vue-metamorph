@@ -1150,4 +1150,34 @@ export default {};
       transform('.foo { color: red; }', 'file.css', [plugin]);
     });
   });
+
+  describe('multi-statement v-on handlers', () => {
+    it('preserves every statement when a template re-print is forced', () => {
+      const input = `<template>
+  <button @click="a(); b()">click</button>
+</template>
+`;
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'add-class',
+        transform({ sfcAST, utils: { astHelpers, builders } }) {
+          if (sfcAST) {
+            astHelpers.findAll(sfcAST, { type: 'VElement', name: 'button' }).forEach((el) => {
+              el.startTag.attributes.push(
+                builders.vAttribute(builders.vIdentifier('class'), builders.vLiteral('primary')),
+              );
+            });
+          }
+          return 1;
+        },
+      };
+      const result = transform(input, 'file.vue', [plugin]).code;
+      expect(result).toMatchInlineSnapshot(`
+        "<template>
+          <button @click="a(); b();" class="primary">click</button>
+        </template>
+        "
+      `);
+    });
+  });
 });
