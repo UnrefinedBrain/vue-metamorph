@@ -87,6 +87,20 @@ describe('VLiteral', () => {
 
     expect(stringify(node)).toBe('"foo"');
   });
+
+  it('should escape double quotes in the value', () => {
+    const node = builders.vLiteral('she said "hi"');
+
+    // Without escaping the printer emits `"she said "hi""` which closes the
+    // attribute prematurely and produces invalid HTML.
+    expect(stringify(node)).toBe('"she said &quot;hi&quot;"');
+  });
+
+  it('should escape ampersands before quotes', () => {
+    const node = builders.vLiteral('a & b "c"');
+
+    expect(stringify(node)).toBe('"a &amp; b &quot;c&quot;"');
+  });
 });
 
 describe('VAttribute', () => {
@@ -121,6 +135,15 @@ describe('VAttribute', () => {
       const node = builders.vAttribute(builders.vIdentifier('foo'), builders.vLiteral('bar'));
 
       expect(stringify(node)).toBe('foo="bar"');
+    });
+
+    it('should escape quotes in a VLiteral attribute value', () => {
+      const node = builders.vAttribute(
+        builders.vIdentifier('title'),
+        builders.vLiteral('she said "hi"'),
+      );
+
+      expect(stringify(node)).toBe('title="she said &quot;hi&quot;"');
     });
   });
 });
@@ -391,5 +414,23 @@ describe('HtmlComment', () => {
     );
 
     expect(stringifyHtmlComment(comment)).toBe('<!-- 3 --><!-- 2 --><!-- 1 -->');
+  });
+
+  it('should throw if the comment value contains a comment terminator', () => {
+    const comment = builders.htmlComment(' --> dangerous ');
+
+    expect(() => stringifyHtmlComment(comment)).toThrowError(/comment terminator/);
+  });
+
+  it('should throw if the comment value contains the alternate `--!>` terminator', () => {
+    const comment = builders.htmlComment(' --!> dangerous ');
+
+    expect(() => stringifyHtmlComment(comment)).toThrowError(/comment terminator/);
+  });
+
+  it('should allow bare double-dash inside a comment value', () => {
+    const comment = builders.htmlComment(' -- hello -- ');
+
+    expect(stringifyHtmlComment(comment)).toBe('<!-- -- hello -- -->');
   });
 });

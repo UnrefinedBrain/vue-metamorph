@@ -86,8 +86,12 @@ export function stringifyVDirectiveKey(node: AST.VDirectiveKey): string {
   return str;
 }
 
+function escapeAttributeValue(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
+}
+
 export function stringifyVLiteral(node: AST.VLiteral): string {
-  return `"${node.value}"`;
+  return `"${escapeAttributeValue(node.value)}"`;
 }
 
 export function stringifyVAttribute(node: AST.VAttribute | AST.VDirective): string {
@@ -95,7 +99,7 @@ export function stringifyVAttribute(node: AST.VAttribute | AST.VDirective): stri
 
   if (node.value) {
     if (node.value.type === 'VLiteral') {
-      str += `="${node.value.value}"`;
+      str += `="${escapeAttributeValue(node.value.value)}"`;
     } else {
       str += `="${stringify(node.value)}"`;
     }
@@ -225,6 +229,12 @@ export function stringifyVGenericExpression(node: AST.VGenericExpression): strin
 export function stringifyHtmlComment(node: AST.HtmlComment | null) {
   if (!node) {
     return '';
+  }
+
+  if (node.value.includes('-->') || node.value.includes('--!>') || node.value.includes('<!--')) {
+    throw new Error(
+      `HTML comment value contains a comment terminator: ${JSON.stringify(node.value)}`,
+    );
   }
 
   let leadingComments = '';
