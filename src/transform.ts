@@ -222,17 +222,24 @@ function transformVueFile(
 
           We don't need to worry about the deeper changed node since one of its ancestors
           has changed and the deeper node's changes will be printed anyways.
+
+          Sort ascending by path length first: uniqWith keeps the first occurrence
+          and drops later matches, so the shorter (ancestor) path needs to land in
+          the array before any of its descendants.
         */
-        const collapsedChanges = uniqWith(changedNodes, (a: ChangedNode, b: ChangedNode) => {
-          if (a.path.length === b.path.length) {
-            return isEqual(a.path, b.path);
-          }
+        const collapsedChanges = uniqWith(
+          [...changedNodes].sort((a, b) => a.path.length - b.path.length),
+          (a: ChangedNode, b: ChangedNode) => {
+            if (a.path.length === b.path.length) {
+              return isEqual(a.path, b.path);
+            }
 
-          const lesser = a.path.length < b.path.length ? a : b;
-          const greater = lesser === a ? b : a;
+            const lesser = a.path.length < b.path.length ? a : b;
+            const greater = lesser === a ? b : a;
 
-          return isEqual(lesser.path, greater.path.slice(0, lesser.path.length - 1));
-        }).sort((a, b) => b.path.length - a.path.length);
+            return isEqual(lesser.path, greater.path.slice(0, lesser.path.length));
+          },
+        ).sort((a, b) => b.path.length - a.path.length);
 
         for (const { start, end, node } of collapsedChanges) {
           ms.update(start, end, stringify(node));
