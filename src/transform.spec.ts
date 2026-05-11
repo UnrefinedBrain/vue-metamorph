@@ -492,6 +492,74 @@ const color = ref('red');
     `);
   });
 
+  it('should not inject script AST into a preceding empty <script> tag', () => {
+    const input = `<template>
+  <div></div>
+</template>
+<script></script>
+<script setup>
+const a = 'hello';
+</script>
+`;
+
+    const plugin: CodemodPlugin = {
+      type: 'codemod',
+      name: 'rewrite-literal',
+      transform({ scriptASTs, utils: { traverseScriptAST } }) {
+        let count = 0;
+        for (const ast of scriptASTs) {
+          traverseScriptAST(ast, {
+            visitLiteral(path) {
+              if (typeof path.node.value === 'string') {
+                path.node.value = 'world';
+                count++;
+              }
+              return this.traverse(path);
+            },
+          });
+        }
+        return count;
+      },
+    };
+
+    const out = transform(input, 'file.vue', [plugin]).code;
+    // empty script must stay empty; populated <script setup> must receive the rewrite
+    expect(out).toContain('<script></script>');
+    expect(out).toContain("const a = 'world';");
+    expect(out).not.toMatch(/<script>\s*const a = /);
+  });
+
+  it('should not inject style AST into a preceding empty <style> tag', () => {
+    const input = `<template>
+  <div></div>
+</template>
+<style></style>
+<style scoped>
+.foo { color: red; }
+</style>
+`;
+
+    const plugin: CodemodPlugin = {
+      type: 'codemod',
+      name: 'rewrite-color',
+      transform({ styleASTs }) {
+        let count = 0;
+        for (const style of styleASTs) {
+          style.walkDecls('color', (decl) => {
+            decl.value = 'blue';
+            count++;
+          });
+        }
+        return count;
+      },
+    };
+
+    const out = transform(input, 'file.vue', [plugin]).code;
+    expect(out).toContain('<style></style>');
+    expect(out).toContain('color: blue');
+    expect(out).not.toMatch(/<style>\s*\.foo \{/);
+  });
+
   it('should add a new element to the sfc ast', () => {
     const input = `<template>
   <div></div>

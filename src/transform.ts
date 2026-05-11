@@ -58,7 +58,18 @@ function transformVueFile(
   const stats: [string, number][] = [];
 
   const ms = new MagicString(workingCode);
-  const { scriptASTs, sfcAST, styleASTs, neededExtraTemplate } = parseVue(workingCode);
+  const {
+    scriptASTs,
+    sfcAST,
+    styleASTs,
+    scriptASTMap,
+    styleASTMap,
+    originalScripts,
+    originalStyles,
+    neededExtraTemplate,
+  } = parseVue(workingCode);
+  const originalScriptCount = scriptASTMap.size;
+  const originalStyleCount = styleASTMap.size;
   const templateAst = sfcAST.templateBody?.parent as unknown as VDocumentFragment;
   const originalTemplate = cloneDeep(templateAst);
 
@@ -78,27 +89,31 @@ function transformVueFile(
   if (templateAst && originalTemplate) {
     setParents(templateAst);
 
-    let scriptIndex = 0;
-    let styleIndex = 0;
+    let nextExtraScript = originalScriptCount;
+    let nextExtraStyle = originalStyleCount;
     AST.traverseNodes(templateAst as never, {
       enterNode(node) {
-        if (
-          node.type === 'VElement' &&
-          node.name === 'script' &&
-          node.parent === templateAst &&
-          scriptIndex < scriptASTs.length
-        ) {
-          const newCode = recast
-            .print(scriptASTs[scriptIndex]!, recastOptions)
-            .code.replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
-
-          const text = `${newCode.startsWith('\n') ? '' : '\n'}${newCode}\n`;
-          if (node.children[0]?.type === 'VText') {
-            node.children[0].value = text;
-          } else {
-            node.children.unshift(vText(text));
+        if (node.type === 'VElement' && node.name === 'script' && node.parent === templateAst) {
+          let scriptAst = scriptASTMap.get(node as never);
+          if (
+            !scriptAst &&
+            !originalScripts.has(node as never) &&
+            nextExtraScript < scriptASTs.length
+          ) {
+            scriptAst = scriptASTs[nextExtraScript++];
           }
-          scriptIndex++;
+          if (scriptAst) {
+            const newCode = recast
+              .print(scriptAst, recastOptions)
+              .code.replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
+
+            const text = `${newCode.startsWith('\n') ? '' : '\n'}${newCode}\n`;
+            if (node.children[0]?.type === 'VText') {
+              node.children[0].value = text;
+            } else {
+              node.children.unshift(vText(text));
+            }
+          }
         }
 
         if (
@@ -106,17 +121,24 @@ function transformVueFile(
           node.name === 'style' &&
           node.parent === templateAst &&
           isSupportedLang(getLangAttribute(node)) &&
-          node.children[0]?.type === 'VText' &&
-          styleASTs[styleIndex]
+          node.children[0]?.type === 'VText'
         ) {
-          const newCode = styleASTs[styleIndex]!.toString(
-            syntaxMap[getLangAttribute(node)]!.stringify,
-          ).replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
+          let styleAst = styleASTMap.get(node as never);
+          if (
+            !styleAst &&
+            !originalStyles.has(node as never) &&
+            nextExtraStyle < styleASTs.length
+          ) {
+            styleAst = styleASTs[nextExtraStyle++];
+          }
+          if (styleAst) {
+            const newCode = styleAst
+              .toString(syntaxMap[getLangAttribute(node)]!.stringify)
+              .replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
 
-          node.children.length = 0;
-          node.children.push(vText(`${newCode.startsWith('\n') ? '' : '\n'}${newCode}`));
-
-          styleIndex++;
+            node.children.length = 0;
+            node.children.push(vText(`${newCode.startsWith('\n') ? '' : '\n'}${newCode}`));
+          }
         }
       },
       leaveNode() {
