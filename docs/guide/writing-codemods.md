@@ -18,8 +18,9 @@ const changeStringLiterals: CodemodPlugin = {
   name: 'change string literals to hello, world',
 
   transform({ scriptASTs, sfcAST, styleASTs, filename, utils: { traverseScriptAST, traverseTemplateAST } }) {
-    // codemod plugins self-report the number of transforms it made
-    // this is only used to print the stats in CLI output
+    // codemod plugins self-report the number of transforms they made
+    // this is used to print stats in CLI output, and to decide whether
+    // the file needs to be re-written (see "Return Value" below)
     let transformCount = 0;
 
     // scriptASTs is an array of Program ASTs
@@ -81,6 +82,17 @@ const codemod = {
 ```
 
 :::
+
+## Return Value
+
+A codemod's `transform()` function should return the number of mutations it made to the AST. The CLI runner uses this value for two things:
+
+1. Aggregating the per-plugin stats printed at the end of a run.
+2. Deciding whether to write the file back to disk. If every codemod returns `0` for a given file, the CLI leaves the file on disk untouched.
+
+This matters because the underlying printer ([recast](https://github.com/benjamn/recast)) preserves the original formatting for AST nodes it knows haven't been touched, but it can still make small, harmless formatting changes to the rest of the file when it re-prints (for example, normalizing quote styles or inserting trailing newlines). Gating the write on the reported count avoids touching files that didn't actually need to change.
+
+The practical implication: if your codemod mutates the AST, it must return a non-zero count, otherwise the CLI will discard those mutations. Conversely, if your codemod only inspects the AST without mutating it, returning `0` is correct and will leave the file alone.
 
 ## HTML Code Comments
 
