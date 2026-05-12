@@ -27,12 +27,12 @@
     "template"
   ],
   "type": "module",
-  "main": "dist/main.js",
+  "main": "dist/main.mjs",
   "types": "dist/vue-metamorph.d.ts",
   "typings": "dist/vue-metamorph.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/main.js",
+      "import": "./dist/main.mjs",
       "types": "./dist/vue-metamorph.d.ts"
     }
   },
