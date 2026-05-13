@@ -182,12 +182,12 @@ jobs:
             repo: UnrefinedBrain/vue-upgrade-tool
             pkg_path: package.json
             pnpm_version: ^9.9.0
-            test_cmd: pnpm test --run
+            test_cmd: pnpm test -- --run
           - name: scriptshifter
             repo: UnrefinedBrain/scriptshifter
             pkg_path: package.json
             pnpm_version: ^9.9.0
-            test_cmd: pnpm test --run
+            test_cmd: pnpm test -- --run
     steps:
       # Checkout vue-metamorph first so .nvmrc is available to setup-node.
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
