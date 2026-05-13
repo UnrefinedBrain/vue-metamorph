@@ -125,3 +125,107 @@ jobs:
           pnpm install
           pnpm build
           pnpm lint
+
+  # Builds vue-metamorph once and uploads the tarball for the ecosystem matrix
+  # to consume; keeps the consumer jobs independent of our build configuration.
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3.0.0
+        with:
+          version: ^9.9.0
+          run_install: false
+      - shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-pnpm-store-
+
+      - run: pnpm install
+      - run: pnpm build
+      - run: pnpm pack --pack-destination "$RUNNER_TEMP"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: vue-metamorph-tarball
+          path: ${{ runner.temp }}/vue-metamorph-*.tgz
+          if-no-files-found: error
+
+  # Runs each consumer's own test suite against the packed vue-metamorph build.
+  # The consumers we test here import vue-metamorph's public API directly, so
+  # their snapshot/unit tests act as a canary for accidental API breakage.
+  # Adding a new consumer is a single matrix entry.
+  ecosystem:
+    needs: pack
+    runs-on: ubuntu-latest
+    name: ecosystem (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          # shadcn-vue pins pnpm@10 via packageManager; the dep lives in the
+          # nested cli workspace package, and their test script already runs
+          # vitest once (vitest run), so no extra --run is needed.
+          - name: shadcn-vue
+            repo: unovue/shadcn-vue
+            pkg_path: packages/cli/package.json
+            pnpm_version: 10.25.0
+            test_cmd: pnpm --filter shadcn-vue test
+          - name: vue-upgrade-tool
+            repo: UnrefinedBrain/vue-upgrade-tool
+            pkg_path: package.json
+            pnpm_version: ^9.9.0
+            test_cmd: pnpm test --run
+          - name: scriptshifter
+            repo: UnrefinedBrain/scriptshifter
+            pkg_path: package.json
+            pnpm_version: ^9.9.0
+            test_cmd: pnpm test --run
+    steps:
+      # Checkout vue-metamorph first so .nvmrc is available to setup-node.
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          path: vue-metamorph
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: vue-metamorph/.nvmrc
+      - uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3.0.0
+        with:
+          version: ${{ matrix.pnpm_version }}
+          run_install: false
+
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          repository: ${{ matrix.repo }}
+          path: downstream
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: vue-metamorph-tarball
+          path: ${{ runner.temp }}
+
+      - name: Swap vue-metamorph dependency for the packed tarball
+        working-directory: downstream
+        env:
+          PKG: ${{ matrix.pkg_path }}
+        run: |
+          TARBALL=$(ls "$RUNNER_TEMP"/vue-metamorph-*.tgz)
+          jq --arg t "file:$TARBALL" \
+            '.dependencies["vue-metamorph"] = $t' \
+            "$PKG" > "$PKG.tmp"
+          mv "$PKG.tmp" "$PKG"
+
+      - name: Install
+        working-directory: downstream
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Run tests
+        working-directory: downstream
+        run: ${{ matrix.test_cmd }}
