@@ -2,7 +2,7 @@
 # ![](./docs/public/logo-xs.png) vue-metamorph
 
 [![NPM License](https://img.shields.io/npm/l/vue-metamorph)](https://github.com/UnrefinedBrain/vue-metamorph/blob/master/LICENSE) [![NPM Version](https://img.shields.io/npm/v/vue-metamorph)](https://npmjs.com/package/vue-metamorph)
- ![NPM Downloads](https://img.shields.io/npm/dw/vue-metamorph)
+ ![NPM Downloads](https://img.shields.io/npm/dm/vue-metamorph)
  [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/UnrefinedBrain/vue-metamorph/ci.yml)](https://github.com/UnrefinedBrain/vue-metamorph/actions) ![NPM Type Definitions](https://img.shields.io/npm/types/vue-metamorph) [![GitHub Repo stars](https://img.shields.io/github/stars/UnrefinedBrain/vue-metamorph)](https://github.com/UnrefinedBrain/vue-metamorph)
 
 vue-metamorph is a codemod framework for JavaScript, TypeScript, Vue, CSS, SCSS, SASS, LESS, and Stylus files. It provides an easy way to reliably manipulate source code using abstract syntax trees.
