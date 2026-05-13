@@ -230,3 +230,93 @@ jobs:
       - name: Run tests
         working-directory: downstream
         run: ${{ matrix.test_cmd }}
+
+      # Fast CLI smoke: hand-rolled fixture so we can assert vue-metamorph
+      # actually rewrote @/-aliased imports in the generated component file.
+      # We deliberately use a non-default utils alias (~/lib/utils) so the
+      # rewrite is observable in the output.
+      - name: shadcn-vue CLI smoke (fixture-based `add`)
+        if: matrix.name == 'shadcn-vue'
+        env:
+          CLI: ${{ github.workspace }}/downstream/packages/cli/dist/index.js
+          SMOKE: ${{ runner.temp }}/cli-smoke-fixture
+        run: |
+          set -euo pipefail
+          mkdir -p "$SMOKE/src"
+          : > "$SMOKE/src/index.css"
+          cat > "$SMOKE/package.json" <<'JSON'
+          {
+            "name": "smoke",
+            "private": true,
+            "version": "0.0.0",
+            "type": "module",
+            "packageManager": "pnpm@10.25.0"
+          }
+          JSON
+          cat > "$SMOKE/tsconfig.json" <<'JSON'
+          {
+            "compilerOptions": {
+              "baseUrl": ".",
+              "paths": { "~/*": ["./src/*"] }
+            }
+          }
+          JSON
+          cat > "$SMOKE/components.json" <<'JSON'
+          {
+            "$schema": "https://shadcn-vue.com/schema.json",
+            "style": "new-york",
+            "typescript": true,
+            "tailwind": {
+              "config": "tailwind.config.ts",
+              "css": "src/index.css",
+              "baseColor": "neutral",
+              "cssVariables": true
+            },
+            "aliases": {
+              "components": "~/components",
+              "utils": "~/lib/utils",
+              "ui": "~/components/ui",
+              "lib": "~/lib",
+              "composables": "~/composables"
+            },
+            "iconLibrary": "lucide"
+          }
+          JSON
+          node "$CLI" add button --cwd "$SMOKE" --yes --silent
+          # Files were written under ~/components/ui/* per our aliases.
+          find "$SMOKE" -name 'Button.vue' -print -quit | grep -q .
+          # Verify transformImport actually rewrote registry/@-aliased imports
+          # to our custom utils alias (quote style varies by registry source).
+          if ! grep -rqE "from ['\"]~/lib/utils['\"]" "$SMOKE"; then
+            echo "FAIL: expected vue-metamorph to rewrite utils import to ~/lib/utils"
+            grep -rE "from ['\"][^'\"]*utils[^'\"]*['\"]" "$SMOKE" || true
+            exit 1
+          fi
+
+      # Slow but representative: scaffold a real Vite project end-to-end via
+      # `init --defaults`, which runs the full project create + base style
+      # install path. A failure here means the user-facing happy path is broken.
+      - name: shadcn-vue CLI smoke (full `init --template vite`)
+        if: matrix.name == 'shadcn-vue'
+        env:
+          CLI: ${{ github.workspace }}/downstream/packages/cli/dist/index.js
+          SMOKE: ${{ runner.temp }}/cli-smoke-init
+        run: |
+          set -euo pipefail
+          mkdir -p "$SMOKE"
+          # Pass `button` as a positional so init actually installs a component
+          # through the transform pipeline; without it, `init --defaults` only
+          # writes components.json + base style and never exercises vue-metamorph
+          # on a generated .vue file.
+          node "$CLI" init button \
+            --defaults \
+            --template vite \
+            --name app \
+            --base-color neutral \
+            --cwd "$SMOKE" \
+            --yes \
+            --silent
+          # init scaffolds into $SMOKE/app; sanity-check the project exists and
+          # the button component was actually written.
+          test -f "$SMOKE/app/package.json"
+          find "$SMOKE/app" -name 'Button.vue' -print -quit | grep -q .
