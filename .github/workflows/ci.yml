@@ -242,6 +242,10 @@ jobs:
           SMOKE: ${{ runner.temp }}/cli-smoke-fixture
         run: |
           set -euo pipefail
+          pass() { echo "  PASS: $*"; }
+          fail() { echo "  FAIL: $*" >&2; exit 1; }
+
+          echo "::group::Setting up fixture project at $SMOKE"
           mkdir -p "$SMOKE/src"
           : > "$SMOKE/src/index.css"
           cat > "$SMOKE/package.json" <<'JSON'
@@ -282,16 +286,38 @@ jobs:
             "iconLibrary": "lucide"
           }
           JSON
+          echo "Created fixture files:"
+          ( cd "$SMOKE" && find . -type f | sort | sed 's/^/  /' )
+          echo "::endgroup::"
+
+          echo "::group::Running shadcn-vue add button"
+          echo "\$ node \$CLI add button --cwd \$SMOKE --yes --silent"
           node "$CLI" add button --cwd "$SMOKE" --yes --silent
-          # Files were written under ~/components/ui/* per our aliases.
-          find "$SMOKE" -name 'Button.vue' -print -quit | grep -q .
-          # Verify transformImport actually rewrote registry/@-aliased imports
-          # to our custom utils alias (quote style varies by registry source).
-          if ! grep -rqE "from ['\"]~/lib/utils['\"]" "$SMOKE"; then
-            echo "FAIL: expected vue-metamorph to rewrite utils import to ~/lib/utils"
-            grep -rE "from ['\"][^'\"]*utils[^'\"]*['\"]" "$SMOKE" || true
-            exit 1
+          echo "::endgroup::"
+
+          echo "Verifying generated output:"
+
+          BUTTON=$(find "$SMOKE" -name 'Button.vue' | head -n 1 || true)
+          if [ -z "$BUTTON" ]; then
+            echo "Files under $SMOKE after add:"
+            find "$SMOKE" -type f | sort | sed 's/^/    /'
+            fail "Button.vue was not generated"
           fi
+          pass "Button.vue generated at ${BUTTON#"$SMOKE"/}"
+
+          # Verify transformImport actually rewrote @/-aliased imports to our
+          # custom utils alias (quote style varies by registry source).
+          UTILS_FILE=$(grep -rlE "from ['\"]~/lib/utils['\"]" "$SMOKE" | head -n 1 || true)
+          if [ -z "$UTILS_FILE" ]; then
+            echo "Imports of *utils* found in generated files:"
+            grep -rnE "from ['\"][^'\"]*utils[^'\"]*['\"]" "$SMOKE" | sed 's/^/    /' || true
+            fail "expected vue-metamorph to rewrite utils import to ~/lib/utils"
+          fi
+          pass "utils alias rewritten to ~/lib/utils (in ${UTILS_FILE#"$SMOKE"/})"
+
+          echo "::group::Generated $(basename "$BUTTON")"
+          cat "$BUTTON"
+          echo "::endgroup::"
 
       # Slow but representative: scaffold a real Vite project end-to-end via
       # `init --defaults`, which runs the full project create + base style
@@ -303,7 +329,12 @@ jobs:
           SMOKE: ${{ runner.temp }}/cli-smoke-init
         run: |
           set -euo pipefail
+          pass() { echo "  PASS: $*"; }
+          fail() { echo "  FAIL: $*" >&2; exit 1; }
+
           mkdir -p "$SMOKE"
+
+          echo "::group::Running shadcn-vue init button --defaults --template vite"
           # Pass `button` as a positional so init actually installs a component
           # through the transform pipeline; without it, `init --defaults` only
           # writes components.json + base style and never exercises vue-metamorph
@@ -316,7 +347,21 @@ jobs:
             --cwd "$SMOKE" \
             --yes \
             --silent
-          # init scaffolds into $SMOKE/app; sanity-check the project exists and
-          # the button component was actually written.
-          test -f "$SMOKE/app/package.json"
-          find "$SMOKE/app" -name 'Button.vue' -print -quit | grep -q .
+          echo "::endgroup::"
+
+          echo "Verifying scaffolded project:"
+
+          if [ ! -f "$SMOKE/app/package.json" ]; then
+            echo "Contents of $SMOKE:"
+            find "$SMOKE" -maxdepth 3 -type f | sort | sed 's/^/    /'
+            fail "$SMOKE/app/package.json missing — init didn't scaffold the project"
+          fi
+          pass "scaffolded Vite project at \$SMOKE/app"
+
+          BUTTON=$(find "$SMOKE/app" -name 'Button.vue' | head -n 1 || true)
+          if [ -z "$BUTTON" ]; then
+            echo "Vue files under $SMOKE/app:"
+            find "$SMOKE/app" -name '*.vue' | sort | sed 's/^/    /'
+            fail "Button.vue was not generated"
+          fi
+          pass "Button.vue generated at ${BUTTON#"$SMOKE/app"/}"
