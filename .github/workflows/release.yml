@@ -55,5 +55,7 @@ jobs:
 
       - name: Build
         run: pnpm build
+      - name: Verify package.json file references exist
+        run: node scripts/verify-package-files.js
       - name: Publish
         run: npm publish --access=public --provenance
