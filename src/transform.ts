@@ -1,9 +1,10 @@
 import MagicString from 'magic-string';
 import { cloneDeep, get, uniqWith, isEqual } from 'lodash-es';
 import * as recast from 'recast-x';
+import type postcss from 'postcss';
 import deepDiff from './vendor/deep-diff/index.js';
 import * as AST from './ast';
-import { utils, type CodemodPlugin } from './types';
+import { utils, type CodemodPlugin, type VueProgram } from './types';
 import { setParents, vText } from './builders';
 import { stringify } from './stringify';
 import { parseTs, parseVue } from './parse';
@@ -31,6 +32,16 @@ const ignoreProperties: Record<string, true> = {
   references: true,
 };
 
+const NON_RENDERABLE_TYPES = new Set<string>([
+  'VStartTag', // VStartTag is rendered as part of VElement, not by itself
+  'VExpressionContainer', // VExpressionContainer has wrong locations from vue-eslint-parser sometimes
+]);
+
+const NON_RENDERABLE_AS_CHILD_OF = new Set<string>([
+  'VDirectiveKey', // range includes the 'v-' prefix
+  'VExpressionContainer', // VExpressionContainer has wrong locations from vue-eslint-parser, so all of its children could as well
+]);
+
 /**
  * Return type of the `transform` function, containing new source code and codemod stats
  * @public
@@ -47,6 +58,59 @@ export type TransformResult = {
   stats: [codemodName: string, transformCount: number][];
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type RenderableNode = { type: string; range: [number, number] } & Record<string, any>;
+
+function isNode(value: unknown): value is RenderableNode {
+  return !!value && typeof value === 'object' && 'type' in value;
+}
+
+/**
+ * Walk up a diff property-path until we land on a node that prints as a
+ * self-contained unit with a correct range. Non-node segments (arrays,
+ * primitives) and `NON_RENDERABLE_TYPES` are skipped automatically.
+ */
+function findRenderableNode(
+  root: AST.Node,
+  propertyPath: (string | number)[],
+): { path: (string | number)[]; node: RenderableNode } {
+  // Drop the trailing property name so we're pointing at the owning node.
+  let path = propertyPath.slice(0, -1);
+  while (path.length > 0) {
+    const value = get(root, path);
+    if (isNode(value) && !NON_RENDERABLE_TYPES.has(value.type)) {
+      const parentPath = path.slice(0, -1);
+      const parent = parentPath.length > 0 ? get(root, parentPath) : root;
+      const blockedByParent = isNode(parent) && NON_RENDERABLE_AS_CHILD_OF.has(parent.type);
+      if (!blockedByParent) {
+        return { path, node: value };
+      }
+    }
+    path = path.slice(0, -1);
+  }
+  return {
+    path,
+    node: root as RenderableNode,
+  };
+}
+
+function runCodemods(
+  codemods: CodemodPlugin[],
+  filename: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  opts: Record<string, any>,
+  asts: {
+    scriptASTs: VueProgram[];
+    sfcAST: AST.VDocumentFragment | null;
+    styleASTs: postcss.Root[];
+  },
+): [string, number][] {
+  return codemods.map((codemod) => [
+    codemod.name,
+    codemod.transform({ ...asts, filename, utils, opts }),
+  ]);
+}
+
 function transformVueFile(
   code: string,
   filename: string,
@@ -54,10 +118,7 @@ function transformVueFile(
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   opts: Record<string, any>,
 ): TransformResult {
-  const workingCode = code;
-  const stats: [string, number][] = [];
-
-  const ms = new MagicString(workingCode);
+  const ms = new MagicString(code);
   const {
     scriptASTs,
     sfcAST,
@@ -67,191 +128,157 @@ function transformVueFile(
     originalScripts,
     originalStyles,
     neededExtraTemplate,
-  } = parseVue(workingCode);
+  } = parseVue(code);
   const originalScriptCount = scriptASTMap.size;
   const originalStyleCount = styleASTMap.size;
   const templateAst = sfcAST.templateBody?.parent as unknown as VDocumentFragment;
   const originalTemplate = cloneDeep(templateAst);
 
-  for (const codemod of codemods) {
-    const count = codemod.transform({
-      scriptASTs,
-      sfcAST: templateAst ?? null,
-      styleASTs,
-      filename,
-      utils,
-      opts,
-    });
+  const stats = runCodemods(codemods, filename, opts, {
+    scriptASTs,
+    sfcAST: templateAst ?? null,
+    styleASTs,
+  });
 
-    stats.push([codemod.name, count]);
+  if (!templateAst || !originalTemplate) {
+    return { code: ms.toString(), stats };
   }
 
-  if (templateAst && originalTemplate) {
-    setParents(templateAst);
+  setParents(templateAst);
 
-    let nextExtraScript = originalScriptCount;
-    let nextExtraStyle = originalStyleCount;
-    AST.traverseNodes(templateAst as never, {
-      enterNode(node) {
-        if (node.type === 'VElement' && node.name === 'script' && node.parent === templateAst) {
-          let scriptAst = scriptASTMap.get(node as never);
-          if (
-            !scriptAst &&
-            !originalScripts.has(node as never) &&
-            nextExtraScript < scriptASTs.length
-          ) {
-            scriptAst = scriptASTs[nextExtraScript++];
-          }
-          if (scriptAst) {
-            const newCode = recast
-              .print(scriptAst, recastOptions)
-              .code.replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
+  let nextExtraScript = originalScriptCount;
+  let nextExtraStyle = originalStyleCount;
 
-            const text = `${newCode.startsWith('\n') ? '' : '\n'}${newCode}\n`;
-            if (node.children[0]?.type === 'VText') {
-              node.children[0].value = text;
-            } else {
-              node.children.unshift(vText(text));
-            }
-          }
-        }
+  const reprintScriptBlock = (node: AST.VElement) => {
+    if (node.name !== 'script' || node.parent !== templateAst) return;
 
-        if (
-          node.type === 'VElement' &&
-          node.name === 'style' &&
-          node.parent === templateAst &&
-          isSupportedLang(getLangAttribute(node)) &&
-          node.children[0]?.type === 'VText'
-        ) {
-          let styleAst = styleASTMap.get(node as never);
-          if (
-            !styleAst &&
-            !originalStyles.has(node as never) &&
-            nextExtraStyle < styleASTs.length
-          ) {
-            styleAst = styleASTs[nextExtraStyle++];
-          }
-          if (styleAst) {
-            const newCode = styleAst
-              .toString(syntaxMap[getLangAttribute(node)]!.stringify)
-              .replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
-
-            node.children.length = 0;
-            node.children.push(vText(`${newCode.startsWith('\n') ? '' : '\n'}${newCode}`));
-          }
-        }
-      },
-      leaveNode() {
-        // empty
-      },
-    });
-
-    const diff = deepDiff(originalTemplate, templateAst, (_, name) => !!ignoreProperties[name]);
-
-    if (diff) {
-      let rootNodeChanged = false;
-
-      type ChangedNode = {
-        path: (string | number)[];
-        node: AST.Node;
-        start: number;
-        end: number;
-      };
-
-      const changedNodes: ChangedNode[] = diff.map((p) => {
-        const path = [...(p.path ?? [])];
-
-        // we want the path to the node, not the path to the changed property
-        path.pop();
-
-        // special case: the VStartTag doesn't actually render a full tag
-        if (path.at(-1) === 'startTag') {
-          path.pop();
-        }
-
-        // special case: VDirectiveKey.key's range includes the 'v-' prefix
-        if (path.at(-2) === 'key') {
-          path.pop();
-        }
-
-        // vue-eslint-parser has wrong location for VExpressionContainer sometimes
-        // just render whole tag again as a workaround
-        if (path.at(-1) === 'expression') {
-          path.pop();
-          path.pop();
-        }
-
-        if (path.at(-1) === 'body') {
-          path.pop();
-        }
-
-        if (path.at(-1) === 'children') {
-          path.pop();
-        }
-
-        if (path.length <= 3 && p.kind !== 'E') {
-          // adding/removing children from the root node should cause a re-print of the root
-          rootNodeChanged = true;
-        }
-
-        const originalNode = rootNodeChanged ? originalTemplate : get(originalTemplate, path);
-
-        return {
-          path,
-          start: originalNode.range[0],
-          end: originalNode.range[1],
-          node: path.length === 0 ? templateAst : get(templateAst, path),
-        };
-      });
-
-      if (rootNodeChanged) {
-        if (neededExtraTemplate) {
-          templateAst.children = templateAst.children.filter(
-            (el) => el.type !== 'VElement' || el.name !== 'template',
-          );
-        }
-        // the 'range' property is present, though the types don't include it for DX
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const [start, end] = (originalTemplate as any).range;
-
-        ms.update(start, end, stringify(templateAst));
-      } else {
-        /* Collapse the diff results. If two changed paths are
-          ['children', 1, 'children', 2]
-          ['children', 1]
-
-          We don't need to worry about the deeper changed node since one of its ancestors
-          has changed and the deeper node's changes will be printed anyways.
-
-          Sort ascending by path length first: uniqWith keeps the first occurrence
-          and drops later matches, so the shorter (ancestor) path needs to land in
-          the array before any of its descendants.
-        */
-        const collapsedChanges = uniqWith(
-          [...changedNodes].sort((a, b) => a.path.length - b.path.length),
-          (a: ChangedNode, b: ChangedNode) => {
-            if (a.path.length === b.path.length) {
-              return isEqual(a.path, b.path);
-            }
-
-            const lesser = a.path.length < b.path.length ? a : b;
-            const greater = lesser === a ? b : a;
-
-            return isEqual(lesser.path, greater.path.slice(0, lesser.path.length));
-          },
-        ).sort((a, b) => b.path.length - a.path.length);
-
-        for (const { start, end, node } of collapsedChanges) {
-          ms.update(start, end, stringify(node));
-        }
-      }
+    let scriptAst = scriptASTMap.get(node as never);
+    if (!scriptAst && !originalScripts.has(node as never) && nextExtraScript < scriptASTs.length) {
+      scriptAst = scriptASTs[nextExtraScript++];
     }
+    if (!scriptAst) return;
+
+    const newCode = recast
+      .print(scriptAst, recastOptions)
+      .code.replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
+
+    const text = `${newCode.startsWith('\n') ? '' : '\n'}${newCode}\n`;
+    if (node.children[0]?.type === 'VText') {
+      node.children[0].value = text;
+    } else {
+      node.children.unshift(vText(text));
+    }
+  };
+
+  const reprintStyleBlock = (node: AST.VElement) => {
+    if (
+      node.name !== 'style' ||
+      node.parent !== templateAst ||
+      !isSupportedLang(getLangAttribute(node)) ||
+      node.children[0]?.type !== 'VText'
+    ) {
+      return;
+    }
+
+    let styleAst = styleASTMap.get(node as never);
+    if (!styleAst && !originalStyles.has(node as never) && nextExtraStyle < styleASTs.length) {
+      styleAst = styleASTs[nextExtraStyle++];
+    }
+    if (!styleAst) return;
+
+    const newCode = styleAst
+      .toString(syntaxMap[getLangAttribute(node)]!.stringify)
+      .replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
+
+    node.children.length = 0;
+    node.children.push(vText(`${newCode.startsWith('\n') ? '' : '\n'}${newCode}`));
+  };
+
+  AST.traverseNodes(templateAst as never, {
+    enterNode(node) {
+      if (node.type === 'VElement') {
+        reprintScriptBlock(node);
+        reprintStyleBlock(node);
+      }
+    },
+    leaveNode() {
+      // empty
+    },
+  });
+
+  const diff = deepDiff(originalTemplate, templateAst, (_, name) => !!ignoreProperties[name]);
+
+  if (!diff) {
+    return { code: ms.toString(), stats };
   }
 
-  return {
-    code: ms.toString(),
-    stats,
+  const normalized = diff.map((p) => ({
+    diff: p,
+    ...findRenderableNode(originalTemplate, [...(p.path ?? [])]),
+  }));
+
+  // Adding or removing something near the root of the template means the root's
+  // children list has changed, so we re-print the whole template rather than
+  // trying to splice individual nodes.
+  const rootNodeChanged = normalized.some(
+    ({ path, diff: p }) => path.length <= 3 && p.kind !== 'E',
+  );
+
+  if (rootNodeChanged) {
+    if (neededExtraTemplate) {
+      templateAst.children = templateAst.children.filter(
+        (el) => el.type !== 'VElement' || el.name !== 'template',
+      );
+    }
+    // the 'range' property is present, though the types don't include it for DX
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const [start, end] = (originalTemplate as any).range;
+    ms.update(start, end, stringify(templateAst));
+    return { code: ms.toString(), stats };
+  }
+
+  type ChangedNode = {
+    path: (string | number)[];
+    node: AST.Node;
+    start: number;
+    end: number;
   };
+
+  const changedNodes: ChangedNode[] = normalized.map(({ path, node: originalNode }) => ({
+    path,
+    start: originalNode.range[0],
+    end: originalNode.range[1],
+    node: path.length === 0 ? templateAst : get(templateAst, path),
+  }));
+
+  /* Collapse the diff results. If two changed paths are
+    ['children', 1, 'children', 2]
+    ['children', 1]
+
+    We don't need to worry about the deeper changed node since one of its ancestors
+    has changed and the deeper node's changes will be printed anyways.
+
+    Sort ascending by path length first: uniqWith keeps the first occurrence
+    and drops later matches, so the shorter (ancestor) path needs to land in
+    the array before any of its descendants.
+  */
+  const collapsedChanges = uniqWith(
+    [...changedNodes].sort((a, b) => a.path.length - b.path.length),
+    (a, b) => {
+      if (a.path.length === b.path.length) {
+        return isEqual(a.path, b.path);
+      }
+      const lesser = a.path.length < b.path.length ? a : b;
+      const greater = lesser === a ? b : a;
+      return isEqual(lesser.path, greater.path.slice(0, lesser.path.length));
+    },
+  ).sort((a, b) => b.path.length - a.path.length);
+
+  for (const { start, end, node } of collapsedChanges) {
+    ms.update(start, end, stringify(node));
+  }
+
+  return { code: ms.toString(), stats };
 }
 
 function transformTypescriptFile(
@@ -262,19 +289,11 @@ function transformTypescriptFile(
   opts: Record<string, any>,
 ): TransformResult {
   const ast = parseTs(code, /\.[jt]sx$/.test(filename));
-  const stats: [string, number][] = [];
-
-  for (const codemod of codemods) {
-    const count = codemod.transform({
-      scriptASTs: [ast],
-      sfcAST: null,
-      styleASTs: [],
-      filename,
-      utils,
-      opts,
-    });
-    stats.push([codemod.name, count]);
-  }
+  const stats = runCodemods(codemods, filename, opts, {
+    scriptASTs: [ast],
+    sfcAST: null,
+    styleASTs: [],
+  });
 
   return {
     code: `${recast.print(ast, recastOptions).code}\n`,
@@ -288,30 +307,19 @@ function transformCssFile(
   codemods: CodemodPlugin[],
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   opts: Record<string, any>,
-) {
+): TransformResult {
   const dialect = getCssDialectForFilename(filename);
 
   if (!dialect) {
-    return {
-      code,
-      stats: [],
-    };
+    return { code, stats: [] };
   }
+
   const ast = parseCss(code, dialect);
-  const stats: [string, number][] = [];
-
-  for (const codemod of codemods) {
-    const count = codemod.transform({
-      scriptASTs: [],
-      sfcAST: null,
-      styleASTs: [ast],
-      filename,
-      utils,
-      opts,
-    });
-
-    stats.push([codemod.name, count]);
-  }
+  const stats = runCodemods(codemods, filename, opts, {
+    scriptASTs: [],
+    sfcAST: null,
+    styleASTs: [ast],
+  });
 
   return {
     code: ast.toString(syntaxMap[dialect]),
