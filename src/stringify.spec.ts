@@ -145,6 +145,15 @@ describe('VAttribute', () => {
 
       expect(stringify(node)).toBe('title="she said &quot;hi&quot;"');
     });
+
+    it('should escape double quotes in a directive expression value', () => {
+      const node = builders.vDirective(
+        builders.vDirectiveKey(builders.vIdentifier('bind', ':'), builders.vIdentifier('title')),
+        builders.vExpressionContainer(b.literal('she said "hi"')),
+      );
+
+      expect(stringify(node)).toBe(':title="\'she said &quot;hi&quot;\'"');
+    });
   });
 });
 

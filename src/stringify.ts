@@ -101,7 +101,7 @@ export function stringifyVAttribute(node: AST.VAttribute | AST.VDirective): stri
     if (node.value.type === 'VLiteral') {
       str += `="${escapeAttributeValue(node.value.value)}"`;
     } else {
-      str += `="${stringify(node.value)}"`;
+      str += `="${escapeAttributeValue(stringify(node.value))}"`;
     }
   }
 
