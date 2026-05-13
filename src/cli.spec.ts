@@ -283,6 +283,36 @@ describe('createVueMetamorphCli', () => {
       expect(final.aborted).toBe(true);
       expect(final.done).toBe(false);
     });
+
+    it('can run again after a previous run was aborted', async () => {
+      await writeFile('a.ts', 'const x = 1;');
+      await writeFile('b.ts', 'const y = 2;');
+
+      let abortFn: (() => void) | null = null;
+      let calls = 0;
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'maybe-abort',
+        transform() {
+          calls++;
+          if (calls === 1) abortFn!();
+          return 0;
+        },
+      };
+
+      const onProgress = vi.fn();
+      const cli = createVueMetamorphCli({ plugins: [plugin], silent: true, onProgress });
+      abortFn = cli.abort;
+
+      await cli.run(argv('--files', `${tmpDir}/**/*`));
+      expect(lastProgressCall(onProgress).aborted).toBe(true);
+
+      await cli.run(argv('--files', `${tmpDir}/**/*`));
+      const second = lastProgressCall(onProgress);
+      expect(second.aborted).toBe(false);
+      expect(second.done).toBe(true);
+      expect(second.filesProcessed).toBe(2);
+    });
   });
 
   describe('progress callback', () => {

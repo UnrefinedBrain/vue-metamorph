@@ -141,6 +141,7 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
   let aborted = false;
 
   const run = async (argv = process.argv) => {
+    aborted = false;
     program.parse(argv);
     const opts = program.opts<ProgramOptions>();
     const stats: Record<string, number> = {};
