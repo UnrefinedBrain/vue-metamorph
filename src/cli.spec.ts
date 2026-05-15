@@ -93,26 +93,36 @@ describe('createVueMetamorphCli', () => {
   });
 
   describe('--list-plugins', () => {
-    it('prints plugin names and exits', async () => {
+    it('prints plugin names and returns without running codemods', async () => {
+      await writeFile('a.ts', 'const x = 1;');
       const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
-      const exitSpy = vi.spyOn(process, 'exit').mockImplementation(() => {
-        throw new Error('__exit__');
-      });
 
+      let transformCalls = 0;
       const plugins: CodemodPlugin[] = [
-        { type: 'codemod', name: 'one', transform: () => 0 },
-        { type: 'codemod', name: 'two', transform: () => 0 },
+        {
+          type: 'codemod',
+          name: 'one',
+          transform: () => {
+            transformCalls++;
+            return 0;
+          },
+        },
+        {
+          type: 'codemod',
+          name: 'two',
+          transform: () => {
+            transformCalls++;
+            return 0;
+          },
+        },
       ];
       const { run } = createVueMetamorphCli({ plugins, silent: true });
 
-      await expect(run(argv('--files', `${tmpDir}/**/*`, '--list-plugins'))).rejects.toThrow(
-        '__exit__',
-      );
+      await run(argv('--files', `${tmpDir}/**/*`, '--list-plugins'));
       expect(writeSpy).toHaveBeenCalledWith('one\ntwo\n');
-      expect(exitSpy).toHaveBeenCalledWith(0);
+      expect(transformCalls).toBe(0);
 
       writeSpy.mockRestore();
-      exitSpy.mockRestore();
     });
   });
 
@@ -331,6 +341,51 @@ describe('createVueMetamorphCli', () => {
       expect(final.filesProcessed).toBe(2);
       expect(final.filesRemaining).toBe(0);
       expect(final.totalFiles).toBe(2);
+    });
+
+    it('reports the correct filesProcessed in intermediate events', async () => {
+      await writeFile('a.ts', 'const x = 1;');
+      await writeFile('b.ts', 'const y = 2;');
+      await writeFile('c.ts', 'const z = 3;');
+
+      const onProgress = vi.fn();
+      const plugin: CodemodPlugin = { type: 'codemod', name: 'noop', transform: () => 0 };
+      const { run } = createVueMetamorphCli({ plugins: [plugin], silent: true, onProgress });
+      await run(argv('--files', `${tmpDir}/**/*`));
+
+      const events = onProgress.mock.calls.map(([p]) => ({
+        processed: p.filesProcessed,
+        remaining: p.filesRemaining,
+        total: p.totalFiles,
+        done: p.done,
+      }));
+      // One progress event per file plus the final done event.
+      expect(events).toEqual([
+        { processed: 1, remaining: 2, total: 3, done: false },
+        { processed: 2, remaining: 1, total: 3, done: false },
+        { processed: 3, remaining: 0, total: 3, done: false },
+        { processed: 3, remaining: 0, total: 3, done: true },
+      ]);
+    });
+
+    it('emits a progress event for files whose plugins throw', async () => {
+      await writeFile('a.ts', 'const x = 1;');
+      await writeFile('b.ts', 'const y = 2;');
+
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'boom',
+        transform: () => {
+          throw new Error('boom');
+        },
+      };
+
+      const onProgress = vi.fn();
+      const { run } = createVueMetamorphCli({ plugins: [plugin], silent: true, onProgress });
+      await run(argv('--files', `${tmpDir}/**/*`));
+
+      // 2 intermediate events + 1 done event, even though every file errored.
+      expect(onProgress).toHaveBeenCalledTimes(3);
     });
 
     it('accumulates per-plugin stats across files', async () => {

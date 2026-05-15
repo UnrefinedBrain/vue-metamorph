@@ -153,7 +153,7 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
           .map((plugin) => plugin.name)
           .join('\n')}\n`,
       );
-      process.exit(0);
+      return;
     }
 
     const files = globSync(opts.files, {
@@ -239,21 +239,6 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
             ...findManualMigrations(newCode.code, file, manualMigrationPlugins, opts),
           );
         }
-
-        const progressArgs = {
-          stats,
-          aborted: false,
-          done: false,
-          filesProcessed,
-          filesRemaining: files.length - filesProcessed,
-          totalFiles: files.length,
-          errors,
-          manualMigrations: manualMigrationReports,
-        };
-        if (!options.silent) {
-          defaultCliProgressHandler(progressArgs);
-        }
-        options.onProgress?.(progressArgs);
       } catch (e) {
         if (e instanceof Error) {
           errors.push({
@@ -264,6 +249,21 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
       }
 
       filesProcessed++;
+
+      const progressArgs = {
+        stats,
+        aborted: false,
+        done: false,
+        filesProcessed,
+        filesRemaining: files.length - filesProcessed,
+        totalFiles: files.length,
+        errors,
+        manualMigrations: manualMigrationReports,
+      };
+      if (!options.silent) {
+        defaultCliProgressHandler(progressArgs);
+      }
+      options.onProgress?.(progressArgs);
     }
 
     const progressArgs = {
