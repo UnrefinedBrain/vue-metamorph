@@ -1,7 +1,8 @@
+import path from 'node:path';
+import { promises as fs } from 'node:fs';
 import { Command } from 'commander';
-import { globSync } from 'glob';
-import { promises as fs } from 'fs';
-import micromatch from 'micromatch';
+import { globSync } from 'tinyglobby';
+import picomatch from 'picomatch';
 import type { CodemodPlugin, ManualMigrationPlugin, Plugin } from './types';
 import { transform } from './transform';
 import { ManualMigrationReport, findManualMigrations } from './manual';
@@ -133,7 +134,7 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
 
   program
     .requiredOption('--files <glob>', 'Run transforms against these files', '**/src/**/*')
-    .requiredOption('--plugins <glob...>', 'Run only these plugins using micromatch queries', '*')
+    .requiredOption('--plugins <glob...>', 'Run only these plugins using picomatch queries', '*')
     .option('--list-plugins', 'Print a list of plugins.');
 
   options.additionalCliOptions?.(program);
@@ -158,25 +159,20 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
 
     const files = globSync(opts.files, {
       absolute: true,
-      nodir: true,
-      ignore: {
-        ignored(p) {
-          if (p.fullpath().includes('node_modules')) {
-            return true;
-          }
+      onlyFiles: true,
+    }).filter((file) => {
+      const normalized = file.split(path.sep).join('/');
 
-          if (!/\.(vue|ts|js|tsx|jsx|css|scss|less|sass|styl)$/.test(p.fullpath())) {
-            return true;
-          }
+      if (normalized.includes('/node_modules/')) {
+        return false;
+      }
 
-          return false;
-        },
-      },
+      return /\.(vue|ts|js|tsx|jsx|css|scss|less|sass|styl)$/.test(normalized)
     });
 
     const plugins = options.plugins
       .flat()
-      .filter((plugin) => micromatch.isMatch(plugin.name, opts.plugins));
+      .filter((plugin) => picomatch.isMatch(plugin.name, opts.plugins));
 
     const codemodPlugins = plugins.filter(
       (plugin): plugin is CodemodPlugin => plugin.type === 'codemod',

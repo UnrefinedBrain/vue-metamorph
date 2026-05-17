@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 /* eslint-disable no-console */
 import chalk from 'chalk';
-import fs from 'fs-extra';
+import fs from 'node:fs';
 import path from 'path';
 import process from 'process';
 import url from 'url';
@@ -17,7 +17,7 @@ if (!name || name === '') {
 
 const targetDir = path.join(process.cwd(), name);
 
-fs.mkdirSync(targetDir);
-fs.copySync(templateDir, targetDir);
+fs.mkdirSync(targetDir, { recursive: true });
+fs.cpSync(templateDir, targetDir, { recursive: true });
 console.log(chalk.green(`Created vue-metamorph project at ${targetDir}`));
 process.exit(0);
