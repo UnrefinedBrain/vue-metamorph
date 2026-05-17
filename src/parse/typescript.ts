@@ -39,7 +39,6 @@ const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
         proposal: 'fsharp',
       },
     ],
-    ['recordAndTuple'],
     'throwExpressions',
     'topLevelAwait',
     'typescript',
