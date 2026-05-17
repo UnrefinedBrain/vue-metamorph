@@ -74,7 +74,7 @@
     "vue-metamorph": "link:"
   },
   "dependencies": {
-    "@babel/parser": "8.0.0-alpha.12",
+    "@babel/parser": "8.0.0-rc.5",
     "ast-types-x": "1.18.0",
     "chalk": "^5.6.2",
     "cli-progress": "^3.12.0",

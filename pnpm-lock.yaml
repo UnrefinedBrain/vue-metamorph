@@ -12,8 +12,8 @@ importers:
   .:
     dependencies:
       '@babel/parser':
-        specifier: 8.0.0-alpha.12
-        version: 8.0.0-alpha.12
+        specifier: 8.0.0-rc.5
+        version: 8.0.0-rc.5
       ast-types-x:
         specifier: 1.18.0
         version: 1.18.0
@@ -219,11 +219,6 @@ packages:
   '@babel/parser@7.29.3':
     resolution: {integrity: sha512-b3ctpQwp+PROvU/cttc4OYl4MzfJUWy6FZg+PMXfzmt/+39iHVF0sDfqay8TQM3JA2EUOyKcFZt75jWriQijsA==}
     engines: {node: '>=6.0.0'}
-    hasBin: true
-
-  '@babel/parser@8.0.0-alpha.12':
-    resolution: {integrity: sha512-AzWmrp4uJ+DcXVH0uoUpJVhRqxNirC0BbXsZ82AQuVod41CoaV5G+cwcvtYusrIIxv7BIJb6ce0dQ9L0wAl1iA==}
-    engines: {node: ^18.20.0 || ^20.10.0 || >=21.0.0}
     hasBin: true
 
   '@babel/parser@8.0.0-rc.4':
@@ -3143,8 +3138,6 @@ snapshots:
     dependencies:
       '@babel/types': 7.29.0
 
-  '@babel/parser@8.0.0-alpha.12': {}
-
   '@babel/parser@8.0.0-rc.4':
     dependencies:
       '@babel/types': 8.0.0-rc.5
@@ -4242,7 +4235,7 @@ snapshots:
 
   ast-kit@3.0.0-beta.1:
     dependencies:
-      '@babel/parser': 8.0.0-rc.4
+      '@babel/parser': 8.0.0-rc.5
       estree-walker: 3.0.3
       pathe: 2.0.3
 
