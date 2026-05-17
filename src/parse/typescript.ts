@@ -69,7 +69,6 @@ export const tsParser = (isJsx: boolean) => ({
     });
 
     res.tokens?.forEach((tok) => {
-      // @ts-expect-error Needed by vue-eslint-parser
       tok.range = [tok.start, tok.end];
     });
 
