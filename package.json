@@ -32,8 +32,8 @@
   "typings": "dist/vue-metamorph.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/main.mjs",
-      "types": "./dist/vue-metamorph.d.ts"
+      "types": "./dist/vue-metamorph.d.ts",
+      "import": "./dist/main.mjs"
     }
   },
   "scripts": {
