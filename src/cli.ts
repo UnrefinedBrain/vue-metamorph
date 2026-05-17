@@ -167,7 +167,7 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
         return false;
       }
 
-      return /\.(vue|ts|js|tsx|jsx|css|scss|less|sass|styl)$/.test(normalized)
+      return /\.(vue|ts|js|tsx|jsx|css|scss|less|sass|styl)$/.test(normalized);
     });
 
     const plugins = options.plugins
