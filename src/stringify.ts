@@ -100,6 +100,8 @@ export function stringifyVAttribute(node: AST.VAttribute | AST.VDirective): stri
   if (node.value) {
     if (node.value.type === 'VLiteral') {
       str += `="${escapeAttributeValue(node.value.value)}"`;
+    } else if (node.value.type === 'VExpressionContainer') {
+      str += `="${stringify(node.value)}"`
     } else {
       str += `="${escapeAttributeValue(stringify(node.value))}"`;
     }
@@ -166,6 +168,10 @@ export function stringifyVExpressionContainer(node: AST.VExpressionContainer): s
     node.expression.type === 'VGenericExpression'
   ) {
     return stringify(node.expression);
+  }
+
+  if(node.expression.type === 'Literal') {
+    return escapeAttributeValue(stringify(node.expression));
   }
 
   return stringifyWithRecast(node.expression);

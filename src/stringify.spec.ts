@@ -154,6 +154,15 @@ describe('VAttribute', () => {
 
       expect(stringify(node)).toBe(':title="\'she said &quot;hi&quot;\'"');
     });
+
+    it('should not escape logical operators in a directive expression value', () => {
+      const node = builders.vDirective(
+        builders.vDirectiveKey(builders.vIdentifier('bind', ':'), builders.vIdentifier('disabled')),
+        builders.vExpressionContainer(b.logicalExpression('&&', b.identifier('foo'), b.identifier('bar'))),
+      );
+
+      expect(stringify(node)).toBe(':disabled="foo && bar"');
+    });
   });
 });
 
