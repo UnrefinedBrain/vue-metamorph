@@ -90,6 +90,71 @@ function escapeAttributeValue(value: string): string {
   return value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
 }
 
+const vueExpressionChildFields: Record<string, readonly string[]> = {
+  VForExpression: ['left', 'right'],
+  VOnExpression: ['body'],
+  VSlotScopeExpression: ['params'],
+  VFilterSequenceExpression: ['expression', 'filters'],
+  VFilter: ['callee', 'arguments'],
+  VGenericExpression: ['params'],
+};
+
+function childFieldNames(node: recast.types.ASTNode): readonly string[] {
+  return vueExpressionChildFields[node.type] ?? recast.types.getFieldNames(node);
+}
+
+function escapeExpressionStrings(node: unknown, restore: (() => void)[]): void {
+  if (!node || typeof node !== 'object') {
+    return;
+  }
+
+  if (Array.isArray(node)) {
+    for (const child of node) {
+      escapeExpressionStrings(child, restore);
+    }
+    return;
+  }
+
+  const record = node as Record<string, any>;
+
+  if (record.type === 'Literal' && typeof record.value === 'string') {
+    const original = record.value;
+    restore.push(() => {
+      record.value = original;
+    });
+    record.value = escapeAttributeValue(original);
+    return;
+  }
+
+  if (record.type === 'TemplateElement' && record.value) {
+    const { raw, cooked } = record.value;
+    restore.push(() => {
+      record.value.raw = raw;
+      record.value.cooked = cooked;
+    });
+    record.value.raw = escapeAttributeValue(raw);
+    if (typeof cooked === 'string') {
+      record.value.cooked = escapeAttributeValue(cooked);
+    }
+    return;
+  }
+
+  for (const key of childFieldNames(record as recast.types.ASTNode)) {
+    escapeExpressionStrings(record[key], restore);
+  }
+}
+
+function stringifyExpressionAttributeValue(node: AST.VExpressionContainer): string {
+  const restore: (() => void)[] = [];
+  escapeExpressionStrings(node.expression, restore);
+
+  try {
+    return stringifyVExpressionContainer(node);
+  } finally {
+    restore.forEach((fn) => fn());
+  }
+}
+
 export function stringifyVLiteral(node: AST.VLiteral): string {
   return `"${escapeAttributeValue(node.value)}"`;
 }
@@ -101,7 +166,7 @@ export function stringifyVAttribute(node: AST.VAttribute | AST.VDirective): stri
     if (node.value.type === 'VLiteral') {
       str += `="${escapeAttributeValue(node.value.value)}"`;
     } else if (node.value.type === 'VExpressionContainer') {
-      str += `="${stringify(node.value)}"`
+      str += `="${stringifyExpressionAttributeValue(node.value)}"`;
     } else {
       str += `="${escapeAttributeValue(stringify(node.value))}"`;
     }
@@ -168,10 +233,6 @@ export function stringifyVExpressionContainer(node: AST.VExpressionContainer): s
     node.expression.type === 'VGenericExpression'
   ) {
     return stringify(node.expression);
-  }
-
-  if(node.expression.type === 'Literal') {
-    return escapeAttributeValue(stringify(node.expression));
   }
 
   return stringifyWithRecast(node.expression);
