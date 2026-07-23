@@ -154,6 +154,107 @@ describe('VAttribute', () => {
 
       expect(stringify(node)).toBe(':title="\'she said &quot;hi&quot;\'"');
     });
+
+    it('should not escape logical operators in a directive expression value', () => {
+      const node = builders.vDirective(
+        builders.vDirectiveKey(builders.vIdentifier('bind', ':'), builders.vIdentifier('disabled')),
+        builders.vExpressionContainer(
+          b.logicalExpression('&&', b.identifier('foo'), b.identifier('bar')),
+        ),
+      );
+
+      expect(stringify(node)).toBe(':disabled="foo && bar"');
+    });
+
+    it('should escape double quotes nested inside a larger expression', () => {
+      const node = builders.vDirective(
+        builders.vDirectiveKey(builders.vIdentifier('bind', ':'), builders.vIdentifier('title')),
+        builders.vExpressionContainer(
+          b.conditionalExpression(b.identifier('cond'), b.literal('a'), b.literal('she said "hi"')),
+        ),
+      );
+
+      expect(stringify(node)).toBe(":title=\"cond ? 'a' : 'she said &quot;hi&quot;'\"");
+    });
+
+    it('should escape double quotes in a call expression argument', () => {
+      const node = builders.vDirective(
+        builders.vDirectiveKey(builders.vIdentifier('bind', ':'), builders.vIdentifier('title')),
+        builders.vExpressionContainer(
+          b.callExpression(b.identifier('fn'), [b.literal('say "hi"')]),
+        ),
+      );
+
+      expect(stringify(node)).toBe(':title="fn(\'say &quot;hi&quot;\')"');
+    });
+
+    it('should escape double quotes in an array element', () => {
+      const node = builders.vDirective(
+        builders.vDirectiveKey(builders.vIdentifier('bind', ':'), builders.vIdentifier('list')),
+        builders.vExpressionContainer(b.arrayExpression([b.literal('say "hi"')])),
+      );
+
+      expect(stringify(node)).toBe(':list="[\'say &quot;hi&quot;\']"');
+    });
+
+    it('should escape ampersands that appear inside string content', () => {
+      const node = builders.vDirective(
+        builders.vDirectiveKey(builders.vIdentifier('bind', ':'), builders.vIdentifier('title')),
+        builders.vExpressionContainer(b.literal('Tom & Jerry')),
+      );
+
+      expect(stringify(node)).toBe(':title="\'Tom &amp; Jerry\'"');
+    });
+
+    it('should escape entity-like text in string content so it round-trips', () => {
+      const node = builders.vDirective(
+        builders.vDirectiveKey(builders.vIdentifier('bind', ':'), builders.vIdentifier('title')),
+        builders.vExpressionContainer(b.literal('&amp;')),
+      );
+
+      expect(stringify(node)).toBe(':title="\'&amp;amp;\'"');
+    });
+
+    it('should escape string content in a template literal without touching interpolations', () => {
+      const node = builders.vDirective(
+        builders.vDirectiveKey(builders.vIdentifier('bind', ':'), builders.vIdentifier('title')),
+        builders.vExpressionContainer(
+          b.templateLiteral(
+            [
+              b.templateElement({ raw: 'a "b" & ', cooked: 'a "b" & ' }, false),
+              b.templateElement({ raw: ' c', cooked: ' c' }, true),
+            ],
+            [b.identifier('x')],
+          ),
+        ),
+      );
+
+      expect(stringify(node)).toBe(':title="`a &quot;b&quot; &amp; ${x} c`"');
+    });
+
+    it('should escape string content nested in a v-on handler value', () => {
+      const node = builders.vDirective(
+        builders.vDirectiveKey(builders.vIdentifier('on', '@'), builders.vIdentifier('click')),
+        builders.vExpressionContainer(
+          builders.vOnExpression([
+            b.expressionStatement(b.callExpression(b.identifier('alert'), [b.literal('say "hi"')])),
+          ]),
+        ),
+      );
+
+      expect(stringify(node)).toBe('@click="alert(\'say &quot;hi&quot;\');"');
+    });
+
+    it('should escape string content nested in a v-for expression value', () => {
+      const node = builders.vDirective(
+        builders.vDirectiveKey(builders.vIdentifier('for')),
+        builders.vExpressionContainer(
+          builders.vForExpression([b.identifier('x')], b.arrayExpression([b.literal('say "hi"')])),
+        ),
+      );
+
+      expect(stringify(node)).toBe('v-for="x in [\'say &quot;hi&quot;\']"');
+    });
   });
 });
 
@@ -380,6 +481,15 @@ describe('VElement with expression container children', () => {
       builders.vExpressionContainer(b.identifier('x'), comment),
     ]);
     expect(stringify(node)).toBe('<span><!-- expr -->{{ x }}</span>');
+  });
+
+  it('should not escape string content in a {{ }} interpolation', () => {
+    // Unlike an attribute value, `"` and `&` are valid text characters inside an
+    // interpolation and must not be HTML-escaped.
+    const node = builders.vElement('span', builders.vStartTag([], false), [
+      builders.vExpressionContainer(b.literal('say "hi" & bye')),
+    ]);
+    expect(stringify(node)).toBe('<span>{{ \'say "hi" & bye\' }}</span>');
   });
 });
 
