@@ -1,6 +1,6 @@
 import MagicString from 'magic-string';
 import { cloneDeep, get, uniqWith, isEqual } from 'lodash-es';
-import * as recast from 'recast-x';
+import * as recast from './vendor/recast/main';
 import type postcss from 'postcss';
 import deepDiff from './vendor/deep-diff/index.js';
 import * as AST from './ast';

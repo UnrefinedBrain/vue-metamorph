@@ -3,7 +3,7 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "lib": [
-      "ESNext",
+      "ESNext"
     ],
     "module": "ESNext",
     "moduleResolution": "Bundler",
@@ -22,5 +22,10 @@
     "useDefineForClassFields": true,
     "types": ["node"]
   },
-  "include": ["src", "docs"]
+  "include": ["src", "docs"],
+  "exclude": ["src/vendor/ast-types", "src/vendor/recast"],
+  "references": [
+    { "path": "./src/vendor/ast-types" },
+    { "path": "./src/vendor/recast" }
+  ]
 }

@@ -18,7 +18,7 @@ import {
   vFilter,
   htmlComment,
 } from './builders';
-import { builders } from 'ast-types-x';
+import { builders } from './vendor/ast-types/main';
 
 describe('builders', () => {
   describe('vIdentifier', () => {

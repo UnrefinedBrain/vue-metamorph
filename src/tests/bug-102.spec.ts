@@ -1,4 +1,4 @@
-import { namedTypes as n } from 'ast-types-x';
+import { namedTypes as n } from '../vendor/ast-types/main';
 import { test, expect } from 'vitest';
 import { CodemodPlugin, AST, transform } from '../main';
 
