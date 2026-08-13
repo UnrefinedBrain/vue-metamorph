@@ -12,7 +12,7 @@
     "test": "vitest"
   },
   "dependencies": {
-    "vue-metamorph": "^3.2.0"
+    "vue-metamorph": "^4.0.0"
   },
   "devDependencies": {
     "@types/node": "^20.11.30",
