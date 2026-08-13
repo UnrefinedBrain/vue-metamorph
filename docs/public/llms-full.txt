@@ -387,7 +387,8 @@ builders.importDeclaration(specifiers, source);
 // ... and all other ESTree node types
 ```
 
-See ast-types documentation and AST Explorer (with @babel/parser) for the full list.
+See ast-types documentation for the full list, and the AST Explorer at
+https://vue-metamorph.dev/explorer for the node shapes they need to produce.
 
 ## SFC Template AST Node Types
 
@@ -488,15 +489,17 @@ const renameComponent: CodemodPlugin = {
 
 ## AST Explorer
 
-Use [AST Explorer](https://astexplorer.net) to visualize the AST for any code snippet.
+Use the [AST Explorer](https://vue-metamorph.dev/explorer) to visualize the AST for any code
+snippet. It runs vue-metamorph's own parsers, so the trees it shows are what a codemod receives,
+and it can run a CodemodPlugin against the source in the browser.
 
 | Source Type | Parser |
 | --- | --- |
-| Vue SFC `<template>` | `vue-eslint-parser` / `@babel/parser` |
-| Vue SFC `<script>` | `@babel/parser` |
-| Vue SFC `<style>` | `postcss` |
-| JavaScript / TypeScript | `@babel/parser` |
-| CSS / SCSS / LESS | `postcss` with appropriate parser |
+| Vue SFC `<template>` | `vue-eslint-parser` |
+| Vue SFC `<script>`, JavaScript / TypeScript | `@babel/parser` via recast |
+| Vue SFC `<style>`, CSS | `postcss` |
+| SCSS / Sass / Less | `postcss-scss` / `postcss-sass` / `postcss-less` |
+| Stylus | `postcss-styl` (Node only, not available in the in-docs explorer) |
 
 ## Code Formatting Note
 

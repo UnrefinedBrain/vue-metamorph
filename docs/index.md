@@ -11,6 +11,9 @@ hero:
     - theme: brand
       text: Get started
       link: /guide/installation
+    - theme: alt
+      text: AST Explorer
+      link: /explorer
 
 features:
   - title: AST-based Code Manipulation

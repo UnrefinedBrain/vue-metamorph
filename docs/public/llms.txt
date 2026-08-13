@@ -31,4 +31,5 @@ npm install -D vue-metamorph
 - [SFC AST Reference](https://vue-metamorph.dev/guide/sfc-ast-reference): Vue template AST node type reference
 - [Manual Migrations](https://vue-metamorph.dev/guide/manual-migrations): Finding nodes that need human attention
 - [CLI](https://vue-metamorph.dev/guide/cli): CLI options and programmatic API
+- [AST Explorer](https://vue-metamorph.dev/explorer): Inspect the ASTs vue-metamorph produces and run a codemod against them in the browser
 - [API Reference](https://vue-metamorph.dev/api/vue-metamorph): Auto-generated API docs

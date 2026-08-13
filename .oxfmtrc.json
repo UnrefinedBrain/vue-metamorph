@@ -3,5 +3,11 @@
   "semi": true,
   "singleQuote": true,
   "trailingComma": "all",
-  "ignorePatterns": ["node_modules", "dist", "src/vendor"]
+  "ignorePatterns": [
+    "node_modules",
+    "dist",
+    "src/vendor",
+    "docs/.vitepress/cache",
+    "docs/.vitepress/dist"
+  ]
 }

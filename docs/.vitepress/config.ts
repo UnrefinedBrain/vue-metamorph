@@ -1,5 +1,6 @@
 import { defineConfig } from 'vitepress';
 import { transformerTwoslash } from '@shikijs/vitepress-twoslash';
+import { astExplorerPlugin } from './explorer/plugin';
 
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
@@ -42,6 +43,7 @@ export default defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Documentation', link: '/guide/installation' },
+      { text: 'AST Explorer', link: '/explorer' },
     ],
 
     sidebar: [
@@ -63,6 +65,10 @@ export default defineConfig({
           {
             text: 'API',
             link: '/api/vue-metamorph',
+          },
+          {
+            text: 'AST Explorer',
+            link: '/explorer',
           },
           {
             text: 'Ecosystem',
@@ -100,6 +106,8 @@ export default defineConfig({
   },
 
   vite: {
+    plugins: [astExplorerPlugin()],
+
     server: {
       allowedHosts: true,
     },
