@@ -15,6 +15,7 @@ import { type TransformOutcome, runTransform } from './core/run-transform';
 import { SOURCE_TYPES, type SourceType, findSourceType } from './core/source-types';
 import { SAMPLE_CODEMOD, sampleFor } from './core/samples';
 import { buildShareUrl, readSharedState } from './core/share';
+import type { CodemodLanguageService } from './core/language-service';
 import type { Range } from './core/tree-adapter';
 import AstTree from './components/AstTree.vue';
 import SourceEditor from './components/SourceEditor.vue';
@@ -57,6 +58,26 @@ const cursor = ref<number | null>(null);
 const highlight = shallowRef<Range | null>(null);
 const selectedNode = shallowRef<unknown>(null);
 
+// TypeScript and vue-metamorph's declarations are a few megabytes between
+// them, so they are fetched the first time the codemod pane is opened rather
+// than with the rest of the page.
+const languageService = shallowRef<CodemodLanguageService | null>(null);
+const languageServiceState = ref<'idle' | 'loading' | 'ready' | 'unavailable'>('idle');
+
+async function ensureLanguageService() {
+  if (languageServiceState.value !== 'idle') {
+    return;
+  }
+
+  languageServiceState.value = 'loading';
+
+  const { loadCodemodLanguageService } = await import('./core/language-service');
+  const service = await loadCodemodLanguageService();
+
+  languageService.value = service;
+  languageServiceState.value = service ? 'ready' : 'unavailable';
+}
+
 const parseResult = shallowRef<ParseResult>(parseSource(code.value, sourceType.value));
 const transformOutcome = shallowRef<TransformOutcome | null>(null);
 const activePanelId = ref<string | null>(null);
@@ -90,7 +111,12 @@ watch([code, codemodSource, sourceType, showTransform], scheduleRefresh);
 
 watch(code, (value) => storage.write(`code:${sourceType.value.id}`, value));
 watch(codemodSource, (value) => storage.write('codemod', value));
-watch(showTransform, (value) => storage.write('show-transform', String(value)));
+watch(showTransform, (value) => {
+  storage.write('show-transform', String(value));
+  if (value) {
+    void ensureLanguageService();
+  }
+});
 watch(mainSplit, (value) => storage.write('split:main', String(value)));
 watch(leftSplit, (value) => storage.write('split:left', String(value)));
 watch(rightSplit, (value) => storage.write('split:right', String(value)));
@@ -193,7 +219,12 @@ async function copyLink() {
   }
 }
 
-onMounted(refresh);
+onMounted(() => {
+  refresh();
+  if (showTransform.value) {
+    void ensureLanguageService();
+  }
+});
 
 onBeforeUnmount(() => {
   clearTimeout(parseTimer);
@@ -215,7 +246,8 @@ onBeforeUnmount(() => {
 
       <span class="explorer-filename">{{ sourceType.filename }}</span>
 
-      <label class="explorer-field">
+      <!-- Start fetching TypeScript on the way to the checkbox. -->
+      <label class="explorer-field" @mouseenter="ensureLanguageService">
         <input v-model="showTransform" type="checkbox" />
         Codemod
       </label>
@@ -254,8 +286,24 @@ onBeforeUnmount(() => {
 
           <template #b>
             <section class="explorer-pane">
-              <h2 class="explorer-pane-title">Codemod</h2>
-              <SourceEditor v-model="codemodSource" language="typescript" :highlight="null" />
+              <h2 class="explorer-pane-title">
+                Codemod
+                <span v-if="languageServiceState === 'loading'" class="explorer-pane-status">
+                  loading TypeScript…
+                </span>
+                <span
+                  v-else-if="languageServiceState === 'unavailable'"
+                  class="explorer-pane-status"
+                >
+                  type checking needs the package built
+                </span>
+              </h2>
+              <SourceEditor
+                v-model="codemodSource"
+                language="typescript"
+                :highlight="null"
+                :language-service="languageService"
+              />
             </section>
           </template>
         </SplitPane>

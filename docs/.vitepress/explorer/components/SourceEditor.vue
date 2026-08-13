@@ -14,12 +14,16 @@ import { javascript } from '@codemirror/lang-javascript';
 import { vue } from '@codemirror/lang-vue';
 import type { EditorLanguage } from '../core/source-types';
 import type { Range } from '../core/tree-adapter';
+import type { CodemodLanguageService } from '../core/language-service';
+import { typescriptExtensions } from './typescript-extensions';
 
 const props = defineProps<{
   modelValue: string;
   language: EditorLanguage;
   /** Range to paint, in source offsets. */
   highlight: Range | null;
+  /** Turns on diagnostics, completions and hover types once it arrives. */
+  languageService?: CodemodLanguageService | null;
 }>();
 
 const emit = defineEmits<{
@@ -29,6 +33,7 @@ const emit = defineEmits<{
 
 const host = ref<HTMLElement | null>(null);
 const language = new Compartment();
+const typescript = new Compartment();
 
 let view: EditorView | null = null;
 
@@ -89,6 +94,7 @@ onMounted(() => {
         EditorView.lineWrapping,
         highlightField,
         language.of(languageExtension(props.language)),
+        typescript.of(props.languageService ? typescriptExtensions(props.languageService) : []),
         EditorView.updateListener.of((update) => {
           if (update.docChanged) {
             emit('update:modelValue', update.state.doc.toString());
@@ -130,6 +136,15 @@ watch(
   () => props.highlight,
   (value) => {
     view?.dispatch({ effects: setHighlight.of(value) });
+  },
+);
+
+watch(
+  () => props.languageService,
+  (service) => {
+    view?.dispatch({
+      effects: typescript.reconfigure(service ? typescriptExtensions(service) : []),
+    });
   },
 );
 </script>

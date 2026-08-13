@@ -282,6 +282,88 @@
   background-color: var(--explorer-focus);
 }
 
+.explorer-pane-status {
+  color: var(--explorer-muted);
+  font-weight: 400;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* language service: diagnostics, completions, hover types */
+
+.source-editor .cm-tooltip {
+  border: 1px solid var(--explorer-border);
+  border-radius: 6px;
+  background-color: var(--vp-c-bg-elv);
+  color: var(--vp-c-text-1);
+}
+
+.source-editor .cm-tooltip.cm-tooltip-autocomplete > ul {
+  max-height: 16em;
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+}
+
+.source-editor .cm-tooltip-autocomplete > ul > li[aria-selected] {
+  background-color: var(--vp-c-brand-soft);
+  color: var(--vp-c-text-1);
+}
+
+.source-editor .cm-completionIcon {
+  margin-right: 6px;
+  opacity: 0.7;
+}
+
+.cm-completion-info,
+.cm-quick-info {
+  max-width: 42em;
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+  line-height: 1.5;
+}
+
+.cm-quick-info {
+  padding: 6px 10px;
+}
+
+.cm-quick-info pre {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.cm-quick-info p {
+  margin: 6px 0 0;
+  color: var(--explorer-muted);
+  font-family: var(--vp-font-family-base);
+}
+
+.cm-completion-info {
+  padding: 6px 10px;
+  white-space: pre-wrap;
+}
+
+.source-editor .cm-diagnostic {
+  font-family: var(--vp-font-family-mono);
+  font-size: 12px;
+  white-space: pre-wrap;
+}
+
+.source-editor .cm-diagnostic-error {
+  border-left-color: var(--vp-c-danger-1);
+}
+
+.source-editor .cm-lintRange-error {
+  background: none;
+  text-decoration: underline wavy var(--vp-c-danger-1);
+  text-underline-offset: 3px;
+}
+
+.source-editor .cm-lintRange-warning {
+  background: none;
+  text-decoration: underline wavy var(--vp-c-warning-1);
+  text-underline-offset: 3px;
+}
+
 .source-editor .tok-comment {
   color: var(--explorer-muted);
   font-style: italic;

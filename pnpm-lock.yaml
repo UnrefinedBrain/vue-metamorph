@@ -69,6 +69,9 @@ importers:
       '@babel/types':
         specifier: ^7.29.0
         version: 7.29.0
+      '@codemirror/autocomplete':
+        specifier: ^6.20.3
+        version: 6.20.3
       '@codemirror/commands':
         specifier: ^6.10.4
         version: 6.10.4
@@ -84,6 +87,9 @@ importers:
       '@codemirror/language':
         specifier: ^6.12.4
         version: 6.12.4
+      '@codemirror/lint':
+        specifier: ^6.9.7
+        version: 6.9.7
       '@codemirror/state':
         specifier: ^6.7.1
         version: 6.7.1

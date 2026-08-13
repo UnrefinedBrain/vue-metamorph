@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
 import type { Plugin } from 'vite';
+import { TYPES_MODULE_ID, typeFilesModuleSource } from './type-files';
 
 /**
  * The AST explorer runs vue-metamorph's real parsers in the browser, which
@@ -42,6 +43,7 @@ const EXCLUDED_PREFIX = '\0vue-metamorph:excluded:';
 
 export const EXPLORER_MODULE_ID = 'virtual:vue-metamorph-explorer';
 const RESOLVED_EXPLORER_MODULE_ID = '\0vue-metamorph:explorer';
+const RESOLVED_TYPES_MODULE_ID = '\0vue-metamorph:types';
 
 const explorerEntry = () => fileURLToPath(new URL('./App.vue', import.meta.url));
 
@@ -131,6 +133,10 @@ export function astExplorerPlugin(): Plugin {
         return options?.ssr ? RESOLVED_EXPLORER_MODULE_ID : explorerEntry();
       }
 
+      if (source === TYPES_MODULE_ID) {
+        return RESOLVED_TYPES_MODULE_ID;
+      }
+
       if (options?.ssr) {
         return null;
       }
@@ -151,6 +157,10 @@ export function astExplorerPlugin(): Plugin {
     load(id) {
       if (id === RESOLVED_EXPLORER_MODULE_ID) {
         return 'export default { render: () => null };';
+      }
+
+      if (id === RESOLVED_TYPES_MODULE_ID) {
+        return typeFilesModuleSource();
       }
 
       if (id.startsWith(EXCLUDED_PREFIX)) {
