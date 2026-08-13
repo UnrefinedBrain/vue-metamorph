@@ -7,7 +7,7 @@
 import { computed, markRaw, nextTick, watch } from 'vue';
 import { TreeAdapter, type TreeAdapterOptions } from '../core/tree-adapter';
 import { useTreeSettings } from '../core/settings';
-import { useExplorerContext } from '../core/context';
+import { usePlaygroundContext } from '../core/context';
 import TreeElement from './TreeElement.vue';
 
 const props = defineProps<{
@@ -17,7 +17,7 @@ const props = defineProps<{
 }>();
 
 const settings = useTreeSettings();
-const context = useExplorerContext();
+const context = usePlaygroundContext();
 
 const adapter = computed(() => markRaw(new TreeAdapter(props.options, settings)));
 const filters = computed(() => adapter.value.getConfigurableFilters());

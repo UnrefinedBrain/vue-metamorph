@@ -387,8 +387,8 @@ builders.importDeclaration(specifiers, source);
 // ... and all other ESTree node types
 ```
 
-See ast-types documentation for the full list, and the AST Explorer at
-https://vue-metamorph.dev/explorer for the node shapes they need to produce.
+See ast-types documentation for the full list, and the Playground at
+https://vue-metamorph.dev/playground for the node shapes they need to produce.
 
 ## SFC Template AST Node Types
 
@@ -487,11 +487,12 @@ const renameComponent: CodemodPlugin = {
 };
 ```
 
-## AST Explorer
+## Playground
 
-Use the [AST Explorer](https://vue-metamorph.dev/explorer) to visualize the AST for any code
+Use the [Playground](https://vue-metamorph.dev/playground) to visualize the AST for any code
 snippet. It runs vue-metamorph's own parsers, so the trees it shows are what a codemod receives,
-and it can run a CodemodPlugin against the source in the browser.
+and it can run a CodemodPlugin against the source in the browser. It is a port of Felix Kling's
+[AST Explorer](https://github.com/fkling/astexplorer).
 
 | Source Type | Parser |
 | --- | --- |
@@ -499,7 +500,7 @@ and it can run a CodemodPlugin against the source in the browser.
 | Vue SFC `<script>`, JavaScript / TypeScript | `@babel/parser` via recast |
 | Vue SFC `<style>`, CSS | `postcss` |
 | SCSS / Sass / Less | `postcss-scss` / `postcss-sass` / `postcss-less` |
-| Stylus | `postcss-styl` (Node only, not available in the in-docs explorer) |
+| Stylus | `postcss-styl` (Node only, not available in the Playground) |
 
 ## Code Formatting Note
 

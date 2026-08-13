@@ -80,7 +80,7 @@ function manifestFor(packageRoot: string): string | null {
 /**
  * Returns a virtual file system of declaration files, or null when the package
  * has not been built yet - `pnpm docs:dev` builds it first, but a bare
- * `vitepress dev docs` does not, and the explorer should still come up.
+ * `vitepress dev docs` does not, and the playground should still come up.
  */
 export function collectTypeFiles(): Record<string, string> | null {
   if (!existsSync(DECLARATIONS)) {

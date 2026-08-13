@@ -6,7 +6,7 @@ import { SAMPLE_CODEMOD } from './samples';
 
 // The declaration files come out of `dist`, which `pnpm docs:build` and
 // `pnpm docs:dev` produce first. A bare `pnpm test` on a clean checkout has
-// nothing to check against, and the explorer degrades the same way.
+// nothing to check against, and the playground degrades the same way.
 const files = collectTypeFiles();
 
 const service = files ? createCodemodLanguageService(ts, files) : null;
@@ -22,7 +22,7 @@ describe.skipIf(!files)('codemod language service', () => {
     expect(files!['/lib.es2022.d.ts']).toBeTypeOf('string');
   });
 
-  it('accepts the codemod the explorer ships with', () => {
+  it('accepts the codemod the playground ships with', () => {
     expect(check(SAMPLE_CODEMOD)).toEqual([]);
   });
 

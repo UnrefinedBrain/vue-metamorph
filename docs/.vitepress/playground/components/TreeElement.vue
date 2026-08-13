@@ -11,7 +11,7 @@ import { computed, onBeforeUnmount, ref, toRef, watch } from 'vue';
 import type { TreeAdapter, TreeProperty } from '../core/tree-adapter';
 import { OPEN_STATES, type OpenState, useOpenState } from '../core/use-open-state';
 import { stringify } from '../core/stringify';
-import { useExplorerContext } from '../core/context';
+import { usePlaygroundContext } from '../core/context';
 import CompactArrayView from './CompactArrayView.vue';
 import CompactObjectView from './CompactObjectView.vue';
 
@@ -33,7 +33,7 @@ const props = withDefaults(
 
 const emit = defineEmits<{ open: [state: OpenState] }>();
 
-const context = useExplorerContext();
+const context = usePlaygroundContext();
 const element = ref<HTMLElement | null>(null);
 
 const isInRange = computed(() => props.adapter.isInRange(props.value, props.name, props.position));

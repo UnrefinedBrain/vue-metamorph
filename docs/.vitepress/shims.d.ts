@@ -12,7 +12,7 @@ declare module 'virtual:vue-metamorph-types' {
   export const TYPE_FILES: Record<string, string> | null;
 }
 
-declare module 'virtual:vue-metamorph-explorer' {
+declare module 'virtual:vue-metamorph-playground' {
   import type { DefineComponent } from 'vue';
 
   const component: DefineComponent<Record<string, unknown>, Record<string, unknown>, unknown>;

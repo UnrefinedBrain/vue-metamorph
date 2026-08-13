@@ -13,7 +13,7 @@ export type TreeSettings = FilterSettings & {
   hideRaws: boolean;
 };
 
-const STORAGE_KEY = 'vue-metamorph:explorer:tree-settings';
+const STORAGE_KEY = 'vue-metamorph:playground:tree-settings';
 
 const DEFAULTS: TreeSettings = {
   autofocus: true,

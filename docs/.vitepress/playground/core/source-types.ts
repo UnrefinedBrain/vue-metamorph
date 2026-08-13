@@ -1,7 +1,7 @@
 /**
- * The source types the explorer understands, which is exactly the set
+ * The source types the playground understands, which is exactly the set
  * vue-metamorph itself dispatches on: `transform()` picks its pipeline from
- * the file name, so the file name is the only control the explorer needs.
+ * the file name, so the file name is the only control the playground needs.
  */
 
 export type EditorLanguage = 'vue' | 'javascript' | 'typescript' | 'css';

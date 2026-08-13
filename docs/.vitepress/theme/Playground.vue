@@ -1,28 +1,27 @@
 <script setup lang="ts">
 /**
- * Loads the explorer in the browser only. It carries the parsers with it, so
+ * Loads the playground in the browser only. It carries the parsers with it, so
  * it is fetched on demand rather than with the rest of the docs, and it is
  * never rendered during the static build.
  */
 import { defineAsyncComponent, h } from 'vue';
 
-const Explorer = defineAsyncComponent({
-  loader: () => import('virtual:vue-metamorph-explorer'),
-  loadingComponent: () => h('div', { class: 'ast-explorer-loading' }, 'Loading parsers…'),
-  errorComponent: () =>
-    h('div', { class: 'ast-explorer-loading' }, 'The AST explorer failed to load.'),
+const PlaygroundApp = defineAsyncComponent({
+  loader: () => import('virtual:vue-metamorph-playground'),
+  loadingComponent: () => h('div', { class: 'playground-loading' }, 'Loading parsers…'),
+  errorComponent: () => h('div', { class: 'playground-loading' }, 'The playground failed to load.'),
   delay: 0,
 });
 </script>
 
 <template>
   <ClientOnly>
-    <Explorer />
+    <PlaygroundApp />
   </ClientOnly>
 </template>
 
 <style>
-.ast-explorer-loading {
+.playground-loading {
   display: flex;
   align-items: center;
   justify-content: center;

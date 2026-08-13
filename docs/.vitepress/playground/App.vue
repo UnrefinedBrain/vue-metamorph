@@ -1,6 +1,6 @@
 <script setup lang="ts">
 /**
- * An AST explorer for vue-metamorph, in the shape of AST Explorer
+ * A playground for vue-metamorph, in the shape of AST Explorer
  * (https://github.com/fkling/astexplorer) by Felix Kling - MIT - with the
  * parser list narrowed to what vue-metamorph runs and the transform pane
  * wired to `transform()`.
@@ -9,7 +9,7 @@
  * shows is what a codemod plugin is handed.
  */
 import { computed, onBeforeUnmount, onMounted, provide, ref, shallowRef, watch } from 'vue';
-import { EXPLORER_CONTEXT, type ExplorerContext } from './core/context';
+import { PLAYGROUND_CONTEXT, type PlaygroundContext } from './core/context';
 import { type ParseResult, parseSource } from './core/parse';
 import { type TransformOutcome, runTransform } from './core/run-transform';
 import { SOURCE_TYPES, type SourceType, findSourceType } from './core/source-types';
@@ -21,10 +21,10 @@ import AstTree from './components/AstTree.vue';
 import SourceEditor from './components/SourceEditor.vue';
 import SplitPane from './components/SplitPane.vue';
 import TransformPane from './components/TransformPane.vue';
-import './explorer.css';
+import './playground.css';
 
 const PARSE_DELAY_MS = 150;
-const STORAGE_PREFIX = 'vue-metamorph:explorer:';
+const STORAGE_PREFIX = 'vue-metamorph:playground:';
 
 const storage = {
   read(key: string): string | null {
@@ -38,7 +38,7 @@ const storage = {
     try {
       localStorage.setItem(STORAGE_PREFIX + key, value);
     } catch {
-      // private mode, quota, blocked storage: the explorer still works
+      // private mode, quota, blocked storage: the playground still works
     }
   },
 };
@@ -137,7 +137,7 @@ watch(panels, (value) => {
 
 const focusedElements = new Set<HTMLElement>();
 
-const context: ExplorerContext = {
+const context: PlaygroundContext = {
   setHighlight(range) {
     highlight.value = range;
   },
@@ -191,7 +191,7 @@ const context: ExplorerContext = {
   },
 };
 
-provide(EXPLORER_CONTEXT, context);
+provide(PLAYGROUND_CONTEXT, context);
 
 function reset() {
   code.value = sampleFor(sourceType.value.id);
@@ -233,9 +233,9 @@ onBeforeUnmount(() => {
 </script>
 
 <template>
-  <div class="ast-explorer">
-    <header class="explorer-toolbar">
-      <label class="explorer-field">
+  <div class="playground">
+    <header class="playground-toolbar">
+      <label class="playground-field">
         Source
         <select v-model="sourceType">
           <option v-for="type in SOURCE_TYPES" :key="type.id" :value="type">
@@ -244,18 +244,18 @@ onBeforeUnmount(() => {
         </select>
       </label>
 
-      <span class="explorer-filename">{{ sourceType.filename }}</span>
+      <span class="playground-filename">{{ sourceType.filename }}</span>
 
       <!-- Start fetching TypeScript on the way to the checkbox. -->
-      <label class="explorer-field" @mouseenter="ensureLanguageService">
+      <label class="playground-field" @mouseenter="ensureLanguageService">
         <input v-model="showTransform" type="checkbox" />
         Codemod
       </label>
 
-      <span class="explorer-toolbar-spacer" />
+      <span class="playground-toolbar-spacer" />
 
       <a
-        class="explorer-credit"
+        class="playground-credit"
         href="https://github.com/fkling/astexplorer"
         target="_blank"
         rel="noreferrer"
@@ -269,12 +269,12 @@ onBeforeUnmount(() => {
       </button>
     </header>
 
-    <SplitPane v-model="mainSplit" direction="horizontal" class="explorer-body">
+    <SplitPane v-model="mainSplit" direction="horizontal" class="playground-body">
       <template #a>
         <SplitPane v-model="leftSplit" direction="vertical" :collapsed="!showTransform">
           <template #a>
-            <section class="explorer-pane">
-              <h2 class="explorer-pane-title">Source</h2>
+            <section class="playground-pane">
+              <h2 class="playground-pane-title">Source</h2>
               <SourceEditor
                 v-model="code"
                 :language="sourceType.language"
@@ -285,15 +285,15 @@ onBeforeUnmount(() => {
           </template>
 
           <template #b>
-            <section class="explorer-pane">
-              <h2 class="explorer-pane-title">
+            <section class="playground-pane">
+              <h2 class="playground-pane-title">
                 Codemod
-                <span v-if="languageServiceState === 'loading'" class="explorer-pane-status">
+                <span v-if="languageServiceState === 'loading'" class="playground-pane-status">
                   loading TypeScript…
                 </span>
                 <span
                   v-else-if="languageServiceState === 'unavailable'"
-                  class="explorer-pane-status"
+                  class="playground-pane-status"
                 >
                   type checking needs the package built
                 </span>
@@ -312,24 +312,24 @@ onBeforeUnmount(() => {
       <template #b>
         <SplitPane v-model="rightSplit" direction="vertical" :collapsed="!showTransform">
           <template #a>
-            <section class="explorer-pane">
-              <div class="explorer-pane-title explorer-tabs">
+            <section class="playground-pane">
+              <div class="playground-pane-title playground-tabs">
                 <button
                   v-for="panel in panels"
                   :key="panel.id"
                   type="button"
-                  class="explorer-tab"
+                  class="playground-tab"
                   :class="{ active: panel.id === activePanel?.id }"
                   @click="activePanelId = panel.id"
                 >
                   {{ panel.label }}
                 </button>
-                <span v-if="activePanel?.note" class="explorer-tab-note">{{
+                <span v-if="activePanel?.note" class="playground-tab-note">{{
                   activePanel.note
                 }}</span>
               </div>
 
-              <details v-if="activePanel?.warnings?.length" class="explorer-warnings">
+              <details v-if="activePanel?.warnings?.length" class="playground-warnings">
                 <summary>
                   {{ activePanel.warnings.length }} syntax error{{
                     activePanel.warnings.length === 1 ? '' : 's'
@@ -339,7 +339,7 @@ onBeforeUnmount(() => {
                 <p v-for="warning in activePanel.warnings" :key="warning">{{ warning }}</p>
               </details>
 
-              <p v-if="parseResult.error" class="explorer-error">{{ parseResult.error }}</p>
+              <p v-if="parseResult.error" class="playground-error">{{ parseResult.error }}</p>
               <AstTree
                 v-else-if="activePanel"
                 :key="activePanel.id"
@@ -351,8 +351,8 @@ onBeforeUnmount(() => {
           </template>
 
           <template #b>
-            <section class="explorer-pane">
-              <h2 class="explorer-pane-title">Transform output</h2>
+            <section class="playground-pane">
+              <h2 class="playground-pane-title">Transform output</h2>
               <TransformPane :outcome="transformOutcome" />
             </section>
           </template>

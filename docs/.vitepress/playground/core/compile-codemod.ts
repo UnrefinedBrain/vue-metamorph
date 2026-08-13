@@ -141,7 +141,7 @@ function stripTypes(program: namedTypes.Program): void {
     }
 
     if (node.type === 'TSEnumDeclaration') {
-      throw new Error('TypeScript enums are not supported in the explorer, use a plain object');
+      throw new Error('TypeScript enums are not supported in the playground, use a plain object');
     }
 
     for (const property of TYPE_PROPERTIES) {

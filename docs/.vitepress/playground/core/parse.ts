@@ -1,7 +1,7 @@
 /**
  * Runs vue-metamorph's own parsers over the editor contents.
  *
- * The explorer deliberately imports the parsing code rather than
+ * The playground deliberately imports the parsing code rather than
  * reimplementing it, so what the tree shows is what a codemod plugin receives:
  * `sfcAST` for the template, one `scriptASTs` entry per `<script>` block, one
  * `styleASTs` entry per supported `<style>` block.
@@ -35,7 +35,8 @@ export type ParseResult = {
 
 const STYLUS_HINT =
   'Stylus is supported by vue-metamorph, but its parser only runs in Node, so it is not part of ' +
-  'this page. Use the postcss-styl playground at https://stylus.github.io/postcss-styl/ instead.';
+  'this page. Use the postcss-styl AST visualizer at https://stylus.github.io/postcss-styl/ ' +
+  'instead.';
 
 function describeError(error: unknown): string {
   const message = error instanceof Error ? error.message : String(error);

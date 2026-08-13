@@ -3,7 +3,7 @@ import type { Plugin } from 'vite';
 import { TYPES_MODULE_ID, typeFilesModuleSource } from './type-files';
 
 /**
- * The AST explorer runs vue-metamorph's real parsers in the browser, which
+ * The playground runs vue-metamorph's real parsers in the browser, which
  * means a handful of things have to be pointed somewhere else for the client
  * bundle.
  *
@@ -12,14 +12,14 @@ import { TYPES_MODULE_ID, typeFilesModuleSource } from './type-files';
  * Both get a small browser implementation.
  *
  * Three packages are excluded outright. They sit behind code paths the
- * explorer never takes, but a bundler hoists the `require()` that reaches them
+ * playground never takes, but a bundler hoists the `require()` that reaches them
  * and pulls in the entire dependency - all of eslint (~3.5 MB), all of stylus
  * and its Node-only image/file handling - so they are replaced by a module
  * that reports what happened if anything ever does reach them.
  */
 const EXCLUDED_PACKAGES = [
   // vue-eslint-parser lazily requires eslint to build a SourceCode for custom
-  // blocks. The explorer reads ASTs; it never asks for one.
+  // blocks. The playground reads ASTs; it never asks for one.
   'eslint',
 
   // recast only re-tokenizes with esprima under NODE_ENV=test, and esprima is
@@ -28,7 +28,7 @@ const EXCLUDED_PACKAGES = [
 
   // stylus is a Node program: its parser drags in the evaluator, which drags
   // in image sizing, `sax`, `glob` and a pile of file system access. Styles
-  // written in stylus are reported as unsupported by the explorer instead.
+  // written in stylus are reported as unsupported by the playground instead.
   'postcss-styl',
 ];
 
@@ -41,11 +41,11 @@ const BROWSER_SHIMS: Record<string, string> = {
 
 const EXCLUDED_PREFIX = '\0vue-metamorph:excluded:';
 
-export const EXPLORER_MODULE_ID = 'virtual:vue-metamorph-explorer';
-const RESOLVED_EXPLORER_MODULE_ID = '\0vue-metamorph:explorer';
+export const PLAYGROUND_MODULE_ID = 'virtual:vue-metamorph-playground';
+const RESOLVED_PLAYGROUND_MODULE_ID = '\0vue-metamorph:playground';
 const RESOLVED_TYPES_MODULE_ID = '\0vue-metamorph:types';
 
-const explorerEntry = () => fileURLToPath(new URL('./App.vue', import.meta.url));
+const playgroundEntry = () => fileURLToPath(new URL('./App.vue', import.meta.url));
 
 /**
  * `src/vendor/deep-diff` is vendored verbatim as UMD. Rollup only converts
@@ -61,7 +61,7 @@ function wrapUmdModule(code: string) {
 function excludedModuleSource(packageName: string) {
   return `
 const unavailable = () => {
-  throw new Error(${JSON.stringify(packageName)} + ' is not bundled into the AST explorer');
+  throw new Error(${JSON.stringify(packageName)} + ' is not bundled into the playground');
 };
 
 export const parse = unavailable;
@@ -82,7 +82,7 @@ const EXCLUDED_NAMESPACE = 'vue-metamorph-excluded';
  * sees them, so the same substitutions have to be handed to the optimizer.
  */
 const dependencyOptimizerPlugin = {
-  name: 'vue-metamorph:ast-explorer-deps',
+  name: 'vue-metamorph:playground-deps',
 
   setup(build: {
     onResolve(options: { filter: RegExp }, callback: (args: { path: string }) => unknown): void;
@@ -108,16 +108,16 @@ const dependencyOptimizerPlugin = {
 };
 
 /**
- * Vite plugin backing the in-docs AST explorer.
+ * Vite plugin backing the in-docs playground.
  *
  * Everything here is scoped to the client build. The SSR pass renders pages in
  * Node at build time, where the real `path`, the real `eslint` and the real
- * `stylus` are all perfectly fine - and where the explorer itself has no
+ * `stylus` are all perfectly fine - and where the playground itself has no
  * business being evaluated at all, so it resolves to an empty component.
  */
-export function astExplorerPlugin(): Plugin {
+export function playgroundPlugin(): Plugin {
   return {
-    name: 'vue-metamorph:ast-explorer',
+    name: 'vue-metamorph:playground',
     enforce: 'pre',
 
     config() {
@@ -129,8 +129,8 @@ export function astExplorerPlugin(): Plugin {
     },
 
     resolveId(source, _importer, options) {
-      if (source === EXPLORER_MODULE_ID) {
-        return options?.ssr ? RESOLVED_EXPLORER_MODULE_ID : explorerEntry();
+      if (source === PLAYGROUND_MODULE_ID) {
+        return options?.ssr ? RESOLVED_PLAYGROUND_MODULE_ID : playgroundEntry();
       }
 
       if (source === TYPES_MODULE_ID) {
@@ -155,7 +155,7 @@ export function astExplorerPlugin(): Plugin {
     },
 
     load(id) {
-      if (id === RESOLVED_EXPLORER_MODULE_ID) {
+      if (id === RESOLVED_PLAYGROUND_MODULE_ID) {
         return 'export default { render: () => null };';
       }
 

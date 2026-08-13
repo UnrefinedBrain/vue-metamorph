@@ -1,6 +1,6 @@
 # Attribution
 
-The AST explorer in these docs is a Vue port of [AST Explorer](https://github.com/fkling/astexplorer)
+The playground in these docs is a Vue port of [AST Explorer](https://github.com/fkling/astexplorer)
 by Felix Kling, trimmed to the parsers vue-metamorph uses and wired to
 vue-metamorph's own `parseVue`/`parseTs`/`parseCss` and `transform`.
 
@@ -8,7 +8,7 @@ Files carrying ported code name their origin in a header comment. The tree
 visualization (`core/tree-adapter.ts`, `core/use-open-state.ts`,
 `core/stringify.ts`, `components/TreeElement.vue`, `components/AstTree.vue`,
 `components/CompactArrayView.vue`, `components/CompactObjectView.vue`) and the
-tree styling in `explorer.css` follow the original closely.
+tree styling in `playground.css` follow the original closely.
 
 ## AST Explorer license
 

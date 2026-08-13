@@ -4,42 +4,42 @@
  * Copyright (c) 2014 Felix Kling - restyled to sit inside the VitePress theme.
  */
 
-.ast-explorer {
-  --explorer-punctuation: var(--vp-c-text-3);
-  --explorer-node-type: #1f6feb;
-  --explorer-key: #9a6700;
-  --explorer-value: #0f766e;
-  --explorer-muted: var(--vp-c-text-2);
-  --explorer-focus: rgb(255 213 0 / 35%);
-  --explorer-border: var(--vp-c-divider);
+.playground {
+  --playground-punctuation: var(--vp-c-text-3);
+  --playground-node-type: #1f6feb;
+  --playground-key: #9a6700;
+  --playground-value: #0f766e;
+  --playground-muted: var(--vp-c-text-2);
+  --playground-focus: rgb(255 213 0 / 35%);
+  --playground-border: var(--vp-c-divider);
 
   display: flex;
   flex-direction: column;
   height: calc(100vh - var(--vp-nav-height));
-  border-top: 1px solid var(--explorer-border);
+  border-top: 1px solid var(--playground-border);
   font-size: 14px;
 }
 
-.dark .ast-explorer {
-  --explorer-node-type: #6cb6ff;
-  --explorer-key: #e3b341;
-  --explorer-value: #6bd0c1;
-  --explorer-focus: rgb(255 213 0 / 22%);
+.dark .playground {
+  --playground-node-type: #6cb6ff;
+  --playground-key: #e3b341;
+  --playground-value: #6bd0c1;
+  --playground-focus: rgb(255 213 0 / 22%);
 }
 
 /* toolbar */
 
-.explorer-toolbar {
+.playground-toolbar {
   display: flex;
   flex-wrap: wrap;
   gap: 12px;
   align-items: center;
   padding: 8px 16px;
-  border-bottom: 1px solid var(--explorer-border);
+  border-bottom: 1px solid var(--playground-border);
   background-color: var(--vp-c-bg-soft);
 }
 
-.explorer-field {
+.playground-field {
   display: inline-flex;
   gap: 6px;
   align-items: center;
@@ -47,38 +47,38 @@
   cursor: pointer;
 }
 
-.explorer-field select {
+.playground-field select {
   padding: 2px 6px;
-  border: 1px solid var(--explorer-border);
+  border: 1px solid var(--playground-border);
   border-radius: 4px;
   background-color: var(--vp-c-bg);
   color: inherit;
   cursor: pointer;
 }
 
-.explorer-filename {
-  color: var(--explorer-muted);
+.playground-filename {
+  color: var(--playground-muted);
   font-family: var(--vp-font-family-mono);
   font-size: 0.85em;
 }
 
-.explorer-toolbar-spacer {
+.playground-toolbar-spacer {
   flex: 1;
 }
 
-.explorer-credit {
-  color: var(--explorer-muted);
+.playground-credit {
+  color: var(--playground-muted);
   font-size: 0.85em;
 }
 
-.explorer-credit:hover {
+.playground-credit:hover {
   color: var(--vp-c-brand-1);
   text-decoration: underline;
 }
 
-.explorer-toolbar button {
+.playground-toolbar button {
   padding: 3px 10px;
-  border: 1px solid var(--explorer-border);
+  border: 1px solid var(--playground-border);
   border-radius: 4px;
   background-color: var(--vp-c-bg);
   font-size: 0.9em;
@@ -87,14 +87,14 @@
     border-color 0.2s;
 }
 
-.explorer-toolbar button:hover {
+.playground-toolbar button:hover {
   border-color: var(--vp-c-brand-1);
   color: var(--vp-c-brand-1);
 }
 
 /* panes */
 
-.explorer-body {
+.playground-body {
   flex: 1;
   min-height: 0;
 }
@@ -125,7 +125,7 @@
 
 .split-pane-divider {
   flex: 0 0 5px;
-  background-color: var(--explorer-border);
+  background-color: var(--playground-border);
   transition: background-color 0.2s;
 }
 
@@ -142,7 +142,7 @@
   background-color: var(--vp-c-brand-1);
 }
 
-.explorer-pane {
+.playground-pane {
   display: flex;
   flex-direction: column;
   min-width: 0;
@@ -150,81 +150,81 @@
   height: 100%;
 }
 
-.explorer-pane-title {
+.playground-pane-title {
   display: flex;
   flex-shrink: 0;
   gap: 8px;
   align-items: center;
   margin: 0;
   padding: 6px 12px;
-  border-bottom: 1px solid var(--explorer-border);
+  border-bottom: 1px solid var(--playground-border);
   background-color: var(--vp-c-bg-soft);
-  color: var(--explorer-muted);
+  color: var(--playground-muted);
   font-size: 0.8em;
   font-weight: 600;
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 
-.explorer-tabs {
+.playground-tabs {
   overflow-x: auto;
   padding: 0 12px;
   text-transform: none;
   letter-spacing: 0;
 }
 
-.explorer-tab {
+.playground-tab {
   padding: 6px 2px;
   border-bottom: 2px solid transparent;
-  color: var(--explorer-muted);
+  color: var(--playground-muted);
   font-size: 1em;
   font-weight: 600;
   white-space: nowrap;
 }
 
-.explorer-tab:hover {
+.playground-tab:hover {
   color: var(--vp-c-text-1);
 }
 
-.explorer-tab.active {
+.playground-tab.active {
   border-bottom-color: var(--vp-c-brand-1);
   color: var(--vp-c-text-1);
 }
 
-.explorer-tab + .explorer-tab {
+.playground-tab + .playground-tab {
   margin-left: 12px;
 }
 
-.explorer-tab-note {
+.playground-tab-note {
   margin-left: auto;
   padding-left: 16px;
-  color: var(--explorer-muted);
+  color: var(--playground-muted);
   font-family: var(--vp-font-family-mono);
   font-size: 0.85em;
   font-weight: 400;
   white-space: nowrap;
 }
 
-.explorer-warnings {
+.playground-warnings {
   flex-shrink: 0;
   max-height: 30%;
   overflow: auto;
   padding: 6px 12px;
-  border-bottom: 1px solid var(--explorer-border);
+  border-bottom: 1px solid var(--playground-border);
   background-color: var(--vp-c-warning-soft);
   font-size: 0.85em;
 }
 
-.explorer-warnings summary {
+.playground-warnings summary {
   cursor: pointer;
 }
 
-.explorer-warnings p {
+.playground-warnings p {
   margin: 4px 0 0;
   font-family: var(--vp-font-family-mono);
 }
 
-.explorer-error {
+.playground-error {
   overflow: auto;
   margin: 0;
   padding: 12px 16px;
@@ -259,7 +259,7 @@
 }
 
 .source-editor .cm-gutters {
-  border-right: 1px solid var(--explorer-border);
+  border-right: 1px solid var(--playground-border);
   background-color: var(--vp-c-bg-soft);
   color: var(--vp-c-text-3);
 }
@@ -279,11 +279,11 @@
 
 .cm-node-highlight {
   border-radius: 2px;
-  background-color: var(--explorer-focus);
+  background-color: var(--playground-focus);
 }
 
-.explorer-pane-status {
-  color: var(--explorer-muted);
+.playground-pane-status {
+  color: var(--playground-muted);
   font-weight: 400;
   text-transform: none;
   letter-spacing: 0;
@@ -292,7 +292,7 @@
 /* language service: diagnostics, completions, hover types */
 
 .source-editor .cm-tooltip {
-  border: 1px solid var(--explorer-border);
+  border: 1px solid var(--playground-border);
   border-radius: 6px;
   background-color: var(--vp-c-bg-elv);
   color: var(--vp-c-text-1);
@@ -333,7 +333,7 @@
 
 .cm-quick-info p {
   margin: 6px 0 0;
-  color: var(--explorer-muted);
+  color: var(--playground-muted);
   font-family: var(--vp-font-family-base);
 }
 
@@ -365,7 +365,7 @@
 }
 
 .source-editor .tok-comment {
-  color: var(--explorer-muted);
+  color: var(--playground-muted);
   font-style: italic;
 }
 
@@ -377,7 +377,7 @@
 
 .source-editor .tok-string,
 .source-editor .tok-string2 {
-  color: var(--explorer-value);
+  color: var(--playground-value);
 }
 
 .source-editor .tok-number,
@@ -389,12 +389,12 @@
 .source-editor .tok-tagName,
 .source-editor .tok-typeName,
 .source-editor .tok-className {
-  color: var(--explorer-node-type);
+  color: var(--playground-node-type);
 }
 
 .source-editor .tok-attributeName,
 .source-editor .tok-propertyName {
-  color: var(--explorer-key);
+  color: var(--playground-key);
 }
 
 .source-editor .tok-variableName {
@@ -403,7 +403,7 @@
 
 .source-editor .tok-punctuation,
 .source-editor .tok-separator {
-  color: var(--explorer-punctuation);
+  color: var(--playground-punctuation);
 }
 
 .dark .source-editor .tok-keyword,
@@ -433,8 +433,8 @@
   flex-wrap: wrap;
   gap: 12px;
   padding: 6px 12px;
-  border-bottom: 1px solid var(--explorer-border);
-  color: var(--explorer-muted);
+  border-bottom: 1px solid var(--playground-border);
+  color: var(--playground-muted);
   font-size: 0.85em;
 }
 
@@ -480,7 +480,7 @@
 
 .entry.highlighted {
   border-radius: 2px;
-  background-color: var(--explorer-focus);
+  background-color: var(--playground-focus);
 }
 
 .entry > .value {
@@ -517,24 +517,24 @@
 }
 
 .ast-tree-root .p {
-  color: var(--explorer-punctuation);
+  color: var(--playground-punctuation);
 }
 
 .ast-tree-root .nc {
-  color: var(--explorer-node-type);
+  color: var(--playground-node-type);
   font-weight: 600;
 }
 
 .ast-tree-root .nb {
-  color: var(--explorer-key);
+  color: var(--playground-key);
 }
 
 .ast-tree-root .s {
-  color: var(--explorer-value);
+  color: var(--playground-value);
 }
 
 .ast-tree-root .ge {
-  color: var(--explorer-muted);
+  color: var(--playground-muted);
   font-style: italic;
 }
 
@@ -557,7 +557,7 @@
 
 .transform-placeholder {
   padding: 16px;
-  color: var(--explorer-muted);
+  color: var(--playground-muted);
 }
 
 .transform-stats {
@@ -566,8 +566,8 @@
   flex-wrap: wrap;
   gap: 12px;
   padding: 6px 16px;
-  border-bottom: 1px solid var(--explorer-border);
-  color: var(--explorer-muted);
+  border-bottom: 1px solid var(--playground-border);
+  color: var(--playground-muted);
   font-size: 0.85em;
 }
 

@@ -4,9 +4,9 @@ import type { Range } from './tree-adapter';
 /**
  * Shared by the tree and the editor. AST Explorer wires these up with a pubsub
  * module and a React context; provide/inject covers both and keeps a page with
- * two explorers on it from crossing wires.
+ * two playgrounds on it from crossing wires.
  */
-export type ExplorerContext = {
+export type PlaygroundContext = {
   /** Highlights a source range while the pointer is over a node. */
   setHighlight(range: Range | null): void;
   /** The node the user last clicked, also published as `$node`. */
@@ -18,13 +18,15 @@ export type ExplorerContext = {
   scrollToFocused(): void;
 };
 
-export const EXPLORER_CONTEXT: InjectionKey<ExplorerContext> = Symbol('vue-metamorph-explorer');
+export const PLAYGROUND_CONTEXT: InjectionKey<PlaygroundContext> = Symbol(
+  'vue-metamorph-playground',
+);
 
-export function useExplorerContext(): ExplorerContext {
-  const context = inject(EXPLORER_CONTEXT);
+export function usePlaygroundContext(): PlaygroundContext {
+  const context = inject(PLAYGROUND_CONTEXT);
 
   if (!context) {
-    throw new Error('useExplorerContext must be used inside the AST explorer');
+    throw new Error('usePlaygroundContext must be used inside the playground');
   }
 
   return context;

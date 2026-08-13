@@ -18,7 +18,7 @@ const stats = computed(() => props.outcome?.stats ?? []);
     </div>
 
     <template v-else-if="outcome.error">
-      <p class="explorer-error">{{ outcome.error }}</p>
+      <p class="playground-error">{{ outcome.error }}</p>
     </template>
 
     <template v-else>
