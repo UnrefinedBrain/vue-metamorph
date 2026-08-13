@@ -328,4 +328,4 @@ builders.binaryExpression('+', builders.identifier('a'), builders.identifier('b'
 builders.callExpression(builders.identifier('myFunction'), []);
 ```
 
-See the [ast-types documentation](https://github.com/benjamn/ast-types) and [AST Explorer](https://astexplorer.net) (with `@babel/parser`) for the full list of available builders.
+See the [ast-types documentation](https://github.com/benjamn/ast-types) for the full list of available builders, and the [Playground](/playground) to see the node shapes they need to produce.

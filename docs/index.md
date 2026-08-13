@@ -11,6 +11,9 @@ hero:
     - theme: brand
       text: Get started
       link: /guide/installation
+    - theme: alt
+      text: Playground
+      link: /playground
 
 features:
   - title: AST-based Code Manipulation
