@@ -7,11 +7,11 @@ import { TYPES_MODULE_ID, typeFilesModuleSource } from './type-files';
  * means a handful of things have to be pointed somewhere else for the client
  * bundle.
  *
- * Two node built-ins are genuinely used: vue-eslint-parser calls
- * `path.extname()` to recognise an SFC and asserts on tokenizer invariants.
- * Both get a small browser implementation.
+ * Three node built-ins are reached: vue-eslint-parser calls `path.extname()`
+ * to recognise an SFC and asserts on tokenizer invariants, and recast imports
+ * `os` for its line terminator. All three get a small browser implementation.
  *
- * Three packages are excluded outright. They sit behind code paths the
+ * Two packages are excluded outright. They sit behind code paths the
  * playground never takes, but a bundler hoists the `require()` that reaches them
  * and pulls in the entire dependency - all of eslint (~3.5 MB), all of stylus
  * and its Node-only image/file handling - so they are replaced by a module
@@ -21,10 +21,6 @@ const EXCLUDED_PACKAGES = [
   // vue-eslint-parser lazily requires eslint to build a SourceCode for custom
   // blocks. The playground reads ASTs; it never asks for one.
   'eslint',
-
-  // recast only re-tokenizes with esprima under NODE_ENV=test, and esprima is
-  // not a dependency of vue-metamorph.
-  'esprima',
 
   // stylus is a Node program: its parser drags in the evaluator, which drags
   // in image sizing, `sax`, `glob` and a pile of file system access. Styles
@@ -36,6 +32,7 @@ const shimPath = (name: string) => fileURLToPath(new URL(`./shims/${name}.ts`, i
 
 const BROWSER_SHIMS: Record<string, string> = {
   assert: shimPath('assert'),
+  os: shimPath('os'),
   path: shimPath('path'),
 };
 
