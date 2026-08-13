@@ -2,8 +2,7 @@
 
 set -euo pipefail
 
-# type check / generate dts files
-tsc
+tsc -b --force
 rm dist/*.spec.d.ts*
 
 # bundle

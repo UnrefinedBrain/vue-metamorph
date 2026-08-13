@@ -2,6 +2,9 @@ node_modules
 dist
 temp
 
+# emitted by `tsc -b` (project references, see src/vendor/ast-types/tsconfig.json)
+*.tsbuildinfo
+
 docs/.vitepress/dist
 docs/.vitepress/cache
 docs/api

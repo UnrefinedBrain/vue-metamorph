@@ -6,7 +6,7 @@
       "ESNext",
       // the docs ship an AST explorer that runs the parsers in the browser
       "DOM",
-      "DOM.Iterable",
+      "DOM.Iterable"
     ],
     "module": "ESNext",
     "moduleResolution": "Bundler",
@@ -25,5 +25,10 @@
     "useDefineForClassFields": true,
     "types": ["node"]
   },
-  "include": ["src", "docs"]
+  "include": ["src", "docs"],
+  "exclude": ["src/vendor/ast-types", "src/vendor/recast"],
+  "references": [
+    { "path": "./src/vendor/ast-types" },
+    { "path": "./src/vendor/recast" }
+  ]
 }

@@ -8,8 +8,8 @@
  * guard so a runaway codemod cannot lock up the page.
  */
 
-import * as recast from 'recast-x';
-import { builders as b, namedTypes, visit } from 'ast-types-x';
+import * as recast from '../../../../src/vendor/recast/main';
+import { builders as b, namedTypes, visit } from '../../../../src/vendor/ast-types/main';
 import postcss from 'postcss';
 import { parseTs } from '../../../../src/parse/typescript';
 import { utils } from '../../../../src/types';

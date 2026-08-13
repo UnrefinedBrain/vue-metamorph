@@ -1,5 +1,5 @@
-import * as Kinds from 'ast-types-x/gen/kinds';
-import { builders as scriptBuilders } from 'ast-types-x';
+import * as Kinds from './vendor/ast-types/gen/kinds';
+import { builders as scriptBuilders, visit } from './vendor/ast-types/main';
 import postcss from 'postcss';
 import * as templateBuilders from './builders';
 import * as AST from './ast';
@@ -34,7 +34,20 @@ export {
   type Kinds,
 };
 
-export { namedTypes, visit as traverseScriptAST } from 'ast-types-x';
+export { namedTypes } from './vendor/ast-types/main';
+
+/**
+ * Traverse a script AST, an alias for ast-types' `visit`.
+ *
+ * Declared here rather than re-exported directly so it carries a release tag;
+ * api-extractor cannot attach one to a destructured binding inside the
+ * vendored module.
+ *
+ * @public
+ */
+const traverseScriptAST = visit;
+
+export { traverseScriptAST };
 
 export {
   createVueMetamorphCli,

@@ -1,0 +1,22 @@
+// Vendored third-party sources are compiled as a separate TypeScript project so
+// the repo's stricter flags (notably noUncheckedIndexedAccess) don't force edits
+// to code we want to keep close to upstream. The root project consumes the .d.ts
+// emitted from here via a project reference, so `tsc -b` order matters.
+{
+  "extends": "../../../tsconfig.json",
+  "compilerOptions": {
+    "composite": true,
+    "rootDir": ".",
+    "declarationDir": "../../../dist/vendor/recast",
+    // Kept out of dist/, which is published verbatim via package.json "files".
+    "tsBuildInfoFile": "../../../vendor-recast.tsbuildinfo",
+    // Upstream recast is written against these settings; see LICENSE/README.
+    "noUncheckedIndexedAccess": false
+  },
+  // Both must be set: `extends` would otherwise inherit the root project's
+  // include/exclude, which excludes this very directory.
+  "include": ["."],
+  "exclude": [],
+  // The printer and friends are typed against the vendored ast-types.
+  "references": [{ "path": "../ast-types" }]
+}

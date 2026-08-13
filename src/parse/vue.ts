@@ -1,5 +1,5 @@
 import * as vueParser from 'vue-eslint-parser';
-import * as recast from 'recast-x';
+import * as recast from '../vendor/recast/main';
 import htmlParser from 'node-html-parser';
 import type postcss from 'postcss';
 import { VueProgram } from '../types';

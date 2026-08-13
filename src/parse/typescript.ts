@@ -1,6 +1,6 @@
-import { visit } from 'ast-types-x';
+import { visit } from '../vendor/ast-types/main';
 import * as babelParser from '@babel/parser';
-import * as recast from 'recast-x';
+import * as recast from '../vendor/recast/main';
 import { VueProgram } from '../types';
 
 const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
@@ -13,35 +13,19 @@ const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
   ranges: true,
   sourceType: 'module',
   plugins: [
-    'asyncGenerators',
-    'bigInt',
-    'classPrivateMethods',
-    'classPrivateProperties',
-    'classProperties',
-    'classStaticBlock',
     'decorators-legacy',
     'doExpressions',
-    'dynamicImport',
     'estree',
     'exportDefaultFrom',
-    'exportNamespaceFrom',
     'functionBind',
     'functionSent',
-    'importMeta',
-    'nullishCoalescingOperator',
-    'numericSeparator',
-    'objectRestSpread',
-    'optionalCatchBinding',
-    'optionalChaining',
     [
       'pipelineOperator',
       {
         proposal: 'fsharp',
       },
     ],
-    ['recordAndTuple'],
     'throwExpressions',
-    'topLevelAwait',
     'typescript',
     'v8intrinsic',
 
@@ -55,7 +39,6 @@ export const tsParser = (isJsx: boolean) => ({
   parseForESLint: (code: string): { ast: babelParser.File['program'] } => {
     const res = babelParser.parse(code, babelOptions(isJsx));
 
-    // needed to avoid vue-eslint-parser error
     visit(res.program, {
       visitNode(path) {
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -69,7 +52,6 @@ export const tsParser = (isJsx: boolean) => ({
     });
 
     res.tokens?.forEach((tok) => {
-      // @ts-expect-error Needed by vue-eslint-parser
       tok.range = [tok.start, tok.end];
     });
 
