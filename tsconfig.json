@@ -3,7 +3,10 @@
     "esModuleInterop": true,
     "isolatedModules": true,
     "lib": [
-      "ESNext"
+      "ESNext",
+      // the docs ship an AST explorer that runs the parsers in the browser
+      "DOM",
+      "DOM.Iterable"
     ],
     "module": "ESNext",
     "moduleResolution": "Bundler",

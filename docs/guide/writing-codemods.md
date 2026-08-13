@@ -110,30 +110,40 @@ CSS codemods are supported as of vue-metamorph v3.1.0. Supported syntaxes includ
 
 Each codemod plugin will be passed an array of [PostCSS Root](https://postcss.org/api/#root) objects. Use the PostCSS API to make changes to the stylesheets.
 
-## AST Explorer
+## Playground
 
-[AST Explorer](https://astexplorer.net) is an invaluable tool for visualizing what the AST for a code snippet will look like. vue-metamorph uses [vue-eslint-parser](https://github.com/vuejs/vue-eslint-parser/blob/master/src/ast/nodes.ts) for the `<template>` AST. As the most detailed parser available for Vue files, it suits this use case fairly well, even if it was really meant for eslint.
+Seeing the AST for a snippet is the fastest way to work out what to traverse. The
+[Playground](/playground) built into these docs runs vue-metamorph's own parsers, so what it shows is
+exactly what your codemod is handed: the `sfcAST` for the template, one `scriptASTs` entry per
+`<script>` block, and one `styleASTs` entry per `<style>` block.
 
-Make sure to choose the correct parser:
+Move the cursor through the source and the tree follows it; hover a node in the tree and its source
+range lights up. Tick **Codemod** to write a plugin next to it and watch the transformed output
+update as you type.
+
+These are the parsers behind each source type:
 
 | Source Type | Parser |
 | - | - |
-| Vue SFC `<template>` | `vue-eslint-parser` / `@babel/parser` |
-| Vue SFC `<script>` | `@babel/parser` |
-| Vue SFC `<style>` | `postcss` |
-| Vue SFC `<style lang="scss">` | `postcss` (parser=scss) |
-| Vue SFC `<style lang="sass">` | `postcss` (parser=sass) |
-| Vue SFC `<style lang="less">` | `postcss` (parser=less) |
-| Vue SFC `<style lang="stylus">` | `postcss-styl` ([AST visualizer](https://stylus.github.io/postcss-styl/)) |
-| JavaScript | `@babel/parser` |
-| TypeScript | `@babel/parser` |
-| CSS | `postcss` |
-| LESS | `postcss` (parser=less) |
-| SASS | `postcss` (parser=sass) |
-| SCSS | `postcss` (parser=scss) |
-| Stylus | `postcss-styl` ([AST visualizer](https://stylus.github.io/postcss-styl/)) |
+| Vue SFC `<template>` | [vue-eslint-parser](https://github.com/vuejs/vue-eslint-parser/blob/master/src/ast/nodes.ts) |
+| Vue SFC `<script>`, JavaScript, TypeScript | `@babel/parser`, via [recast](https://github.com/benjamn/recast) |
+| Vue SFC `<style>`, CSS | `postcss` |
+| SCSS | `postcss-scss` |
+| Sass | `postcss-sass` |
+| Less | `postcss-less` |
+| Stylus | `postcss-styl` |
 
-When using `@babel/parser` with AST Explorer, enable [this list](https://github.com/UnrefinedBrain/vue-metamorph/blob/master/src/parse/typescript.ts#L15-L53) of plugins to get an accurate representation of the AST you'll be working with.
+vue-eslint-parser was really meant for eslint, but it is the most detailed parser available for Vue
+files and it suits this use case well.
+
+Stylus is the one dialect the Playground cannot show: its parser only runs in Node. Use the
+[postcss-styl AST visualizer](https://stylus.github.io/postcss-styl/) for those, and note that
+vue-metamorph itself handles stylus normally.
+
+The Playground is a port of Felix Kling's [AST Explorer](https://github.com/fkling/astexplorer). If
+you would rather use [astexplorer.net](https://astexplorer.net) itself, pick `@babel/parser` for script
+code and enable [this list](https://github.com/UnrefinedBrain/vue-metamorph/blob/master/src/parse/typescript.ts#L15-L53)
+of plugins to get an accurate representation of the AST you'll be working with.
 
 ## Testing
 
