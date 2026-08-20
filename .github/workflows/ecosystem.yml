@@ -1,0 +1,133 @@
+name: 'Ecosystem CI'
+
+on:
+  push:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pack:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+      - uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3.0.0
+        with:
+          version: ^9.9.0
+          run_install: false
+      - shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: ${{ runner.os }}-ecosystem-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            ${{ runner.os }}-ecosystem-pnpm-store-
+
+      - run: pnpm install
+      - run: pnpm build
+      - run: pnpm pack --pack-destination "$RUNNER_TEMP"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: vue-metamorph-tarball
+          path: ${{ runner.temp }}/vue-metamorph-*.tgz
+          if-no-files-found: error
+
+  ecosystem:
+    needs: pack
+    runs-on: ubuntu-latest
+    name: ecosystem (${{ matrix.name }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: shadcn-vue
+            repo: unovue/shadcn-vue
+            pkg_path: packages/cli/package.json
+            build_cmd: pnpm --filter shadcn-vue build
+            test_cmd: pnpm --filter shadcn-vue test
+            test_network: open
+          - name: vue-upgrade-tool
+            repo: UnrefinedBrain/vue-upgrade-tool
+            pkg_path: package.json
+            build_cmd: ''
+            test_cmd: pnpm test -- --run
+            test_network: none
+          - name: scriptshifter
+            repo: UnrefinedBrain/scriptshifter
+            pkg_path: package.json
+            pnpm_version: ^9.9.0
+            build_cmd: ''
+            test_cmd: pnpm test -- --run
+            test_network: none
+    env:
+      PKG_PATH: ${{ matrix.pkg_path }}
+      PNPM_VERSION: ${{ matrix.pnpm_version }}
+      BUILD_CMD: ${{ matrix.build_cmd }}
+      TEST_CMD: ${{ matrix.test_cmd }}
+      TEST_NETWORK: ${{ matrix.test_network }}
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          path: vue-metamorph
+          persist-credentials: false
+
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          repository: ${{ matrix.repo }}
+          path: downstream
+          persist-credentials: false
+
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: vue-metamorph-tarball
+          path: ${{ runner.temp }}/tarball
+
+      - name: Prepare sandbox
+        run: |
+          set -euo pipefail
+
+          mkdir -p "$RUNNER_TEMP/sandbox-home" "$RUNNER_TEMP/smoke"
+
+          {
+            echo "DOWNSTREAM=$GITHUB_WORKSPACE/downstream"
+            echo "TARBALL_DIR=$RUNNER_TEMP/tarball"
+            echo "SANDBOX_HOME=$RUNNER_TEMP/sandbox-home"
+            echo "SMOKE_DIR=$RUNNER_TEMP/smoke"
+            echo "NODE_IMAGE=node:$(tr -d 'v \n' < vue-metamorph/.nvmrc)-bookworm"
+          } >> "$GITHUB_ENV"
+
+      - name: Swap vue-metamorph dependency for the packed tarball
+        working-directory: downstream
+        run: |
+          set -euo pipefail
+          TARBALL=$(cd "$TARBALL_DIR" && ls vue-metamorph-*.tgz)
+          jq --arg t "file:/tarball/$TARBALL" \
+            '.dependencies["vue-metamorph"] = $t' \
+            "$PKG_PATH" > "$PKG_PATH.tmp"
+          mv "$PKG_PATH.tmp" "$PKG_PATH"
+
+      - name: Install
+        run: vue-metamorph/scripts/ci/sandbox-run.sh proxied vue-metamorph/scripts/ci/ecosystem-install.sh
+
+      - name: Build and test
+        run: vue-metamorph/scripts/ci/sandbox-run.sh "$TEST_NETWORK" vue-metamorph/scripts/ci/ecosystem-test.sh
+
+      - name: shadcn-vue CLI smoke (fixture-based `add`)
+        if: matrix.name == 'shadcn-vue'
+        run: vue-metamorph/scripts/ci/sandbox-run.sh open vue-metamorph/scripts/ci/shadcn-smoke-add.sh
+
+      - name: shadcn-vue CLI smoke (full `init --template vite`)
+        if: matrix.name == 'shadcn-vue'
+        run: vue-metamorph/scripts/ci/sandbox-run.sh open vue-metamorph/scripts/ci/shadcn-smoke-init.sh
