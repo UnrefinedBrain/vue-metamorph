@@ -1,23 +1,28 @@
-# CLI Options
+# Command-line interface
 
-vue-metamorph provides a CLI codemod runner to facilitate running codemods against many files.
+vue-metamorph provides a CLI codemod runner that runs your codemods against many files.
 
 ## Options
 
+The CLI runner accepts the following options:
+
 | Option | Description | Default |
 | - | - | - |
-| --help | Print available options | N/A |
-| --list-plugins | Lists all registered plugins and exits | N/A |
-| --files &lt;glob&gt; | Run transforms against these files using a [glob](https://www.npmjs.com/package/glob) pattern | `'**/src/**/*'` |
-| --plugins &lt;glob&gt; | Only run plugins matching these [picomatch](https://github.com/micromatch/picomatch) patterns. This option can be passed multiple times to specify multiple patterns | `'*'` |
+| `--help` | Prints the available options. | N/A |
+| `--list-plugins` | Lists all registered plugins, then exits. | N/A |
+| `--files <glob>` | Runs transforms against the files that match a [glob](https://www.npmjs.com/package/glob) pattern. | `'**/src/**/*'` |
+| `--plugins <glob>` | Runs only the plugins that match a [picomatch](https://github.com/micromatch/picomatch) pattern. To specify more than one pattern, pass this option multiple times. | `'*'` |
 
 ## API
+
+To create the CLI runner, call `createVueMetamorphCli()`:
 
 ```ts twoslash
 import { createVueMetamorphCli } from 'vue-metamorph';
 
 const { run, abort } = createVueMetamorphCli({
-  silent: true, // suppress vue-metamorph's default output by setting silent:true
+  // set silent to true to suppress vue-metamorph's default output
+  silent: true,
 
   onProgress({
     totalFiles,
@@ -29,27 +34,30 @@ const { run, abort } = createVueMetamorphCli({
     errors,
     manualMigrations,
   }) {
-    // called every time a file was transformed
-    // also called when vue-metamorph finished processing all files (with done:true)
-    // also called when vue-metamorph was aborted via the `abort()` function (with aborted:true)
+    // called every time a file is transformed
+    // also called when vue-metamorph finishes processing all files (with done:true)
+    // also called when the abort() function stops the runner (with aborted:true)
   },
 
-  // register your CodemodPlugins and/or ManualMigrationPlugins here
+  // register your CodemodPlugins and ManualMigrationPlugins here
   plugins: [],
 });
 
 run();
 
-// call abort() to gracefully stop the runner
+// call abort() to stop the runner gracefully
 // process.on('SIGINT', abort);
 
 ```
 
-## Adding Additional Custom CLI Options
+## Add custom CLI options
 
-You may attach additional arguments to your vue-metamorph CLI using the `additionalCliOptions` property. See the [commander.js docs](https://github.com/tj/commander.js?tab=readme-ov-file#options) for info on the `.option()` and `.requiredOption()` functions.
+To attach extra options to your vue-metamorph CLI, use the `additionalCliOptions` property. For
+more information about the `.option()` and `.requiredOption()` functions, see the
+[Commander.js options documentation](https://github.com/tj/commander.js?tab=readme-ov-file#options).
 
-Options will be passed to the CodemodPlugin `transform()` and ManualMigrationPlugin `find()` functions as the `opts` parameter.
+vue-metamorph passes the parsed options to the `transform()` function of each CodemodPlugin and
+the `find()` function of each ManualMigrationPlugin, as the `opts` parameter.
 
 ```ts
 
@@ -82,7 +90,7 @@ const {
   }
 });
 
-// if you need the options outside of a codemod or manual migration, call opts()
+// to read the options outside of a codemod or manual migration, call opts()
 if (opts().myCustomOption) {
   console.error('do not use this option');
   process.exit(1);

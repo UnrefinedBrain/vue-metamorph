@@ -1,12 +1,13 @@
-# SFC AST Node Reference
+# SFC AST node reference
 
-This is a quick reference for the `<template>` AST node types that vue-eslint-parser produces.
+This page is a quick reference for the `<template>` AST node types that vue-eslint-parser
+produces.
 
-## Node Types
+## Node types
 
 ### VDocumentFragment
 
-The root of the template AST. This is what `sfcAST` points to.
+The root of the template AST. The `sfcAST` parameter points to this node.
 
 ```vue-html
 <template>
@@ -18,11 +19,11 @@ The root of the template AST. This is what `sfcAST` points to.
 | --- | --- | --- |
 | `type` | `'VDocumentFragment'` | |
 | `children` | `(VElement \| VText \| VExpressionContainer \| VStyleElement)[]` | Top-level nodes |
-| `parent` | `null` | Always null |
+| `parent` | `null` | Always `null` |
 
 ### VElement
 
-An HTML element or Vue component.
+An HTML element or a Vue component.
 
 ```vue-html
 <div>...</div>
@@ -33,11 +34,11 @@ An HTML element or Vue component.
 | --- | --- | --- |
 | `type` | `'VElement'` | |
 | `name` | `string` | Lowercased for HTML elements, original case for components |
-| `rawName` | `string` | Tag name as written in source |
+| `rawName` | `string` | The tag name as written in the source |
 | `namespace` | `Namespace` | Usually `NS.HTML` |
 | `startTag` | `VStartTag` | |
 | `children` | `(VElement \| VText \| VExpressionContainer)[]` | |
-| `endTag` | `VEndTag \| null` | Null for self-closing and void elements |
+| `endTag` | `VEndTag \| null` | `null` for self-closing elements and void elements |
 
 ### VStartTag
 
@@ -51,11 +52,11 @@ The opening tag, including all attributes and directives.
 | --- | --- | --- |
 | `type` | `'VStartTag'` | |
 | `attributes` | `(VAttribute \| VDirective)[]` | Both static attributes and directives |
-| `selfClosing` | `boolean` | `true` for `<br />`, `<MyComponent />` |
+| `selfClosing` | `boolean` | `true` for `<br />` and `<MyComponent />` |
 
 ### VAttribute
 
-A static attribute — no `v-` prefix, no `:` or `@` shorthand.
+A static attribute, with no `v-` prefix and no `:` or `@` shorthand.
 
 ```vue-html
 <div class="container" id="app" disabled>
@@ -65,15 +66,21 @@ A static attribute — no `v-` prefix, no `:` or `@` shorthand.
 | Property | Type | Description |
 | --- | --- | --- |
 | `type` | `'VAttribute'` | |
-| `directive` | `false` | This is how you tell it apart from `VDirective` |
-| `key` | `VIdentifier` | Attribute name |
-| `value` | `VLiteral \| null` | Null for boolean attributes like `disabled` |
+| `directive` | `false` | How to tell this node apart from a `VDirective` node |
+| `key` | `VIdentifier` | The attribute name |
+| `value` | `VLiteral \| null` | `null` for boolean attributes such as `disabled` |
 
 ### VDirective
 
-A Vue directive. `:prop`, `@click`, and `#slot` are all directives too — they're shorthands for `v-bind`, `v-on`, and `v-slot`.
+A Vue directive. `:prop`, `@click`, and `#slot` are directives too, because they're shorthands
+for `v-bind`, `v-on`, and `v-slot`.
 
-Watch out: the AST `type` is `'VAttribute'`, not `'VDirective'`. You need to check `directive: true` to tell them apart from static attributes.
+::: warning
+
+The AST `type` of a directive is `'VAttribute'`, not `'VDirective'`. To tell a directive apart
+from a static attribute, check for `directive: true`.
+
+:::
 
 ```vue-html
 <div v-if="show" :class="classes" @click="handler" v-model.trim="value">
@@ -82,14 +89,14 @@ Watch out: the AST `type` is `'VAttribute'`, not `'VDirective'`. You need to che
 
 | Property | Type | Description |
 | --- | --- | --- |
-| `type` | `'VAttribute'` | Same as `VAttribute` — check `directive` |
+| `type` | `'VAttribute'` | The same as `VAttribute` — check `directive` |
 | `directive` | `true` | |
 | `key` | `VDirectiveKey` | The directive name, argument, and modifiers |
 | `value` | `VExpressionContainer \| null` | The expression in quotes |
 
 ### VDirectiveKey
 
-The name, argument, and modifiers of a directive — everything to the left of `=`.
+The name, argument, and modifiers of a directive — everything to the left of the `=` sign.
 
 ```
 v-on:click.prevent.stop
@@ -101,11 +108,11 @@ v-on:click.prevent.stop
 | Property | Type | Description |
 | --- | --- | --- |
 | `type` | `'VDirectiveKey'` | |
-| `name` | `VIdentifier` | `if`, `bind`, `on`, `model`, `slot`, etc. |
-| `argument` | `VExpressionContainer \| VIdentifier \| null` | Static arg = `VIdentifier`, dynamic `[arg]` = `VExpressionContainer` |
-| `modifiers` | `VIdentifier[]` | `.prevent`, `.stop`, `.trim`, etc. |
+| `name` | `VIdentifier` | `if`, `bind`, `on`, `model`, `slot`, and so on |
+| `argument` | `VExpressionContainer \| VIdentifier \| null` | A static argument is a `VIdentifier`, and a dynamic `[arg]` is a `VExpressionContainer` |
+| `modifiers` | `VIdentifier[]` | `.prevent`, `.stop`, `.trim`, and so on |
 
-Shorthands and their `name` values:
+The following table lists the shorthands and their `name` values:
 
 | Syntax | `key.name.name` | `key.name.rawName` |
 | --- | --- | --- |
@@ -118,7 +125,8 @@ Shorthands and their `name` values:
 
 ### VExpressionContainer
 
-Wraps a JavaScript expression. You'll see these in two places: directive values (`v-if="expr"`) and text interpolation (`{{ expr }}`).
+Wraps a JavaScript expression. These nodes appear in two places: directive values
+(`v-if="expr"`) and text interpolation (`{{ expr }}`).
 
 ```vue-html
 <div v-if="count > 0">{{ message }}</div>
@@ -130,11 +138,14 @@ Wraps a JavaScript expression. You'll see these in two places: directive values 
 | `type` | `'VExpressionContainer'` | |
 | `expression` | JS expression \| `VForExpression` \| `VOnExpression` \| `VSlotScopeExpression` \| `null` | |
 
-The `expression` inside is a regular JavaScript AST node (`Identifier`, `BinaryExpression`, `MemberExpression`, etc.), except for the special Vue expression types described below.
+The `expression` inside is a regular JavaScript AST node, such as `Identifier`,
+`BinaryExpression`, or `MemberExpression`. The exceptions are the Vue expression types described
+in [Special expression types](#special-expression-types).
 
 ### VIdentifier
 
-Used for attribute names, directive names, directive arguments, and directive modifiers. This is not the same as a JavaScript `Identifier`.
+Used for attribute names, directive names, directive arguments, and directive modifiers. A
+`VIdentifier` node isn't the same as a JavaScript `Identifier` node.
 
 ```vue-html
 <div class="foo" v-on:click.prevent="handler">
@@ -144,8 +155,8 @@ Used for attribute names, directive names, directive arguments, and directive mo
 | Property | Type | Description |
 | --- | --- | --- |
 | `type` | `'VIdentifier'` | |
-| `name` | `string` | Normalized name |
-| `rawName` | `string` | As written in source (e.g. `':'` for `v-bind` shorthand) |
+| `name` | `string` | The normalized name |
+| `rawName` | `string` | The name as written in the source — for example, `':'` for the `v-bind` shorthand |
 
 ### VLiteral
 
@@ -177,7 +188,7 @@ Plain text inside an element.
 
 ### VEndTag
 
-The closing tag of an element. Not present on self-closing or void elements.
+The closing tag of an element. Self-closing elements and void elements don't have one.
 
 | Property | Type | Description |
 | --- | --- | --- |
@@ -185,7 +196,8 @@ The closing tag of an element. Not present on self-closing or void elements.
 
 ### HtmlComment
 
-An HTML comment. Can be attached to other nodes via their `leadingComment` property.
+An HTML comment. To attach a comment to another node, set the `leadingComment` property of that
+node.
 
 ```vue-html
 <!-- TODO: fix this -->
@@ -197,9 +209,9 @@ An HTML comment. Can be attached to other nodes via their `leadingComment` prope
 | `type` | `'HtmlComment'` | |
 | `value` | `string` | The comment text |
 
-## Special Expression Types
+## Special expression types
 
-These show up inside `VExpressionContainer` for certain directives.
+The following node types appear inside a `VExpressionContainer` for certain directives.
 
 ### VForExpression
 
@@ -214,12 +226,12 @@ The parsed `v-for` expression.
 | Property | Type | Description |
 | --- | --- | --- |
 | `type` | `'VForExpression'` | |
-| `left` | `PatternKind[]` | Iteration variables (`item`, `index`, etc.) |
-| `right` | `ExpressionKind` | The collection being iterated |
+| `left` | `PatternKind[]` | The iteration variables, such as `item` and `index` |
+| `right` | `ExpressionKind` | The collection that's iterated over |
 
 ### VOnExpression
 
-Used when `v-on` has multiple statements.
+Used when `v-on` has more than one statement.
 
 ```vue-html
 <button @click="doA(); doB()">
@@ -243,17 +255,17 @@ The slot scope parameters.
 | `type` | `'VSlotScopeExpression'` | |
 | `params` | `PatternKind[]` | |
 
-### VFilterSequenceExpression / VFilter
+### VFilterSequenceExpression and VFilter
 
-Vue 2 filter syntax. Probably not relevant if you're working with Vue 3.
+Vue 2 filter syntax. Vue 3 doesn't support filters.
 
 ```vue-html
 {{ message | capitalize | truncate(50) }}
 ```
 
-## Finding Nodes
+## Find nodes
 
-Some common `findAll` patterns:
+The following examples show common `findAll` patterns:
 
 ```ts
 // All <MyComponent> elements

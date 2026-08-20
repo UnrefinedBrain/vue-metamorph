@@ -16,17 +16,16 @@ hero:
       link: /playground
 
 features:
-  - title: AST-based Code Manipulation
+  - title: AST-based code manipulation
     icon: 🌲
-    details: Easily and reliably make large-scale changes to your codebase by mutating ASTs
-  - title: Supports multiple file types
+    details: Make large-scale changes to your codebase reliably by mutating abstract syntax trees.
+  - title: Support for many file types
     icon: 🗃️
-    details: Transform Vue SFC, JavaScript, TypeScript, CSS, SCSS, SASS, LESS, and Stylus files
+    details: Transform Vue SFC, JavaScript, TypeScript, CSS, SCSS, Sass, Less, and Stylus files.
   - title: Built-in CLI
     icon: 🚀
-    details: Run your codemods against many files with the built-in CLI, or use the codemod API directly
-  - title: Codemod Scaffolding
+    details: Run your codemods against many files with the built-in CLI, or call the codemod API directly.
+  - title: Codemod scaffolding
     icon: 🧰
-    details: Quickly create new codemod projects with the included scaffolding tool
+    details: Create a new codemod project with the included scaffolding tool.
 ---
-

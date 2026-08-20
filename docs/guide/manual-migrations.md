@@ -1,12 +1,14 @@
-# Manual Migrations
+# Manual migrations
 
-Sometimes, a code change is needed that cannot be easily or reliably automated and requires human attention. For finding such places in our source code, vue-metamorph provides an interface for this.
+Some code changes can't be automated reliably and need human attention. To find the places in
+your source code that need such a change, write a manual migration plugin.
 
-The vue-metamorph CLI runs manual migration plugins *after* running codemod plugins.
+The vue-metamorph CLI runs manual migration plugins *after* it runs codemod plugins.
 
 ::: danger
 
-Do not mutate the AST in manual migrations! vue-metamorph passes the same AST object to each manual migration plugin, so any mutations may cause incorrect results from later plugins.
+Don't mutate the AST in a manual migration. vue-metamorph passes the same AST object to every
+manual migration plugin, so a mutation can cause later plugins to report incorrect results.
 
 :::
 
@@ -27,12 +29,13 @@ const migrateVueEmitter: ManualMigrationPlugin = {
     for (const scriptAST of scriptASTs) {
       traverseScriptAST(scriptAST, {
         visitCallExpression(path) {
-          // find calls to $on(), $off(), $once() functions
+          // find calls to the $on(), $off(), and $once() functions
           if (path.node.callee.type === 'MemberExpression'
             && path.node.callee.property.type === 'Identifier'
             && ['$on', '$off', '$once'].includes(path.node.callee.property.name)) {
 
-            // To show a manual migration result for a node, call `report()` and pass the node and a message
+            // to report a manual migration for a node, call report()
+            // with the node and a message
             report(path.node.callee, 'Migrate the event emitter methods');
           }
           this.traverse(path);
@@ -44,7 +47,7 @@ const migrateVueEmitter: ManualMigrationPlugin = {
 
 ```
 
-The CLI output for this manual migration plugin might look like:
+For this manual migration plugin, the CLI output is similar to the following:
 
 
 ```
@@ -61,6 +64,3 @@ Migrate the event emitter methods
 7 |
 
 ```
-
----
-

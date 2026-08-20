@@ -1,29 +1,44 @@
 # What is vue-metamorph?
 
-vue-metamorph is a codemod framework for JavaScript, TypeScript, and Vue files. It provides a way to reliably make large-scale changes to a codebase by manipulating abstract syntax trees.
+vue-metamorph is a codemod framework for JavaScript, TypeScript, and Vue files. It gives you a
+way to make large-scale changes to a codebase reliably, by manipulating abstract syntax trees
+(ASTs).
 
-## The Basics
+## Basics
 
-vue-metamorph is designed around the concept of plugins. There are two types of plugins: **codemod plugins** and **manual migration plugins**.
+vue-metamorph is designed around the concept of plugins. There are two types of plugins:
+**codemod plugins** and **manual migration plugins**.
 
-A codemod plugin can mutate and manipulate an AST to make changes to the source code it was parsed from. A manual migration plugin can find and report on AST nodes that require human attention.
+A codemod plugin manipulates an AST to change the source code that the AST was parsed from. A
+manual migration plugin finds and reports AST nodes that need human attention.
 
-## Comparison to Regex
+## Comparison to regular expressions
 
-While regex is a very powerful find-and-replace tool, it might not be the best choice for modifying source code if your use case goes beyond simple changes. Differences in formatting such as whitespace or unnecessary parentheses can make regex-based code transformation difficult and unreliable. Since codemods work with the grammar of the language, these sorts of stylistic code differences are handled seamlessly and reliably.
+Regular expressions are a powerful find-and-replace tool, but they aren't always a good fit for
+modifying source code. Differences in formatting, such as whitespace or extra parentheses, make
+regex-based code transformation difficult and unreliable. Because codemods work with the grammar
+of the language, they handle these stylistic differences for you.
 
 ## Comparison to jscodeshift
 
-Similar to [jscodeshift](https://github.com/facebook/jscodeshift), vue-metamorph provides a wrapper around [recast](https://github.com/benjamn/recast). However, since recast and jscodeshift are limited to working only with ESTree-based ASTs, vue-metamorph also provides a similar mechanism for working with the `<template>` AST in a Vue SFC.
+Like [jscodeshift](https://github.com/facebook/jscodeshift), vue-metamorph wraps
+[recast](https://github.com/benjamn/recast). However, recast and jscodeshift work only with
+ESTree-based ASTs, so vue-metamorph adds a similar mechanism for working with the `<template>`
+AST in a Vue single-file component (SFC).
 
 ## Comparison to vue-codemod
 
-[vue-codemod](https://github.com/vuejs/vue-codemod) is an experimental project that implements codemods for upgrading Vue projects from Vue 2 to Vue 3. While it also wraps jscodeshift/recast, it also didn't provide a way to manipulate source code entirely through ASTs. vue-codemod provides some utilities for working with text-based operations, but doesn't come full circle to provide a recast-like experience for the entire SFC.
+[vue-codemod](https://github.com/vuejs/vue-codemod) is an experimental project that implements
+codemods for upgrading Vue projects from Vue 2 to Vue 3. It also wraps jscodeshift and recast,
+but it doesn't provide a way to manipulate source code entirely through ASTs. It includes some
+utilities for text-based operations, but it doesn't offer a recast-like experience for the
+entire SFC.
 
-## 💡 Motivation
+## Motivation
 
-Somewhat often, we find ourselves needing to make the same changes over and over and over again to a large set of files in a codebase. No matter how good your regex skills are, sometimes regex is just not up to the job.
+Applying the same change over and over to a large set of files is common work, and regular
+expressions aren't always a reliable way to do it. A codemod changes code based on the grammar
+of the language instead of on text patterns, so you can make accurate changes across a large
+number of files with little effort.
 
-That's where codemods come in. A codemod allows us to make changes based on the grammar of the language we're working in, instead of simple text patterns like with regex. With a codemod, we can easily and accurately make changes to a large number of files with minimal effort.
-
-vue-metamorph was created to facilitate those sorts of large-scale changes in Vue codebases.
+vue-metamorph exists to make those large-scale changes practical in Vue codebases.

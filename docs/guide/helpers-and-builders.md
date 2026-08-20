@@ -1,6 +1,7 @@
-# Helpers and Builders
+# Helpers and builders
 
-vue-metamorph provides a set of helper functions and builder functions through the `utils` object passed to your plugin's `transform()` or `find()` function.
+vue-metamorph provides a set of helper functions and builder functions through the `utils` object
+that it passes to the `transform()` or `find()` function of your plugin.
 
 ```ts
 const myCodemod: CodemodPlugin = {
@@ -13,11 +14,12 @@ const myCodemod: CodemodPlugin = {
 }
 ```
 
-## AST Helpers
+## AST helpers
 
-### findFirst
+### `findFirst`
 
-Finds the first node in an AST that matches a partial object. Works with both script and template ASTs.
+Finds the first node in an AST that matches a partial object. This function works with both
+script ASTs and template ASTs.
 
 ```ts
 const { astHelpers } = utils;
@@ -39,11 +41,11 @@ const consoleLog = astHelpers.findFirst(scriptAST, {
 });
 ```
 
-Returns the first matching node, or `null` if no match was found.
+Returns the first matching node, or `null` if there's no match.
 
-### findAll
+### `findAll`
 
-Finds all nodes in an AST that match a partial object.
+Finds every node in an AST that matches a partial object.
 
 ```ts
 const { astHelpers } = utils;
@@ -60,9 +62,9 @@ const calls = astHelpers.findAll(scriptAST, {
 });
 ```
 
-Returns an array of all matching nodes.
+Returns an array of all the matching nodes.
 
-### findImportDeclaration
+### `findImportDeclaration`
 
 Finds an existing import declaration for a module.
 
@@ -76,11 +78,12 @@ if (vueImport) {
 }
 ```
 
-Returns the `ImportDeclaration` node, or `null`.
+Returns the `ImportDeclaration` node, or `null` if there's no match.
 
-### createNamedImport
+### `createNamedImport`
 
-Adds a named import to a script AST. If an import declaration for the module already exists, the new specifier is added to it. Duplicate imports are not created.
+Adds a named import to a script AST. If an import declaration for the module already exists, this
+function adds the new specifier to that declaration. It doesn't create duplicate imports.
 
 ```ts
 const { astHelpers } = utils;
@@ -92,9 +95,10 @@ astHelpers.createNamedImport(scriptAST, 'vue', 'defineComponent');
 astHelpers.createNamedImport(scriptAST, 'lodash-es', 'map', 'lodashMap');
 ```
 
-### createDefaultImport
+### `createDefaultImport`
 
-Adds a default import to a script AST. Follows the same merging and deduplication logic as `createNamedImport`.
+Adds a default import to a script AST. This function follows the same merging and deduplication
+logic as `createNamedImport`.
 
 ```ts
 const { astHelpers } = utils;
@@ -103,9 +107,10 @@ const { astHelpers } = utils;
 astHelpers.createDefaultImport(scriptAST, 'vue', 'Vue');
 ```
 
-### createNamespaceImport
+### `createNamespaceImport`
 
-Adds a namespace import to a script AST. Follows the same merging and deduplication logic as `createNamedImport`.
+Adds a namespace import to a script AST. This function follows the same merging and deduplication
+logic as `createNamedImport`.
 
 ```ts
 const { astHelpers } = utils;
@@ -114,9 +119,11 @@ const { astHelpers } = utils;
 astHelpers.createNamespaceImport(scriptAST, 'lodash-es', '_');
 ```
 
-### findVueComponentOptions
+### `findVueComponentOptions`
 
-Finds all Options API object expressions in a script. Detects `defineComponent()`, `Vue.extend()`, `Vue.component()`, `Vue.mixin()`, `new Vue()`, and (when `isSfc` is `true`) the default export.
+Finds every Options API object expression in a script. This function detects
+`defineComponent()`, `Vue.extend()`, `Vue.component()`, `Vue.mixin()`, and `new Vue()`. When
+`isSfc` is `true`, it also detects the default export.
 
 ```ts
 const { astHelpers } = utils;
@@ -130,13 +137,16 @@ for (const scriptAST of scriptASTs) {
 }
 ```
 
-## Template Builders
+## Template builders
 
-The `utils.builders` object includes functions for creating new template AST nodes. These are useful when your codemod needs to insert new elements, attributes, or directives into the `<template>`.
+The `utils.builders` object includes functions that create new template AST nodes. Use them when
+your codemod needs to insert new elements, attributes, or directives into the `<template>`.
 
 ::: tip
 
-After building new nodes and inserting them into the AST, call `builders.setParents()` on the root of the new subtree. Builder functions leave `parent` references unset — `setParents` fills them in.
+After you build new nodes and insert them into the AST, call `builders.setParents()` on the root
+of the new subtree. Builder functions leave `parent` references unset, and `setParents()` fills
+them in.
 
 ```ts
 const newElement = builders.vElement('div', builders.vStartTag([], false), []);
@@ -145,9 +155,10 @@ builders.setParents(sfcAST); // fix parent references
 
 :::
 
-### vElement
+### `vElement`
 
-Creates a new element node. An end tag is created automatically unless the tag is self-closing or a void element.
+Creates a new element node. This function creates an end tag automatically, unless the tag is
+self-closing or a void element.
 
 ```ts
 const { builders } = utils;
@@ -162,9 +173,9 @@ const div = builders.vElement(
 // <div class="container">Hello</div>
 ```
 
-### vStartTag
+### `vStartTag`
 
-Creates a start tag with attributes and/or directives.
+Creates a start tag with attributes, directives, or both.
 
 ```ts
 const { builders } = utils;
@@ -177,7 +188,7 @@ const startTag = builders.vStartTag(
 );
 ```
 
-### vAttribute
+### `vAttribute`
 
 Creates a static attribute.
 
@@ -197,9 +208,10 @@ const disabled = builders.vAttribute(
 );
 ```
 
-### vDirective
+### `vDirective`
 
-Creates a Vue directive. Note that `VDirective` has the AST type `'VAttribute'` with `directive: true`.
+Creates a Vue directive. Note that a `VDirective` node has the AST type `'VAttribute'` with
+`directive: true`.
 
 ```ts
 const { builders } = utils;
@@ -225,7 +237,7 @@ const vBindKey = builders.vDirective(
 );
 ```
 
-### vDirectiveKey
+### `vDirectiveKey`
 
 Creates the key part of a directive: `v-name:argument.modifier1.modifier2`.
 
@@ -240,9 +252,9 @@ const key = builders.vDirectiveKey(
 );
 ```
 
-### vExpressionContainer
+### `vExpressionContainer`
 
-Creates an expression container (`{{ }}` in text, or a directive value).
+Creates an expression container, which is either `{{ }}` in text or a directive value.
 
 ```ts
 const { builders } = utils;
@@ -253,7 +265,7 @@ const interpolation = builders.vExpressionContainer(
 );
 ```
 
-### vText
+### `vText`
 
 Creates a text node.
 
@@ -263,9 +275,11 @@ const { builders } = utils;
 const text = builders.vText('Hello, world!');
 ```
 
-### vIdentifier
+### `vIdentifier`
 
-Creates an identifier node for attribute names, directive names, etc. The optional `rawName` parameter controls what gets printed — useful for directive shorthands.
+Creates an identifier node for an attribute name, a directive name, a directive argument, or a
+directive modifier. The optional `rawName` parameter controls what vue-metamorph prints, which is
+useful for directive shorthands.
 
 ```ts
 const { builders } = utils;
@@ -275,9 +289,9 @@ builders.vIdentifier('bind', ':');      // name is 'bind', prints as ':'
 builders.vIdentifier('on', '@');        // name is 'on', prints as '@'
 ```
 
-### vLiteral
+### `vLiteral`
 
-Creates a string literal node for static attribute values.
+Creates a string literal node for a static attribute value.
 
 ```ts
 const { builders } = utils;
@@ -285,9 +299,10 @@ const { builders } = utils;
 builders.vLiteral('my-class'); // used with vAttribute for: class="my-class"
 ```
 
-### htmlComment
+### `htmlComment`
 
-Creates an HTML comment node. Can be attached to other nodes via their `leadingComment` parameter.
+Creates an HTML comment node. To attach the comment to another node, set the `leadingComment`
+property of that node.
 
 ```ts
 const { builders } = utils;
@@ -297,9 +312,10 @@ const text = builders.vText('Hello', comment);
 // <!-- TODO: refactor this -->Hello
 ```
 
-### setParents
+### `setParents`
 
-Traverses a node tree and sets the `parent` property on each descendant. Call this after building and inserting new nodes.
+Traverses a node tree and sets the `parent` property on every descendant. Call this function
+after you build new nodes and insert them.
 
 ```ts
 const { builders } = utils;
@@ -308,9 +324,11 @@ const { builders } = utils;
 builders.setParents(sfcAST);
 ```
 
-## Script Builders
+## Script builders
 
-`utils.builders` also includes all script AST builders from [ast-types](https://github.com/benjamn/ast-types). These are used to create JavaScript/TypeScript AST nodes.
+The `utils.builders` object also includes all the script AST builders from
+[ast-types](https://github.com/benjamn/ast-types). Use them to create JavaScript and TypeScript
+AST nodes.
 
 ```ts
 const { builders } = utils;
@@ -328,4 +346,6 @@ builders.binaryExpression('+', builders.identifier('a'), builders.identifier('b'
 builders.callExpression(builders.identifier('myFunction'), []);
 ```
 
-See the [ast-types documentation](https://github.com/benjamn/ast-types) for the full list of available builders, and the [Playground](/playground) to see the node shapes they need to produce.
+For the full list of available builders, see the
+[ast-types documentation](https://github.com/benjamn/ast-types). To see the node shapes that
+these builders need to produce, use the [Playground](/playground).

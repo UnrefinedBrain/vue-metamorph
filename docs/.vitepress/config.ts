@@ -55,11 +55,11 @@ export default defineConfig({
             link: '/guide/what-is-vue-metamorph',
           },
           {
-            text: 'Installation / Scaffolding',
+            text: 'Installation and scaffolding',
             link: '/guide/installation',
           },
           {
-            text: 'Command-line Interface',
+            text: 'Command-line interface',
             link: '/guide/cli',
           },
           {
@@ -77,22 +77,22 @@ export default defineConfig({
         ],
       },
       {
-        text: 'Writing Plugins',
+        text: 'Writing plugins',
         items: [
           {
             text: 'Codemods',
             link: '/guide/writing-codemods',
           },
           {
-            text: 'Helpers and Builders',
+            text: 'Helpers and builders',
             link: '/guide/helpers-and-builders',
           },
           {
-            text: 'SFC AST Reference',
+            text: 'SFC AST reference',
             link: '/guide/sfc-ast-reference',
           },
           {
-            text: 'Manual Migrations',
+            text: 'Manual migrations',
             link: '/guide/manual-migrations',
           },
         ],

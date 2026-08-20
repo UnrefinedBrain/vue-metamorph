@@ -1,27 +1,31 @@
 # Installation
 
-There are two ways to use vue-metamorph - you can use it directly within your own app or library via its exports, or use the scaffolding tool to quickly create a vue-metamorph CLI project.
+There are two ways to use vue-metamorph. You can use the scaffolding tool to create a
+vue-metamorph CLI project, or you can import vue-metamorph into an app or library that you
+already have.
 
-To scaffold a vue-metamorph project:
+## Scaffold a new codemod project
+
+To create a new codemod project, run the scaffolding tool:
 
 ```bash
-$ npx vue-metamorph my-codemod-name
+npx vue-metamorph my-codemod-name
 ```
 
-vue-metamorph's scaffold script will create a new directory at `my-codemod-name` containing a sample codemod project.
+The scaffolding tool creates a directory named `my-codemod-name` that contains a sample codemod
+project.
 
----
+## Install vue-metamorph in an existing package
 
-
-To install vue-metamorph in your existing package:
+To add vue-metamorph to a package that you already have, install it as a development dependency:
 
 ```bash
 # npm
-$ npm install -D vue-metamorph
+npm install -D vue-metamorph
 
 # yarn
-$ yarn add -D vue-metamorph
+yarn add -D vue-metamorph
 
 # pnpm
-$ pnpm i -D vue-metamorph
+pnpm add -D vue-metamorph
 ```
