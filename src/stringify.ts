@@ -3,6 +3,7 @@
 import * as recast from './vendor/recast/main';
 import * as AST from './ast';
 
+// The void elements, as listed in the HTML markup specification:
 // https://www.w3.org/TR/2011/WD-html-markup-20110113/syntax.html#syntax-elements
 export const voidElements: Record<string, true> = {
   area: true,
@@ -72,7 +73,7 @@ export function stringifyVDirectiveKey(node: AST.VDirectiveKey): string {
       }
 
       default:
-        // @ts-expect-error We shouldn't hit this case if the types are correct
+        // @ts-expect-error This case is unreachable when the types are correct.
         throw new Error(`Unexpected argument type: ${node.argument.type}`);
     }
   }

@@ -6,32 +6,32 @@ import { getCssDialectForFilename, parseCss } from './parse/css';
 
 type SampleArgs = {
   /**
-   * Full text of the source code
+   * The full text of the source code.
    */
   code: string;
 
   /**
-   * 1-based index of the starting line to highlight
+   * The 1-based index of the first line to highlight.
    */
   lineStart: number;
 
   /**
-   * 1-based index of the starting column to highlight
+   * The 1-based index of the first column to highlight.
    */
   columnStart: number;
 
   /**
-   * 1-based index of the ending line to highlight
+   * The 1-based index of the last line to highlight.
    */
   lineEnd: number;
 
   /**
-   * 1-based index of the ending column to highlight
+   * The 1-based index of the last column to highlight.
    */
   columnEnd: number;
 
   /**
-   * number of extra lines to include on either side of the starting/ending lines
+   * The number of extra lines to include before the first line and after the last line.
    */
   extraLines: number;
 };
@@ -40,9 +40,9 @@ const spaces = (n: number) => ' '.repeat(n);
 const carets = (n: number) => '^'.repeat(n);
 
 /**
- * Extracts a code sample with carets pointing to specific locations
- * @param args Arguments
- * @returns formatted code sample
+ * Extracts a code sample with carets that point at a range in the source.
+ * @param args - The source code and the range to highlight.
+ * @returns The formatted code sample.
  */
 export function sample({
   code,
@@ -84,54 +84,54 @@ export function sample({
 }
 
 /**
- * An object containing a manual migration that a ManualMigrationPlugin reported
+ * A manual migration that a `ManualMigrationPlugin` reported.
  * @public
  */
 export type ManualMigrationReport = {
   /**
-   * Migration message
+   * The migration message.
    */
   message: string;
 
   /**
-   * The filename
+   * The name of the file that holds the node.
    */
   file: string;
 
   /**
-   * Code snippet highlighting the node
+   * A code snippet that highlights the node.
    */
   snippet: string;
 
   /**
-   * The plugin that generated this report
+   * The name of the plugin that reported this migration.
    */
   pluginName: string;
 
   /**
-   * 1-based index of the starting line number
+   * The 1-based index of the first line of the node.
    */
   lineStart: number;
 
   /**
-   * 1-based index of the ending line number
+   * The 1-based index of the last line of the node.
    */
   lineEnd: number;
 
   /**
-   * 1-based index of the starting column number on the starting line
+   * The 1-based index of the first column of the node, on the first line.
    */
   columnStart: number;
 
   /**
-   * 1-based index of the enging column number on the ending line
+   * The 1-based index of the last column of the node, on the last line.
    */
   columnEnd: number;
 };
 
 /**
- * Runs manual migration plugins against source code and returns reports
- * identifying nodes that require human attention. Does not modify the code.
+ * Runs manual migration plugins against source code and returns reports that identify the nodes
+ * that need human attention. This function doesn't change the code.
  *
  * @example
  * ```ts
@@ -159,11 +159,11 @@ export type ManualMigrationReport = {
  * // Each report: { message, file, snippet, pluginName, lineStart, lineEnd, columnStart, columnEnd }
  * ```
  *
- * @param code - Source code string
- * @param filename - The file name (determines parser selection)
- * @param plugins - Manual migration plugins to run
- * @param opts - Additional options passed through to plugins
- * @returns Array of reports, each identifying a node and message
+ * @param code - The source code.
+ * @param filename - The name of the file. vue-metamorph selects a parser based on this name.
+ * @param plugins - The manual migration plugins to run.
+ * @param opts - Extra options to pass through to the plugins.
+ * @returns An array of reports. Each report identifies a node and carries a message.
  * @public
  */
 export function findManualMigrations(
@@ -214,7 +214,7 @@ export function findManualMigrations(
             columnEnd: node.loc.end.column,
           });
         } else if ('range' in node && Array.isArray(node.range)) {
-          // parser didn't attach loc info for some reason, we'll have to compute it
+          // The parser didn't attach loc information, so compute the position from the range.
           const [start, end] = node.range;
 
           const before = code.slice(0, start);

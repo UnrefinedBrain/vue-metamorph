@@ -31,7 +31,7 @@ export const createDefaultCliProgressHandler = (console: {
         `Processed ${filesProcessed} of ${totalFiles} matching files with ${errors.length} errors`,
       );
 
-      // print errors
+      // Print the errors.
       if (errors.length > 0) {
         console.log(chalk.bold.redBright('Parse/transform errors:'));
         for (const err of errors) {
@@ -40,7 +40,7 @@ export const createDefaultCliProgressHandler = (console: {
         console.log(errors);
       }
 
-      // print codemod stats
+      // Print the codemod stats.
       console.log(
         table.table([
           [chalk.bold.blueBright('Codemod name'), chalk.bold.blueBright('Count')],
@@ -48,7 +48,7 @@ export const createDefaultCliProgressHandler = (console: {
         ]),
       );
 
-      // print manual migrations
+      // Print the manual migrations.
       if (manualMigrations.length > 0) {
         console.log(chalk.bold.blueBright('MANUAL MIGRATIONS:\n'));
         for (const migration of manualMigrations) {

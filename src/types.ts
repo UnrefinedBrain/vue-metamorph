@@ -15,16 +15,16 @@ export const utils = {
 };
 
 /**
- * ESTree Program type, with an additional property `isScriptSetup` that denotes whether the program
- * represents the contents of a \<script setup\> block in a Vue SFC
+ * An ESTree Program node with an extra `isScriptSetup` property, which says whether the program
+ * holds the contents of a \<script setup\> block in a Vue SFC.
  *
  * @public
  */
 export type VueProgram = namedTypes.Program & {
   /**
-   * Whether this Program represents the contents of a \<script setup\>
+   * Whether this Program holds the contents of a \<script setup\> block.
    *
-   * In a JS/TS file, this will always be false.
+   * In a JavaScript or TypeScript file, this property is always `false`.
    */
   isScriptSetup: boolean;
 };
@@ -36,46 +36,46 @@ export type ReportFunction = (node: AST.Node | postcss.AnyNode, message: string)
  */
 export type ManualMigrationPluginContext = {
   /**
-   * If this is a .vue file, the AST of the \<script\> blocks.
-   * If this is a JS/TS module, the 0th element is the AST of the module
+   * For a Vue file, the ASTs of the \<script\> blocks. For a JavaScript or TypeScript module,
+   * the first element is the AST of the module.
    */
   scriptASTs: VueProgram[];
 
   /**
-   * If this is a .vue file, the AST of the SFC. Otherwise, null
+   * For a Vue file, the AST of the SFC. For any other file, `null`.
    */
   sfcAST: AST.VDocumentFragment | null;
 
   /**
-   * If this is a .vue file, postcss contexts of each \<style\> block
-   * If this is a css/scss/less/sass/styl file, the 0th element is the context of the file
+   * For a Vue file, the PostCSS roots of the \<style\> blocks. For a CSS, SCSS, Sass, Less, or
+   * Stylus file, the first element is the root of the file.
    */
   styleASTs: postcss.Root[];
 
   /**
-   * The absolute path of the file being worked on
+   * The absolute path of the file that the plugin is running against.
    */
   filename: string;
 
   /**
-   * Function to report a node that needs to be migrated
+   * Reports a node that needs to be migrated.
    */
   report: ReportFunction;
 
   /**
-   * Utility functions
+   * Helper functions and builder functions.
    */
   utils: typeof utils;
 
   /**
-   * CLI Options
+   * The parsed CLI options.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   opts: Record<string, any>;
 };
 
 /**
- * A plugin for finding nodes that cannot be migrated automatically
+ * A plugin that finds nodes that can't be migrated automatically.
  *
  * @public
  */
@@ -83,7 +83,7 @@ export type ManualMigrationPlugin = {
   type: 'manual';
   name: string;
   /**
-   * Find nodes that need manual migration
+   * Finds the nodes that need manual migration.
    */
   find(context: ManualMigrationPluginContext): void;
 };
@@ -93,41 +93,41 @@ export type ManualMigrationPlugin = {
  */
 export type CodemodPluginContext = {
   /**
-   * If this is a .vue file, the AST of the `<script>` blocks.
-   * If this is a JS/TS module, the 0th element is the AST of the module
+   * For a Vue file, the ASTs of the `<script>` blocks. For a JavaScript or TypeScript module,
+   * the first element is the AST of the module.
    */
   scriptASTs: VueProgram[];
 
   /**
-   * If this is a .vue file, the AST of the SFC. Otherwise, null
+   * For a Vue file, the AST of the SFC. For any other file, `null`.
    */
   sfcAST: AST.VDocumentFragment | null;
 
   /**
-   * If this is a .vue file, postcss contexts of each \<style\> block
-   * If this is a css/scss/less/sass/styl file, the 0th element is the context of the file
+   * For a Vue file, the PostCSS roots of the \<style\> blocks. For a CSS, SCSS, Sass, Less, or
+   * Stylus file, the first element is the root of the file.
    */
   styleASTs: postcss.Root[];
 
   /**
-   * The absolute path of the file being worked on
+   * The absolute path of the file that the plugin is running against.
    */
   filename: string;
 
   /**
-   * Utility functions
+   * Helper functions and builder functions.
    */
   utils: typeof utils;
 
   /**
-   * CLI Options
+   * The parsed CLI options.
    */
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   opts: Record<string, any>;
 };
 
 /**
- * A plugin that updates source code
+ * A plugin that changes source code.
  * @public
  */
 export type CodemodPlugin = {
@@ -135,14 +135,15 @@ export type CodemodPlugin = {
   type: 'codemod';
 
   /**
-   * Mutate the AST to make changes
-   * @returns Number of transforms applied. Used for stats
+   * Mutates the AST to change the source code.
+   * @returns The number of transforms that the plugin applied. vue-metamorph uses this count for
+   * its stats, and to decide whether to write the file back to disk.
    */
   transform(context: CodemodPluginContext): number;
 };
 
 /**
- * Union of plugin types
+ * The union of the plugin types.
  * @public
  */
 export type Plugin = ManualMigrationPlugin | CodemodPlugin;

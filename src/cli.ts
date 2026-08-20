@@ -9,93 +9,93 @@ import { ManualMigrationReport, findManualMigrations } from './manual';
 import { createDefaultCliProgressHandler } from './default-cli-progress-handler';
 
 /**
- * An error that was encountered during parsing or plugin execution
+ * An error that occurred while parsing a file or running a plugin against it.
  * @public
  */
 export type ErrorReport = {
   /**
-   * The error object that was thrown
+   * The error object that was thrown.
    */
   error: Error;
 
   /**
-   * The filename that was being processed when the error was thrown
+   * The name of the file that the runner was processing when the error was thrown.
    */
   filename: string;
 };
 
 /**
- * Function signature for the onProgress function passed to createVueMetamorphCli
+ * The signature of the `onProgress` function that you pass to `createVueMetamorphCli()`.
  * @public
  */
 export type ProgressCallback = (args: {
   /**
-   * Total number files matching the glob input
+   * The total number of files that match the glob pattern.
    */
   totalFiles: number;
 
   /**
-   * Number of files that have already been processed
+   * The number of files that the runner has already processed.
    */
   filesProcessed: number;
 
   /**
-   * Number of files left to be processed
+   * The number of files that the runner has left to process.
    */
   filesRemaining: number;
 
   /**
-   * Number of changes each plugin has applied or reported
+   * The number of changes that each plugin has applied or reported.
    */
   stats: Record<string, number>;
 
   /**
-   * True if the runner was aborted before completing
+   * `true` if a call to `abort()` stopped the runner before it finished.
    */
   aborted: boolean;
 
   /**
-   * True if the runner finished processing all files
+   * `true` if the runner finished processing every file.
    */
   done: boolean;
 
   /**
-   * Errors encountered during processing
+   * The errors that occurred during processing.
    */
   errors: ErrorReport[];
 
   /**
-   * Manual migrations reported by manual migration plugins
+   * The manual migrations that the manual migration plugins reported.
    */
   manualMigrations: ManualMigrationReport[];
 }) => void;
 
 /**
- * vue-metamorph CLI Options
+ * The options for the vue-metamorph CLI runner.
  * @public
  */
 export interface CreateVueMetamorphCliOptions {
   /**
-   * Whether to suppress the default output of vue-metamorph's CLI
+   * Whether to suppress the default output of the vue-metamorph CLI.
    *
-   * If you set this to true, use the onProgress function to define your own output
+   * If you set this option to `true`, use the `onProgress` function to produce your own output.
    */
   silent?: boolean;
 
   /**
-   * The vue-metamorph CLI will call this function when a file has been transformed
-   * and written back to disk
+   * The vue-metamorph CLI calls this function after it transforms a file and writes the file
+   * back to disk.
    */
   onProgress?: ProgressCallback;
 
   /**
-   * List of codemods / manual migrations to run against matching files
+   * The codemod plugins and manual migration plugins to run against the matching files.
    */
   plugins: (Plugin | Plugin[])[];
 
   /**
-   * Add additional commander options to access with opts()
-   * @param program - Commander Command
+   * Adds extra Commander options, which you can then read through `opts()`.
+   * @param program - The Commander `Command` object.
    */
   additionalCliOptions?: (program: Pick<Command, 'option' | 'requiredOption'>) => void;
 }
@@ -107,10 +107,11 @@ type ProgramOptions = {
 };
 
 /**
- * Creates a CLI runner that globs files and runs codemod/manual-migration plugins against them.
+ * Creates a CLI runner that matches files against a glob pattern and runs codemod plugins and
+ * manual migration plugins against them.
  *
- * Parses `process.argv` for `--files <glob>`, `--plugins <glob...>`, and `--list-plugins` options.
- * Returns an object with `run()`, `abort()`, and `opts()` methods.
+ * The runner parses `process.argv` for the `--files <glob>`, `--plugins <glob...>`, and
+ * `--list-plugins` options, and returns an object with `run()`, `abort()`, and `opts()` methods.
  *
  * @example
  * ```ts
@@ -284,17 +285,17 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
 
   return {
     /**
-     * Run the CLI
+     * Runs the CLI.
      */
     run,
 
     /**
-     * Stops progress of the runner
+     * Stops the runner gracefully.
      */
     abort,
 
     /**
-     * Commander arguments
+     * Returns the parsed Commander options.
      */
     opts: (argv = process.argv) => {
       program.parseOptions(argv);

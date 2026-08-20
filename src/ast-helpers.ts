@@ -13,8 +13,9 @@ type Matcher<T> = T extends { type: string }
   : T;
 
 /**
- * Finds the first node in an AST that matches a partial node using deep partial matching.
- * Works with both script ASTs (ESTree) and template ASTs (vue-eslint-parser).
+ * Finds the first node in an AST that matches a partial node, using deep partial matching.
+ * This function works with both script ASTs from ESTree and template ASTs from
+ * vue-eslint-parser.
  *
  * @example
  * ```ts
@@ -32,9 +33,10 @@ type Matcher<T> = T extends { type: string }
  * });
  * ```
  *
- * @param ast - The node to traverse
- * @param matcher - Partial object to match against (uses lodash isMatch)
- * @returns The first matching node, or null if no matching node was found
+ * @param ast - The node to traverse.
+ * @param matcher - A partial object to match against. Matching uses the lodash `isMatch`
+ * function.
+ * @returns The first matching node, or `null` if there's no match.
  * @public
  */
 export function findFirst<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
@@ -71,8 +73,9 @@ export function findFirst<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
 }
 
 /**
- * Finds all nodes in an AST that match a partial node using deep partial matching.
- * Works with both script ASTs (ESTree) and template ASTs (vue-eslint-parser).
+ * Finds every node in an AST that matches a partial node, using deep partial matching.
+ * This function works with both script ASTs from ESTree and template ASTs from
+ * vue-eslint-parser.
  *
  * @example
  * ```ts
@@ -90,9 +93,10 @@ export function findFirst<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
  * const calls = findAll(scriptAST, { type: 'CallExpression' });
  * ```
  *
- * @param ast - The node to traverse
- * @param matcher - Partial object to match against (uses lodash isMatch)
- * @returns All matching nodes
+ * @param ast - The node to traverse.
+ * @param matcher - A partial object to match against. Matching uses the lodash `isMatch`
+ * function.
+ * @returns Every matching node.
  * @public
  */
 export function findAll<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
@@ -135,9 +139,9 @@ export function findAll<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
  * }
  * ```
  *
- * @param ast - The script AST
- * @param moduleSpecifier - The module name (e.g. `'vue'`, `'lodash-es'`)
- * @returns The ImportDeclaration node if one was found, or null
+ * @param ast - The script AST.
+ * @param moduleSpecifier - The module name, such as `'vue'` or `'lodash-es'`.
+ * @returns The `ImportDeclaration` node, or `null` if there's no match.
  * @public
  */
 export function findImportDeclaration(
@@ -154,8 +158,9 @@ export function findImportDeclaration(
 }
 
 /**
- * Adds a named import to a script AST. If an import declaration for the module
- * already exists, the new specifier is merged into it. Duplicate imports are skipped.
+ * Adds a named import to a script AST. If an import declaration for the module already exists,
+ * this function merges the new specifier into that declaration. It doesn't create duplicate
+ * imports.
  *
  * @example
  * ```ts
@@ -166,10 +171,10 @@ export function findImportDeclaration(
  * createNamedImport(scriptAST, 'lodash-es', 'map', 'lodashMap');
  * ```
  *
- * @param ast - The script AST
- * @param moduleSpecifier - The module name to import from (e.g. `'vue'`)
- * @param importName - The exported name of the import
- * @param localName - The local alias (defaults to `importName`)
+ * @param ast - The script AST.
+ * @param moduleSpecifier - The module name to import from, such as `'vue'`.
+ * @param importName - The exported name of the import.
+ * @param localName - The local alias. Defaults to `importName`.
  * @public
  */
 export function createNamedImport(
@@ -201,10 +206,10 @@ export function createNamedImport(
         continue;
       }
 
-      // The effective local binding name of an existing specifier is its
-      // alias if present, otherwise the imported name itself. Comparing
-      // against this avoids matching `{ ref as myRef }` when the caller
-      // asked for an unaliased `ref` binding.
+      // The effective local binding name of an existing specifier is its alias if the
+      // specifier has one, and otherwise the imported name itself. Comparing against this name
+      // avoids matching `{ ref as myRef }` when the caller asked for an unaliased `ref`
+      // binding.
       const effectiveLocalName = specifier.local?.name ?? specifier.imported.name;
       if (specifier.imported.name === importName && effectiveLocalName === localName) {
         found = true;
@@ -218,8 +223,9 @@ export function createNamedImport(
 }
 
 /**
- * Adds a default import to a script AST. If an import declaration for the module
- * already exists, the default specifier is merged into it. Duplicate imports are skipped.
+ * Adds a default import to a script AST. If an import declaration for the module already exists,
+ * this function merges the default specifier into that declaration. It doesn't create duplicate
+ * imports.
  *
  * @example
  * ```ts
@@ -227,9 +233,10 @@ export function createNamedImport(
  * createDefaultImport(scriptAST, 'vue', 'Vue');
  * ```
  *
- * @param ast - The script AST
- * @param moduleSpecifier - The module name to import from (e.g. `'vue'`)
- * @param importName - The local name for the default import
+ * @param ast - The script AST.
+ * @param moduleSpecifier - The module name to import from, such as `'vue'`.
+ * @param importName - The local name for the default import.
+ * @throws An error if the declaration already has a default import under a different name.
  * @public
  */
 export function createDefaultImport(
@@ -263,9 +270,9 @@ export function createDefaultImport(
     if (existingDefaultName === null) {
       decl.specifiers.push(newSpecifier);
     } else if (existingDefaultName !== importName) {
-      // An ESM ImportDeclaration may have at most one default specifier, and
-      // pushing a second one produces invalid JS. Surface the conflict so the
-      // codemod author can resolve it explicitly.
+      // An ESM ImportDeclaration can have at most one default specifier, and pushing a second
+      // one produces invalid JavaScript. Report the conflict so that the codemod author can
+      // resolve it explicitly.
       throw new Error(
         `Cannot add default import '${importName}' from '${moduleSpecifier}': a different default import '${existingDefaultName}' already exists.`,
       );
@@ -274,8 +281,9 @@ export function createDefaultImport(
 }
 
 /**
- * Adds a namespace (star) import to a script AST. If an import declaration for
- * the module already exists, the namespace specifier is merged into it. Duplicate imports are skipped.
+ * Adds a namespace import to a script AST. If an import declaration for the module already
+ * exists, this function merges the namespace specifier into that declaration. It doesn't create
+ * duplicate imports.
  *
  * @example
  * ```ts
@@ -283,9 +291,10 @@ export function createDefaultImport(
  * createNamespaceImport(scriptAST, 'lodash-es', '_');
  * ```
  *
- * @param ast - The script AST
- * @param moduleSpecifier - The module name to import from (e.g. `'lodash-es'`)
- * @param namespaceName - The local name for the namespace import
+ * @param ast - The script AST.
+ * @param moduleSpecifier - The module name to import from, such as `'lodash-es'`.
+ * @param namespaceName - The local name for the namespace import.
+ * @throws An error if the declaration already has a namespace import under a different name.
  * @public
  */
 export function createNamespaceImport(
@@ -330,8 +339,8 @@ export function createNamespaceImport(
   }
 
   if (hasNamedSpecifier) {
-    // ESM forbids combining a NameSpaceImport with NamedImports in one
-    // declaration, so we emit a sibling declaration instead.
+    // ESM forbids combining a namespace import with named imports in one declaration, so this
+    // function adds a sibling declaration instead.
     const idx = ast.body.indexOf(decl);
     ast.body.splice(
       idx === -1 ? 0 : idx,
@@ -345,11 +354,11 @@ export function createNamespaceImport(
 }
 
 /**
- * Finds all Vue Options API object expressions in a script AST.
+ * Finds every Vue Options API object expression in a script AST.
  *
- * Detects objects passed to `defineComponent()`, `Vue.extend()`, `Vue.component()`,
- * `Vue.mixin()`, and `new Vue()`. When `isSfc` is true, also treats the default export
- * as an options object.
+ * This function detects the objects that are passed to `defineComponent()`, `Vue.extend()`,
+ * `Vue.component()`, `Vue.mixin()`, and `new Vue()`. When `isSfc` is `true`, it also treats the
+ * default export as an options object.
  *
  * @example
  * ```ts
@@ -361,9 +370,9 @@ export function createNamespaceImport(
  * }
  * ```
  *
- * @param ast - The script AST
- * @param isSfc - If true, treat the default export as an options api object
- * @returns Array of ObjectExpression nodes
+ * @param ast - The script AST.
+ * @param isSfc - If `true`, treat the default export as an Options API object.
+ * @returns An array of `ObjectExpression` nodes.
  * @public
  */
 export function findVueComponentOptions(

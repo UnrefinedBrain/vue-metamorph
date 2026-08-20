@@ -43,17 +43,18 @@ const NON_RENDERABLE_AS_CHILD_OF = new Set<string>([
 ]);
 
 /**
- * Return type of the `transform` function, containing new source code and codemod stats
+ * The return type of the `transform` function, which holds the transformed source code and the
+ * codemod stats.
  * @public
  */
 export type TransformResult = {
   /**
-   * The new source code
+   * The transformed source code.
    */
   code: string;
 
   /**
-   * Stats on how many transforms each codemod reported that it made
+   * The number of transforms that each codemod reported.
    */
   stats: [codemodName: string, transformCount: number][];
 };
@@ -66,15 +67,15 @@ function isNode(value: unknown): value is RenderableNode {
 }
 
 /**
- * Walk up a diff property-path until we land on a node that prints as a
- * self-contained unit with a correct range. Non-node segments (arrays,
- * primitives) and `NON_RENDERABLE_TYPES` are skipped automatically.
+ * Walks up a diff property path until it reaches a node that prints as a self-contained unit
+ * with a correct range. This function skips non-node segments, such as arrays and primitives,
+ * along with the types in `NON_RENDERABLE_TYPES`.
  */
 function findRenderableNode(
   root: AST.Node,
   propertyPath: (string | number)[],
 ): { path: (string | number)[]; node: RenderableNode } {
-  // Drop the trailing property name so we're pointing at the owning node.
+  // Drop the trailing property name so that the path points at the owning node.
   let path = propertyPath.slice(0, -1);
   while (path.length > 0) {
     const value = get(root, path);
@@ -328,13 +329,14 @@ function transformCssFile(
 }
 
 /**
- * Parses source code into ASTs, runs codemod plugins against them, and returns
- * the transformed source code. This is the core function of vue-metamorph.
+ * Parses source code into ASTs, runs codemod plugins against them, and returns the transformed
+ * source code. This is the core function of vue-metamorph.
  *
- * The filename determines how code is parsed:
- * - `.vue` — Parsed as a Vue SFC (template + scripts + styles)
- * - `.js`, `.jsx`, `.ts`, `.tsx` — Parsed as JavaScript/TypeScript
- * - `.css`, `.scss`, `.sass`, `.less`, `.styl` — Parsed as CSS
+ * The filename determines how vue-metamorph parses the code:
+ *
+ * - `.vue` — Parsed as a Vue SFC, which covers the template, the scripts, and the styles.
+ * - `.js`, `.jsx`, `.ts`, `.tsx` — Parsed as JavaScript or TypeScript.
+ * - `.css`, `.scss`, `.sass`, `.less`, `.styl` — Parsed as CSS.
  *
  * @example
  * ```ts
@@ -365,11 +367,12 @@ function transformCssFile(
  * result.stats; // [['my-transform', 3]]
  * ```
  *
- * @param code - Source code string
- * @param filename - The file name (determines parser selection)
- * @param plugins - List of codemod plugins to run
- * @param opts - Additional options passed through to plugins
- * @returns Object with `code` (transformed source) and `stats` (per-plugin transform counts)
+ * @param code - The source code.
+ * @param filename - The name of the file. vue-metamorph selects a parser based on this name.
+ * @param plugins - The codemod plugins to run.
+ * @param opts - Extra options to pass through to the plugins.
+ * @returns An object with a `code` property, which holds the transformed source, and a `stats`
+ * property, which holds the per-plugin transform counts.
  * @public
  */
 export function transform(

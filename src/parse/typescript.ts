@@ -68,9 +68,10 @@ export const tsParser = (isJsx: boolean) => ({
 });
 
 /**
- * Parse JS or TS code
- * @param code Source code
- * @returns AST
+ * Parses JavaScript or TypeScript source code.
+ * @param code - The source code.
+ * @param isJsx - Whether to parse the code as JSX.
+ * @returns The script AST.
  */
 export function parseTs(code: string, isJsx: boolean) {
   const ast = recast.parse(code, {

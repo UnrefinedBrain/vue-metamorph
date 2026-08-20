@@ -2,8 +2,8 @@ import { voidElements } from './stringify';
 import * as AST from './ast';
 
 /**
- * Traverses a Node tree and sets the `parent` property for each descendent
- * @param node - The Node to traverse
+ * Traverses a node tree and sets the `parent` property on every descendant.
+ * @param node - The node to traverse.
  * @public
  */
 export function setParents(node: AST.Node) {
@@ -18,7 +18,7 @@ export function setParents(node: AST.Node) {
 }
 
 /**
- * Creates a new VAttribute node (a static HTML attribute, not a directive).
+ * Creates a `VAttribute` node, which is a static HTML attribute rather than a directive.
  *
  * @example
  * ```ts
@@ -29,9 +29,9 @@ export function setParents(node: AST.Node) {
  * vAttribute(vIdentifier('disabled'), null);
  * ```
  *
- * @param key - A VIdentifier node for the attribute name
- * @param value - A VLiteral node for the value, or null for boolean attributes
- * @returns A new VAttribute node
+ * @param key - A `VIdentifier` node for the attribute name.
+ * @param value - A `VLiteral` node for the value, or `null` for a boolean attribute.
+ * @returns A new `VAttribute` node.
  * @public
  */
 export function vAttribute(
@@ -49,9 +49,10 @@ export function vAttribute(
 }
 
 /**
- * Creates a new VDirective node (a Vue directive like `v-if`, `:prop`, `@click`).
+ * Creates a `VDirective` node, which represents a Vue directive such as `v-if`, `:prop`, or
+ * `@click`.
  *
- * Note: VDirective has the AST type `'VAttribute'` with `directive: true`.
+ * Note that a `VDirective` node has the AST type `'VAttribute'` with `directive: true`.
  *
  * @example
  * ```ts
@@ -70,9 +71,9 @@ export function vAttribute(
  * );
  * ```
  *
- * @param key - The VDirectiveKey node
- * @param value - A VExpressionContainer node, or null
- * @returns A new VDirective node
+ * @param key - The `VDirectiveKey` node.
+ * @param value - A `VExpressionContainer` node, or `null`.
+ * @returns A new `VDirective` node.
  * @public
  */
 export function vDirective(
@@ -90,17 +91,17 @@ export function vDirective(
 }
 
 /**
- * Creates a new VDirectiveKey node
+ * Creates a `VDirectiveKey` node.
  *
  * @example
  * ```
  * v-name:argument.modifier1.modifier2
  * ```
  *
- * @param name - A VIdentifier node
- * @param argument - The directive argument, or null
- * @param modifiers - The directive modifiers
- * @returns A new VDirectiveKey node
+ * @param name - A `VIdentifier` node for the directive name.
+ * @param argument - The directive argument, or `null`.
+ * @param modifiers - The directive modifiers.
+ * @returns A new `VDirectiveKey` node.
  * @public
  */
 export function vDirectiveKey(
@@ -119,9 +120,9 @@ export function vDirectiveKey(
 }
 
 /**
- * Creates a new VDocumentFragment node
- * @param children - The document's children
- * @returns A new VDocumentFragment node
+ * Creates a `VDocumentFragment` node.
+ * @param children - The child nodes of the document.
+ * @returns A new `VDocumentFragment` node.
  * @public
  */
 export function vDocumentFragment(
@@ -136,9 +137,9 @@ export function vDocumentFragment(
 }
 
 /**
- * Creates a new VEndTag node
- * @param leadingComment - A HTML comment directly before the end tag, if any
- * @returns A new VEndTag node
+ * Creates a `VEndTag` node.
+ * @param leadingComment - An HTML comment to print directly before the end tag, if any.
+ * @returns A new `VEndTag` node.
  * @public
  */
 export function vEndTag(leadingComment?: AST.HtmlComment): AST.VEndTag {
@@ -151,8 +152,8 @@ export function vEndTag(leadingComment?: AST.HtmlComment): AST.VEndTag {
 }
 
 /**
- * Creates a new VElement node. An end tag is created automatically unless
- * the tag is self-closing or a void element (e.g. `br`, `img`).
+ * Creates a `VElement` node. This function creates an end tag automatically, unless the tag is
+ * self-closing or a void element such as `br` or `img`.
  *
  * @example
  * ```ts
@@ -172,11 +173,11 @@ export function vEndTag(leadingComment?: AST.HtmlComment): AST.VEndTag {
  * vElement('MyComponent', vStartTag([], true), []);
  * ```
  *
- * @param name - The tag name (e.g. `'div'` or `'MyComponent'`)
- * @param startTag - A VStartTag node
- * @param children - Child nodes (VElement, VText, VExpressionContainer)
- * @param namespace - The element's namespace (defaults to HTML)
- * @returns A new VElement node
+ * @param name - The tag name, such as `'div'` or `'MyComponent'`.
+ * @param startTag - A `VStartTag` node.
+ * @param children - The child nodes: `VElement`, `VText`, or `VExpressionContainer` nodes.
+ * @param namespace - The namespace of the element. Defaults to the HTML namespace.
+ * @returns A new `VElement` node.
  * @public
  */
 export function vElement(
@@ -199,8 +200,8 @@ export function vElement(
 }
 
 /**
- * Creates a new VExpressionContainer node. Used for `{{ }}` text interpolation
- * and directive values.
+ * Creates a `VExpressionContainer` node, which holds either `{{ }}` text interpolation or a
+ * directive value.
  *
  * @example
  * ```ts
@@ -214,9 +215,10 @@ export function vElement(
  * );
  * ```
  *
- * @param expression - The JavaScript expression node
- * @param leadingComment - If the container is a child of a VElement, a HTML comment to print before this node
- * @returns A new VExpressionContainer node
+ * @param expression - The JavaScript expression node.
+ * @param leadingComment - An HTML comment to print directly before this node. vue-metamorph
+ * prints the comment only when the container is a child of a `VElement`.
+ * @returns A new `VExpressionContainer` node.
  * @public
  */
 export function vExpressionContainer(
@@ -235,14 +237,14 @@ export function vExpressionContainer(
 }
 
 /**
- * Creates a new VForExpression node
+ * Creates a `VForExpression` node.
  * @example
  * ```
  * v-for="`left` in `right`"
  * ```
- * @param left - The pattern on the left side of `in`
- * @param right - The expression node on the right side of `in`
- * @returns A new VForExpression node
+ * @param left - The pattern on the left side of `in`.
+ * @param right - The expression node on the right side of `in`.
+ * @returns A new `VForExpression` node.
  * @public
  */
 export function vForExpression(
@@ -259,9 +261,9 @@ export function vForExpression(
 }
 
 /**
- * Creates a new VIdentifier node for attribute names, directive names, arguments,
- * and modifiers. The optional `rawName` controls what gets printed, which is
- * useful for directive shorthands.
+ * Creates a `VIdentifier` node for an attribute name, a directive name, a directive argument, or
+ * a directive modifier. The optional `rawName` parameter controls what vue-metamorph prints,
+ * which is useful for directive shorthands.
  *
  * @example
  * ```ts
@@ -271,9 +273,9 @@ export function vForExpression(
  * vIdentifier('slot', '#');      // name is 'slot', prints as '#'
  * ```
  *
- * @param name - The normalized identifier name
- * @param rawName - The value to print (defaults to `name`)
- * @returns A new VIdentifier node
+ * @param name - The normalized identifier name.
+ * @param rawName - The value to print. Defaults to `name`.
+ * @returns A new `VIdentifier` node.
  * @public
  */
 export function vIdentifier(
@@ -290,9 +292,9 @@ export function vIdentifier(
 }
 
 /**
- * Creates a new VLiteral node
- * @param value - Text value
- * @returns A new VLiteral node
+ * Creates a `VLiteral` node, which holds the quoted value of a static attribute.
+ * @param value - The text value.
+ * @returns A new `VLiteral` node.
  * @public
  */
 export function vLiteral(value: AST.VLiteral['value']): AST.VLiteral {
@@ -305,11 +307,11 @@ export function vLiteral(value: AST.VLiteral['value']): AST.VLiteral {
 }
 
 /**
- * Creates a new VStartTag node
- * @param attributes - Attributes or Directives
- * @param selfClosing - Whether the tag is self-closing. Void elements should not be self-closing
- * @param leadingComment - A HTML comment to print directly before the start tag, if any
- * @returns A new VStartTag node
+ * Creates a `VStartTag` node.
+ * @param attributes - The `VAttribute` and `VDirective` nodes on the tag.
+ * @param selfClosing - Whether the tag is self-closing. A void element must not be self-closing.
+ * @param leadingComment - An HTML comment to print directly before the start tag, if any.
+ * @returns A new `VStartTag` node.
  * @public
  */
 export function vStartTag(
@@ -328,10 +330,10 @@ export function vStartTag(
 }
 
 /**
- * Create a new VText node
- * @param value - Text value
- * @param leadingComment - A HTML comment directly before the VText, if any
- * @returns A new VText node
+ * Creates a `VText` node, which holds plain text inside an element.
+ * @param value - The text value.
+ * @param leadingComment - An HTML comment to print directly before the text, if any.
+ * @returns A new `VText` node.
  * @public
  */
 export function vText(value: AST.VText['value'], leadingComment?: AST.HtmlComment): AST.VText {
@@ -345,9 +347,9 @@ export function vText(value: AST.VText['value'], leadingComment?: AST.HtmlCommen
 }
 
 /**
- * Create a new VOnExpression node
- * @param body - Expression body
- * @returns A VOnExpression node
+ * Creates a `VOnExpression` node, which holds the statements of a `v-on` directive.
+ * @param body - The statements in the expression.
+ * @returns A new `VOnExpression` node.
  * @public
  */
 export function vOnExpression(body: AST.VOnExpression['body']): AST.VOnExpression {
@@ -360,9 +362,10 @@ export function vOnExpression(body: AST.VOnExpression['body']): AST.VOnExpressio
 }
 
 /**
- * Creates a new VFilterSequenceExpression node
- * @param expression - The expression to filter
- * @param filters - VFilter nodes
+ * Creates a `VFilterSequenceExpression` node, which represents Vue 2 filter syntax.
+ * @param expression - The expression to filter.
+ * @param filters - The `VFilter` nodes to apply.
+ * @returns A new `VFilterSequenceExpression` node.
  * @public
  */
 export function vFilterSequenceExpression(
@@ -379,9 +382,10 @@ export function vFilterSequenceExpression(
 }
 
 /**
- * Creates a new VFilter node
- * @param callee - Identifier node
- * @param args - Filter arguments, if any
+ * Creates a `VFilter` node, which represents one filter in a Vue 2 filter sequence.
+ * @param callee - An `Identifier` node for the filter name.
+ * @param args - The filter arguments, if any.
+ * @returns A new `VFilter` node.
  * @public
  */
 export function vFilter(
@@ -398,9 +402,11 @@ export function vFilter(
 }
 
 /**
- * Creates a new HtmlComment
- * @param value The comment's inner value
- * @param leadingComment Any comment directly before this one
+ * Creates an `HtmlComment` node. To attach the comment to another node, set the
+ * `leadingComment` property of that node.
+ * @param value - The text inside the comment.
+ * @param leadingComment - An HTML comment to print directly before this one, if any.
+ * @returns A new `HtmlComment` node.
  * @public
  */
 export function htmlComment(value: string, leadingComment?: AST.HtmlComment): AST.HtmlComment {

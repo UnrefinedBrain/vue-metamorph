@@ -9,9 +9,9 @@ import { tsParser } from './typescript';
 import { getLangAttribute, isSupportedLang, parseCss } from './css';
 
 /**
- * Parse Vue code
- * @param code Source code
- * @returns SFC AST and Script AST
+ * Parses Vue source code.
+ * @param code - The source code.
+ * @returns The SFC AST, the script ASTs, and the style roots.
  */
 export function parseVue(code: string): {
   neededExtraTemplate: boolean;
@@ -26,8 +26,8 @@ export function parseVue(code: string): {
   const extraTemplate = '\n<template></template>';
   let neededExtraTemplate = false;
   if (!htmlParser.parse(code).querySelector('template')) {
-    // hack: if no <template> is present, templateBody will be null
-    // and we cannot access the VDocumentFragment
+    // If the SFC has no <template>, templateBody is null and the VDocumentFragment isn't
+    // reachable, so parse a placeholder template to get one.
     code += extraTemplate;
     neededExtraTemplate = true;
   }
@@ -101,7 +101,7 @@ export function parseVue(code: string): {
   for (const el of scripts) {
     if (el.children.length === 0) continue;
 
-    // hack: make the source locations line up properly
+    // Offset the source locations so that they line up with the original file.
     const blankLines = '\n'.repeat(el.loc.start.line - 1);
     const start = el.children[0]?.range[0];
     const end = el.children[0]?.range[1];
@@ -131,7 +131,7 @@ export function parseVue(code: string): {
   for (const el of styles) {
     if (el.children.length === 0 || !isSupportedLang(getLangAttribute(el as never))) continue;
 
-    // hack: make the source locations line up properly
+    // Offset the source locations so that they line up with the original file.
     const blankLines = '\n'.repeat(el.loc.start.line - 1);
     const start = el.children[0]?.range[0];
     const end = el.children.at(-1)!.range[1];
