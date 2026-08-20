@@ -12,3 +12,4 @@ docs/api
 template/pnpm-lock.yaml
 
 coverage
+.vitepress/temp
