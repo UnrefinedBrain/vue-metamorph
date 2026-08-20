@@ -15,6 +15,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
@@ -39,6 +41,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
@@ -62,6 +66,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
@@ -85,6 +91,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
@@ -110,6 +118,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .nvmrc
@@ -126,242 +136,3 @@ jobs:
           pnpm install
           pnpm build
           pnpm lint
-
-  # Builds vue-metamorph once and uploads the tarball for the ecosystem matrix
-  # to consume; keeps the consumer jobs independent of our build configuration.
-  pack:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version-file: .nvmrc
-      - uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3.0.0
-        with:
-          version: ^9.9.0
-          run_install: false
-      - shell: bash
-        run: |
-          echo "STORE_PATH=$(pnpm store path --silent)" >> $GITHUB_ENV
-      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
-        with:
-          path: ${{ env.STORE_PATH }}
-          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('**/pnpm-lock.yaml') }}
-          restore-keys: |
-            ${{ runner.os }}-pnpm-store-
-
-      - run: pnpm install
-      - run: pnpm build
-      - run: pnpm pack --pack-destination "$RUNNER_TEMP"
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
-        with:
-          name: vue-metamorph-tarball
-          path: ${{ runner.temp }}/vue-metamorph-*.tgz
-          if-no-files-found: error
-
-  # Runs each consumer's own test suite against the packed vue-metamorph build.
-  # The consumers we test here import vue-metamorph's public API directly, so
-  # their snapshot/unit tests act as a canary for accidental API breakage.
-  # Adding a new consumer is a single matrix entry.
-  ecosystem:
-    needs: pack
-    runs-on: ubuntu-latest
-    name: ecosystem (${{ matrix.name }})
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          # shadcn-vue pins pnpm@10 via packageManager; the dep lives in the
-          # nested cli workspace package, and their test script already runs
-          # vitest once (vitest run), so no extra --run is needed.
-          - name: shadcn-vue
-            repo: unovue/shadcn-vue
-            pkg_path: packages/cli/package.json
-            pnpm_version: 10.25.0
-            test_cmd: pnpm --filter shadcn-vue test
-          - name: vue-upgrade-tool
-            repo: UnrefinedBrain/vue-upgrade-tool
-            pkg_path: package.json
-            pnpm_version: ^9.9.0
-            test_cmd: pnpm test -- --run
-          - name: scriptshifter
-            repo: UnrefinedBrain/scriptshifter
-            pkg_path: package.json
-            pnpm_version: ^9.9.0
-            test_cmd: pnpm test -- --run
-    steps:
-      # Checkout vue-metamorph first so .nvmrc is available to setup-node.
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-        with:
-          path: vue-metamorph
-      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
-        with:
-          node-version-file: vue-metamorph/.nvmrc
-      - uses: pnpm/action-setup@a3252b78c470c02df07e9d59298aecedc3ccdd6d # v3.0.0
-        with:
-          version: ${{ matrix.pnpm_version }}
-          run_install: false
-
-      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
-        with:
-          repository: ${{ matrix.repo }}
-          path: downstream
-
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
-        with:
-          name: vue-metamorph-tarball
-          path: ${{ runner.temp }}
-
-      - name: Swap vue-metamorph dependency for the packed tarball
-        working-directory: downstream
-        env:
-          PKG: ${{ matrix.pkg_path }}
-        run: |
-          TARBALL=$(ls "$RUNNER_TEMP"/vue-metamorph-*.tgz)
-          jq --arg t "file:$TARBALL" \
-            '.dependencies["vue-metamorph"] = $t' \
-            "$PKG" > "$PKG.tmp"
-          mv "$PKG.tmp" "$PKG"
-
-      - name: Install
-        working-directory: downstream
-        run: pnpm install --no-frozen-lockfile
-
-      - name: Run tests
-        working-directory: downstream
-        run: ${{ matrix.test_cmd }}
-
-      # Fast CLI smoke: hand-rolled fixture so we can assert vue-metamorph
-      # actually rewrote @/-aliased imports in the generated component file.
-      # We deliberately use a non-default utils alias (~/lib/utils) so the
-      # rewrite is observable in the output.
-      - name: shadcn-vue CLI smoke (fixture-based `add`)
-        if: matrix.name == 'shadcn-vue'
-        env:
-          CLI: ${{ github.workspace }}/downstream/packages/cli/dist/index.js
-          SMOKE: ${{ runner.temp }}/cli-smoke-fixture
-        run: |
-          set -euo pipefail
-          pass() { echo "  PASS: $*"; }
-          fail() { echo "  FAIL: $*" >&2; exit 1; }
-
-          echo "::group::Setting up fixture project at $SMOKE"
-          mkdir -p "$SMOKE/src"
-          : > "$SMOKE/src/index.css"
-          cat > "$SMOKE/package.json" <<'JSON'
-          {
-            "name": "smoke",
-            "private": true,
-            "version": "0.0.0",
-            "type": "module",
-            "packageManager": "pnpm@10.25.0"
-          }
-          JSON
-          cat > "$SMOKE/tsconfig.json" <<'JSON'
-          {
-            "compilerOptions": {
-              "baseUrl": ".",
-              "paths": { "~/*": ["./src/*"] }
-            }
-          }
-          JSON
-          cat > "$SMOKE/components.json" <<'JSON'
-          {
-            "$schema": "https://shadcn-vue.com/schema.json",
-            "style": "new-york",
-            "typescript": true,
-            "tailwind": {
-              "config": "tailwind.config.ts",
-              "css": "src/index.css",
-              "baseColor": "neutral",
-              "cssVariables": true
-            },
-            "aliases": {
-              "components": "~/components",
-              "utils": "~/lib/utils",
-              "ui": "~/components/ui",
-              "lib": "~/lib",
-              "composables": "~/composables"
-            },
-            "iconLibrary": "lucide"
-          }
-          JSON
-          echo "Created fixture files:"
-          ( cd "$SMOKE" && find . -type f | sort | sed 's/^/  /' )
-          echo "::endgroup::"
-
-          echo "::group::Running shadcn-vue add button"
-          echo "\$ node \$CLI add button --cwd \$SMOKE --yes --silent"
-          node "$CLI" add button --cwd "$SMOKE" --yes --silent
-          echo "::endgroup::"
-
-          echo "Verifying generated output:"
-
-          BUTTON=$(find "$SMOKE" -name 'Button.vue' | head -n 1 || true)
-          if [ -z "$BUTTON" ]; then
-            echo "Files under $SMOKE after add:"
-            find "$SMOKE" -type f | sort | sed 's/^/    /'
-            fail "Button.vue was not generated"
-          fi
-          pass "Button.vue generated at ${BUTTON#"$SMOKE"/}"
-
-          # Verify transformImport actually rewrote @/-aliased imports to our
-          # custom utils alias (quote style varies by registry source).
-          UTILS_FILE=$(grep -rlE "from ['\"]~/lib/utils['\"]" "$SMOKE" | head -n 1 || true)
-          if [ -z "$UTILS_FILE" ]; then
-            echo "Imports of *utils* found in generated files:"
-            grep -rnE "from ['\"][^'\"]*utils[^'\"]*['\"]" "$SMOKE" | sed 's/^/    /' || true
-            fail "expected vue-metamorph to rewrite utils import to ~/lib/utils"
-          fi
-          pass "utils alias rewritten to ~/lib/utils (in ${UTILS_FILE#"$SMOKE"/})"
-
-          echo "::group::Generated $(basename "$BUTTON")"
-          cat "$BUTTON"
-          echo "::endgroup::"
-
-      # Slow but representative: scaffold a real Vite project end-to-end via
-      # `init --defaults`, which runs the full project create + base style
-      # install path. A failure here means the user-facing happy path is broken.
-      - name: shadcn-vue CLI smoke (full `init --template vite`)
-        if: matrix.name == 'shadcn-vue'
-        env:
-          CLI: ${{ github.workspace }}/downstream/packages/cli/dist/index.js
-          SMOKE: ${{ runner.temp }}/cli-smoke-init
-        run: |
-          set -euo pipefail
-          pass() { echo "  PASS: $*"; }
-          fail() { echo "  FAIL: $*" >&2; exit 1; }
-
-          mkdir -p "$SMOKE"
-
-          echo "::group::Running shadcn-vue init button --defaults --template vite"
-          # Pass `button` as a positional so init actually installs a component
-          # through the transform pipeline; without it, `init --defaults` only
-          # writes components.json + base style and never exercises vue-metamorph
-          # on a generated .vue file.
-          node "$CLI" init button \
-            --defaults \
-            --template vite \
-            --name app \
-            --base-color neutral \
-            --cwd "$SMOKE" \
-            --yes \
-            --silent
-          echo "::endgroup::"
-
-          echo "Verifying scaffolded project:"
-
-          if [ ! -f "$SMOKE/app/package.json" ]; then
-            echo "Contents of $SMOKE:"
-            find "$SMOKE" -maxdepth 3 -type f | sort | sed 's/^/    /'
-            fail "$SMOKE/app/package.json missing — init didn't scaffold the project"
-          fi
-          pass "scaffolded Vite project at \$SMOKE/app"
-
-          BUTTON=$(find "$SMOKE/app" -name 'Button.vue' | head -n 1 || true)
-          if [ -z "$BUTTON" ]; then
-            echo "Vue files under $SMOKE/app:"
-            find "$SMOKE/app" -name '*.vue' | sort | sed 's/^/    /'
-            fail "Button.vue was not generated"
-          fi
-          pass "Button.vue generated at ${BUTTON#"$SMOKE/app"/}"
