@@ -24,6 +24,95 @@ export const voidElements: Record<string, true> = {
   wbr: true,
 };
 
+/**
+ * Everything the printer needs in order to reuse the formatting of the file it parsed.
+ * @public
+ */
+export type PrintContext = {
+  /**
+   * The source code that the AST was parsed from.
+   */
+  source: string;
+
+  /**
+   * Returns whether a node and everything under it is unchanged since the parse.
+   */
+  isClean: (node: AST.Node) => boolean;
+};
+
+let printContext: PrintContext | null = null;
+
+/**
+ * Runs `print` with a print context, so that the stringify functions copy the original source text
+ * for the nodes that no codemod touched. Without a context they print every node from scratch.
+ *
+ * @param context - The source code and the cleanliness test to print against.
+ * @param print - The function that does the printing.
+ * @returns Whatever `print` returns.
+ * @public
+ */
+export function withPrintContext<T>(context: PrintContext, print: () => T): T {
+  const previous = printContext;
+  printContext = context;
+  try {
+    return print();
+  } finally {
+    printContext = previous;
+  }
+}
+
+// The other node types either have ranges that don't line up with what the printer emits, or get
+// wrapped in delimiters that their own range doesn't cover. VExpressionContainer is the clearest
+// example: its range covers the `{{ }}` that stringifyVElement adds around the printed child.
+const SOURCE_REUSABLE_TYPES = new Set<string>(['VElement', 'VAttribute', 'VText']);
+
+function rangeOf(node: unknown): [number, number] | null {
+  const range = (node as { range?: unknown } | null)?.range;
+
+  if (!Array.isArray(range) || range.length !== 2) {
+    return null;
+  }
+
+  const [start, end] = range as [number, number];
+
+  if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end < start) {
+    return null;
+  }
+
+  return [start, end];
+}
+
+// A leading comment sits outside the range of the node that carries it, so reusing that range
+// would drop the comment.
+function hasLeadingComment(node: AST.Node): boolean {
+  if (node.type === 'VElement') {
+    return !!node.startTag.leadingComment || !!node.endTag?.leadingComment;
+  }
+
+  return !!(node as { leadingComment?: AST.HtmlComment | null }).leadingComment;
+}
+
+/**
+ * Returns the original source text of a node, or null when the printer has to build the text
+ * itself. The text is reusable only when a context is set, the node type prints as the exact span
+ * that its range covers, the range fits inside the source, and no codemod touched the node.
+ */
+function originalSource(node: AST.Node): string | null {
+  const context = printContext;
+
+  if (!context || !SOURCE_REUSABLE_TYPES.has(node.type) || hasLeadingComment(node)) {
+    return null;
+  }
+
+  const range = rangeOf(node);
+
+  if (!range || range[1] > context.source.length || !context.isClean(node)) {
+    return null;
+  }
+
+  return context.source.slice(range[0], range[1]);
+}
+
 function stringifyWithRecast(node: recast.types.ASTNode) {
   return recast.prettyPrint(node, {
     quote: 'single',
@@ -161,6 +250,12 @@ export function stringifyVLiteral(node: AST.VLiteral): string {
 }
 
 export function stringifyVAttribute(node: AST.VAttribute | AST.VDirective): string {
+  const original = originalSource(node);
+
+  if (original !== null) {
+    return original;
+  }
+
   let str = node.directive ? stringifyVDirectiveKey(node.key) : node.key.rawName;
 
   if (node.value) {
@@ -176,7 +271,101 @@ export function stringifyVAttribute(node: AST.VAttribute | AST.VDirective): stri
   return str;
 }
 
+function isWhitespace(text: string): boolean {
+  return text.trim() === '';
+}
+
+/**
+ * Prints the inside of a start tag, from the end of the tag name up to the `>` or `/>`, keeping
+ * the whitespace that separated the attributes in the original source. Returns null when the tag
+ * can't be matched up with the source, in which case the caller falls back to printing the
+ * attributes one space apart.
+ *
+ * An attribute contributes its original separator only when that separator is still whitespace.
+ * When a codemod removes an attribute, the gap in front of the next attribute covers the removed
+ * text, so the separator collapses to a single space instead of reprinting what was removed.
+ */
+function stringifyVStartTagFromSource(node: AST.VStartTag, isVoidElement: boolean): string | null {
+  const context = printContext;
+  const tagRange = rangeOf(node);
+  const element = node.parent;
+
+  if (!context || !tagRange || element?.type !== 'VElement') {
+    return null;
+  }
+
+  const [tagStart, tagEnd] = tagRange;
+
+  if (tagEnd > context.source.length) {
+    return null;
+  }
+
+  const selfClosing = node.selfClosing && !isVoidElement;
+  const attributesStart = tagStart + 1 + element.rawName.length;
+
+  // Make sure the range really points at the tag this node came from. A mismatch means the node
+  // was renamed, moved, or rebuilt, so its range says nothing about the source.
+  if (
+    context.source[tagEnd - 1] !== '>' ||
+    context.source.slice(tagStart, attributesStart) !== `<${element.rawName}`
+  ) {
+    return null;
+  }
+
+  // Find the closing delimiter in the source rather than trusting node.selfClosing, which a
+  // codemod may have toggled since the parse. The `/` counts as the delimiter only when it sits
+  // outside every attribute, so an unquoted value that ends in `/` isn't mistaken for one.
+  const lastAttributeEnd = node.attributes.reduce(
+    (end, attribute) => Math.max(end, rangeOf(attribute)?.[1] ?? attributesStart),
+    attributesStart,
+  );
+  const closesWithSlash = context.source[tagEnd - 2] === '/' && lastAttributeEnd <= tagEnd - 2;
+  const attributesEnd = tagEnd - (closesWithSlash ? 2 : 1);
+
+  if (attributesEnd < attributesStart) {
+    return null;
+  }
+
+  let str = '';
+  let cursor = attributesStart;
+
+  for (const attribute of node.attributes) {
+    const attributeRange = rangeOf(attribute);
+    const separator =
+      attributeRange && attributeRange[0] >= cursor && attributeRange[1] <= attributesEnd
+        ? context.source.slice(cursor, attributeRange[0])
+        : null;
+
+    if (separator !== null && isWhitespace(separator)) {
+      str += separator;
+      cursor = attributeRange![1];
+    } else {
+      str += ' ';
+    }
+
+    str += stringifyVAttribute(attribute);
+  }
+
+  // The whitespace in front of the closing delimiter belongs to the closing form that the source
+  // used, so it only carries over while a codemod leaves that form alone.
+  const trailing =
+    closesWithSlash === selfClosing ? context.source.slice(cursor, attributesEnd) : '';
+  str += isWhitespace(trailing) ? trailing : '';
+
+  if (selfClosing) {
+    str += str.endsWith(' ') || str.endsWith('\n') ? '/' : ' /';
+  }
+
+  return str;
+}
+
 export function stringifyVStartTag(node: AST.VStartTag, isVoidElement = false): string {
+  const fromSource = stringifyVStartTagFromSource(node, isVoidElement);
+
+  if (fromSource !== null) {
+    return fromSource;
+  }
+
   let str = '';
 
   for (const attribute of node.attributes) {
@@ -314,6 +503,12 @@ export function stringifyHtmlComment(node: AST.HtmlComment | null) {
 }
 
 export function stringify(node: AST.Node): string {
+  const original = originalSource(node);
+
+  if (original !== null) {
+    return original;
+  }
+
   switch (node.type) {
     case 'VAttribute':
       return stringifyVAttribute(node);
