@@ -17,6 +17,14 @@ function clean(value) {
     .slice(0, 100);
 }
 
+function cleanForLog(value) {
+  return clean(
+    String(value ?? '')
+      .replace(/[\r\n]/g, '')
+      .replace(/[\x00-\x1F\x7F]/g, '')
+  );
+}
+
 function isAllowed(host) {
   const name = host.toLowerCase().replace(/:\d+$/, '');
   return allowed.some((entry) => (entry.startsWith('.')
@@ -25,7 +33,7 @@ function isAllowed(host) {
 }
 
 const server = http.createServer((req, res) => {
-  console.log(`[proxy] DENY   ${clean(req.method)} ${clean(req.headers.host)} (plain HTTP is not proxied)`);
+  console.log(`[proxy] DENY   ${cleanForLog(req.method)} ${cleanForLog(req.headers.host)} (plain HTTP is not proxied)`);
   res.writeHead(403).end('blocked by ecosystem sandbox proxy\n');
 });
 
