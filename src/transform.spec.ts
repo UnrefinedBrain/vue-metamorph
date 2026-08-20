@@ -1174,10 +1174,728 @@ export default {};
       const result = transform(input, 'file.vue', [plugin]).code;
       expect(result).toMatchInlineSnapshot(`
         "<template>
-          <button @click="a(); b();" class="primary">click</button>
+          <button @click="a(); b()" class="primary">click</button>
         </template>
         "
       `);
+    });
+  });
+  describe('original formatting', () => {
+    const addClassTo = (name: string): CodemodPlugin => ({
+      type: 'codemod',
+      name: `add-class-to-${name}`,
+      transform({ sfcAST, utils: { astHelpers, builders } }) {
+        if (!sfcAST) {
+          return 0;
+        }
+
+        const elements = astHelpers.findAll(sfcAST, { type: 'VElement', name });
+
+        elements.forEach((el) => {
+          el.startTag.attributes.push(
+            builders.vAttribute(builders.vIdentifier('class'), builders.vLiteral('primary')),
+          );
+        });
+
+        return elements.length;
+      },
+    });
+
+    const addClass = addClassTo('button');
+    const run = (input: string, plugins: CodemodPlugin[] = [addClass]) =>
+      transform(input, 'file.vue', plugins).code;
+
+    describe('keeps the source formatting of what a codemod leaves alone', () => {
+      it('keeps the line breaks between the attributes of a changed element', () => {
+        expect(
+          run(`<template>
+  <button
+    id="a"
+    :disabled="isDisabled"
+    @click="handle()"
+  >click</button>
+</template>
+`),
+        ).toBe(`<template>
+  <button
+    id="a"
+    :disabled="isDisabled"
+    @click="handle()" class="primary"
+  >click</button>
+</template>
+`);
+      });
+
+      it('keeps the quote style and the spacing of untouched attributes', () => {
+        expect(
+          run(`<template>
+  <button data-x='y'   :foo="a   +   b">click</button>
+</template>
+`),
+        ).toBe(`<template>
+  <button data-x='y'   :foo="a   +   b" class="primary">click</button>
+</template>
+`);
+      });
+
+      it('keeps the spacing inside an untouched v-for expression', () => {
+        expect(
+          run(`<template>
+  <li   v-for="( item ,   index ) in   items"   :key='item.id'>x</li>
+  <button>b</button>
+</template>
+`),
+        ).toBe(`<template>
+  <li   v-for="( item ,   index ) in   items"   :key='item.id'>x</li>
+  <button class="primary">b</button>
+</template>
+`);
+      });
+
+      it('keeps the character references in an untouched attribute value', () => {
+        expect(
+          run(`<template>
+  <button   a="x &amp; y &quot;q&quot;"   b='&lt;'>b</button>
+</template>
+`),
+        ).toBe(`<template>
+  <button   a="x &amp; y &quot;q&quot;"   b='&lt;' class="primary">b</button>
+</template>
+`);
+      });
+
+      it('keeps the formatting of untouched siblings and ancestors', () => {
+        expect(
+          run(`<template>
+  <section   x='1'>
+    <p    class='a'>one</p>
+    <div    y='2'>
+      <button    z='3'>b</button>
+    </div>
+  </section>
+</template>
+`),
+        ).toBe(`<template>
+  <section   x='1'>
+    <p    class='a'>one</p>
+    <div    y='2'>
+      <button    z='3' class="primary">b</button>
+    </div>
+  </section>
+</template>
+`);
+      });
+
+      it('keeps the formatting of a self-closing tag', () => {
+        expect(
+          run(`<template>
+  <button
+    id="a"
+  />
+</template>
+`),
+        ).toBe(`<template>
+  <button
+    id="a" class="primary"
+  />
+</template>
+`);
+      });
+
+      it('keeps boolean attributes and the spacing around them', () => {
+        expect(
+          run(`<template>
+  <button    disabled     data-x
+  >b</button>
+</template>
+`),
+        ).toBe(`<template>
+  <button    disabled     data-x class="primary"
+  >b</button>
+</template>
+`);
+      });
+
+      it('keeps the untouched script and style blocks of the same file', () => {
+        expect(
+          run(`<template>
+  <button   a='1'>b</button>
+</template>
+
+<script>
+export default { name: 'x' };
+</script>
+
+<style scoped>
+.a   {   color:   red;   }
+</style>
+`),
+        ).toBe(`<template>
+  <button   a='1' class="primary">b</button>
+</template>
+
+<script>
+export default { name: 'x' };
+</script>
+
+<style scoped>
+.a   {   color:   red;   }
+</style>
+`);
+      });
+    });
+
+    describe('still prints what a codemod changes', () => {
+      it('prints a changed attribute value', () => {
+        const setValue: CodemodPlugin = {
+          type: 'codemod',
+          name: 'set-value',
+          transform({ sfcAST, utils: { astHelpers } }) {
+            let count = 0;
+
+            for (const attr of astHelpers.findAll(sfcAST!, { type: 'VAttribute' })) {
+              if (attr.directive || attr.key.rawName !== 'id' || !attr.value) {
+                continue;
+              }
+
+              attr.value.value = 'CHANGED';
+              count++;
+            }
+
+            return count;
+          },
+        };
+
+        expect(
+          run(
+            `<template>
+  <div    id="a"   title="t">hi</div>
+</template>
+`,
+            [setValue],
+          ),
+        ).toBe(`<template>
+  <div    id="CHANGED"   title="t">hi</div>
+</template>
+`);
+      });
+
+      it('prints a changed attribute name', () => {
+        const rename: CodemodPlugin = {
+          type: 'codemod',
+          name: 'rename-attr',
+          transform({ sfcAST, utils: { astHelpers } }) {
+            let count = 0;
+
+            for (const attr of astHelpers.findAll(sfcAST!, { type: 'VAttribute' })) {
+              if (attr.directive || attr.key.rawName !== 'id') {
+                continue;
+              }
+
+              attr.key.name = 'data-id';
+              attr.key.rawName = 'data-id';
+              count++;
+            }
+
+            return count;
+          },
+        };
+
+        expect(
+          run(
+            `<template>
+  <div    id="a"   title="t">hi</div>
+</template>
+`,
+            [rename],
+          ),
+        ).toBe(`<template>
+  <div    data-id="a"   title="t">hi</div>
+</template>
+`);
+      });
+
+      it('prints a changed directive expression', () => {
+        const replace: CodemodPlugin = {
+          type: 'codemod',
+          name: 'replace-expression',
+          transform({ sfcAST, utils: { astHelpers, builders } }) {
+            const attr = astHelpers.findAll(sfcAST!, { type: 'VAttribute', directive: true })[0]!;
+            (attr.value as never as { expression: unknown }).expression =
+              builders.identifier('zzz');
+            return 1;
+          },
+        };
+
+        expect(
+          run(
+            `<template>
+  <div   :foo="a   +   b"   id="x">hi</div>
+</template>
+`,
+            [replace],
+          ),
+        ).toBe(`<template>
+  <div   :foo="zzz"   id="x">hi</div>
+</template>
+`);
+      });
+
+      it('prints an added directive modifier', () => {
+        const addModifier: CodemodPlugin = {
+          type: 'codemod',
+          name: 'add-modifier',
+          transform({ sfcAST, utils: { astHelpers, builders } }) {
+            const attr = astHelpers.findAll(sfcAST!, { type: 'VAttribute', directive: true })[0]!;
+            (attr.key as never as { modifiers: unknown[] }).modifiers.push(
+              builders.vIdentifier('prevent'),
+            );
+            return 1;
+          },
+        };
+
+        expect(
+          run(
+            `<template>
+  <div   @click="go()"   id="x">hi</div>
+</template>
+`,
+            [addModifier],
+          ),
+        ).toBe(`<template>
+  <div   @click.prevent="go()"   id="x">hi</div>
+</template>
+`);
+      });
+
+      it('prints a renamed element instead of the original tag name', () => {
+        const rename: CodemodPlugin = {
+          type: 'codemod',
+          name: 'rename-element',
+          transform({ sfcAST, utils: { astHelpers } }) {
+            const el = astHelpers.findFirst(sfcAST!, { type: 'VElement', name: 'div' })!;
+            el.name = 'section';
+            el.rawName = 'section';
+            return 1;
+          },
+        };
+
+        expect(
+          run(
+            `<template>
+  <div    id="a">hi</div>
+</template>
+`,
+            [rename],
+          ),
+        ).toBe(`<template>
+  <section id="a">hi</section>
+</template>
+`);
+      });
+
+      it('prints changed text', () => {
+        const setText: CodemodPlugin = {
+          type: 'codemod',
+          name: 'set-text',
+          transform({ sfcAST, utils: { astHelpers } }) {
+            const el = astHelpers.findFirst(sfcAST!, { type: 'VElement', name: 'div' })!;
+            (el.children[0] as { value: string }).value = 'REPLACED';
+            return 1;
+          },
+        };
+
+        expect(
+          run(
+            `<template>
+  <div    id="a">hello   world</div>
+</template>
+`,
+            [setText],
+          ),
+        ).toBe(`<template>
+  <div    id="a">REPLACED</div>
+</template>
+`);
+      });
+
+      it('does not reprint an attribute that was removed', () => {
+        const removeId: CodemodPlugin = {
+          type: 'codemod',
+          name: 'remove-id',
+          transform({ sfcAST, utils: { astHelpers } }) {
+            astHelpers.findAll(sfcAST!, { type: 'VElement', name: 'button' }).forEach((el) => {
+              el.startTag.attributes = el.startTag.attributes.filter(
+                (attr) => attr.directive || attr.key.rawName !== 'id',
+              );
+            });
+            return 1;
+          },
+        };
+
+        expect(
+          run(
+            `<template>
+  <button id="gone" title="kept">click</button>
+</template>
+`,
+            [removeId],
+          ),
+        ).toBe(`<template>
+  <button title="kept">click</button>
+</template>
+`);
+      });
+
+      it('drops the spacing before the closing delimiter when self-closing is turned off', () => {
+        const expand: CodemodPlugin = {
+          type: 'codemod',
+          name: 'expand',
+          transform({ sfcAST, utils: { astHelpers } }) {
+            const el = astHelpers.findFirst(sfcAST!, { type: 'VElement', name: 'custom' })!;
+            el.startTag.selfClosing = false;
+            return 1;
+          },
+        };
+
+        expect(
+          run(
+            `<template>
+  <custom />
+</template>
+`,
+            [expand],
+          ),
+        ).toBe(`<template>
+  <custom></custom>
+</template>
+`);
+      });
+
+      it('keeps attribute spacing when self-closing is turned on', () => {
+        const collapse: CodemodPlugin = {
+          type: 'codemod',
+          name: 'collapse',
+          transform({ sfcAST, utils: { astHelpers } }) {
+            const el = astHelpers.findFirst(sfcAST!, { type: 'VElement', name: 'custom' })!;
+            el.startTag.selfClosing = true;
+            el.endTag = null;
+            el.children = [];
+            return 1;
+          },
+        };
+
+        expect(
+          run(
+            `<template>
+  <custom   a="1"></custom>
+</template>
+`,
+            [collapse],
+          ),
+        ).toBe(`<template>
+  <custom   a="1" />
+</template>
+`);
+      });
+
+      it('prints reordered attributes in their new order', () => {
+        const reverse: CodemodPlugin = {
+          type: 'codemod',
+          name: 'reverse-attrs',
+          transform({ sfcAST, utils: { astHelpers } }) {
+            const el = astHelpers.findFirst(sfcAST!, { type: 'VElement', name: 'div' })!;
+            el.startTag.attributes.reverse();
+            return 1;
+          },
+        };
+
+        const result = run(
+          `<template>
+  <div
+    a="1"
+    b="2"
+    c="3"
+  >hi</div>
+</template>
+`,
+          [reverse],
+        );
+
+        expect(result).toContain('c="3"');
+        expect(result.indexOf('c="3"')).toBeLessThan(result.indexOf('a="1"'));
+      });
+
+      it('prints an attribute that was added at the front', () => {
+        const unshift: CodemodPlugin = {
+          type: 'codemod',
+          name: 'unshift-attr',
+          transform({ sfcAST, utils: { astHelpers, builders } }) {
+            const el = astHelpers.findFirst(sfcAST!, { type: 'VElement', name: 'div' })!;
+            el.startTag.attributes.unshift(
+              builders.vAttribute(builders.vIdentifier('z'), builders.vLiteral('0')),
+            );
+            return 1;
+          },
+        };
+
+        expect(
+          run(
+            `<template>
+  <div
+    a="1"
+    b="2"
+  >hi</div>
+</template>
+`,
+            [unshift],
+          ),
+        ).toBe(`<template>
+  <div z="0"
+    a="1"
+    b="2"
+  >hi</div>
+</template>
+`);
+      });
+    });
+
+    describe('comments', () => {
+      it('prints the leading comment of a changed element exactly once', () => {
+        expect(
+          run(`<template>
+  <!-- keep me --><button   a='1'>b</button>
+</template>
+`),
+        ).toBe(`<template>
+  <!-- keep me --><button   a='1' class="primary">b</button>
+</template>
+`);
+      });
+
+      it('prints a chain of leading comments exactly once', () => {
+        expect(
+          run(`<template>
+  <!-- one --><!-- two --><button   a='1'>b</button>
+</template>
+`),
+        ).toBe(`<template>
+  <!-- one --><!-- two --><button   a='1' class="primary">b</button>
+</template>
+`);
+      });
+
+      it('handles several changed siblings that each carry a leading comment', () => {
+        expect(
+          run(`<template>
+  <!-- a --><button   x='1'>1</button>
+  <!-- b --><button   y='2'>2</button>
+  <!-- c --><button   z='3'>3</button>
+</template>
+`),
+        ).toBe(`<template>
+  <!-- a --><button   x='1' class="primary">1</button>
+  <!-- b --><button   y='2' class="primary">2</button>
+  <!-- c --><button   z='3' class="primary">3</button>
+</template>
+`);
+      });
+
+      it('keeps a comment that sits inside a changed element', () => {
+        expect(
+          run(`<template>
+  <button   a='1'><!-- inner -->text</button>
+</template>
+`),
+        ).toBe(`<template>
+  <button   a='1' class="primary"><!-- inner -->text</button>
+</template>
+`);
+      });
+
+      it('keeps the comment on an untouched sibling of a changed element', () => {
+        expect(
+          run(`<template>
+  <!-- keep me -->
+  <span   a='1'>x</span>
+  <button>b</button>
+</template>
+`),
+        ).toBe(`<template>
+  <!-- keep me -->
+  <span   a='1'>x</span>
+  <button class="primary">b</button>
+</template>
+`);
+      });
+    });
+
+    describe('source offsets', () => {
+      it('handles multi-byte characters and emoji', () => {
+        expect(
+          run(`<template>
+  <button   a="héllo 🎉 日本">🎉 tail</button>
+</template>
+`),
+        ).toBe(`<template>
+  <button   a="héllo 🎉 日本" class="primary">🎉 tail</button>
+</template>
+`);
+      });
+
+      it('handles CRLF line endings', () => {
+        expect(
+          run('<template>\r\n  <button\r\n    a="1"\r\n  >b</button>\r\n</template>\r\n'),
+        ).toBe(
+          '<template>\r\n  <button\r\n    a="1" class="primary"\r\n  >b</button>\r\n</template>\r\n',
+        );
+      });
+
+      it('handles an attribute value that contains the tag delimiters', () => {
+        expect(
+          run(`<template>
+  <button   a="1 > 0"   b="path/to/x/">b</button>
+</template>
+`),
+        ).toBe(`<template>
+  <button   a="1 > 0"   b="path/to/x/" class="primary">b</button>
+</template>
+`);
+      });
+
+      it('leaves an SFC without a template block alone', () => {
+        const touchScript: CodemodPlugin = {
+          type: 'codemod',
+          name: 'touch-script',
+          transform({ scriptASTs, utils: { traverseScriptAST } }) {
+            let count = 0;
+
+            for (const ast of scriptASTs) {
+              traverseScriptAST(ast, {
+                visitLiteral(path) {
+                  if (typeof path.node.value === 'number') {
+                    path.node.value = 42;
+                    count++;
+                  }
+
+                  return this.traverse(path);
+                },
+              });
+            }
+
+            return count;
+          },
+        };
+
+        expect(
+          run(
+            `<script setup>
+const x = 1;
+</script>
+`,
+            [touchScript],
+          ),
+        ).toBe(`<script setup>
+const x = 42;
+</script>
+`);
+      });
+    });
+
+    describe('stability', () => {
+      const messy = `<template>
+  <div    a='1'   b="2">  weird   spacing  </div>
+</template>
+`;
+
+      it('leaves the file untouched when a codemod reports a count but mutates nothing', () => {
+        expect(run(messy, [{ type: 'codemod', name: 'noop', transform: () => 3 }])).toBe(messy);
+      });
+
+      it('leaves the file untouched when a codemod reverts its own change', () => {
+        const revert: CodemodPlugin = {
+          type: 'codemod',
+          name: 'revert',
+          transform({ sfcAST, utils: { astHelpers } }) {
+            let count = 0;
+
+            for (const attr of astHelpers.findAll(sfcAST!, { type: 'VAttribute' })) {
+              if (attr.directive || !attr.value) {
+                continue;
+              }
+
+              const original = attr.value.value;
+              attr.value.value = 'temp';
+              attr.value.value = original;
+              count++;
+            }
+
+            return count;
+          },
+        };
+
+        expect(run(messy, [revert])).toBe(messy);
+      });
+
+      it('is stable when the output is transformed again', () => {
+        const once = run(`<template>
+  <button   x='1'>1</button>
+</template>
+`);
+
+        expect(run(once, [{ type: 'codemod', name: 'noop', transform: () => 0 }])).toBe(once);
+      });
+
+      it('applies every plugin in a run', () => {
+        expect(
+          run(
+            `<template>
+  <button   x='1'>1</button>
+  <div    y='2'>2</div>
+</template>
+`,
+            [addClass, addClassTo('div')],
+          ),
+        ).toBe(`<template>
+  <button   x='1' class="primary">1</button>
+  <div    y='2' class="primary">2</div>
+</template>
+`);
+      });
+
+      it('does not leak the print context of one file into the next', () => {
+        const breakComment: CodemodPlugin = {
+          type: 'codemod',
+          name: 'break-comment',
+          transform({ sfcAST, utils: { astHelpers, builders } }) {
+            const el = astHelpers.findFirst(sfcAST!, { type: 'VElement', name: 'button' })!;
+            el.startTag.leadingComment = builders.htmlComment(' --> ');
+            return 1;
+          },
+        };
+
+        expect(() =>
+          transform(
+            `<template>
+  <button>b</button>
+</template>
+`,
+            'broken.vue',
+            [breakComment],
+          ),
+        ).toThrow();
+
+        // The next file still prints against its own source, not the one that threw.
+        expect(
+          run(`<template>
+  <button   a='1'>b</button>
+</template>
+`),
+        ).toBe(`<template>
+  <button   a='1' class="primary">b</button>
+</template>
+`);
+      });
     });
   });
 });
