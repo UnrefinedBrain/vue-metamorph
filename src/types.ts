@@ -29,6 +29,32 @@ export type VueProgram = namedTypes.Program & {
   isScriptSetup: boolean;
 };
 
+/**
+ * The parsed CLI options that are passed through to plugins.
+ *
+ * Options registered with `addCliOption` are not known ahead of time, so every key reads as
+ * `unknown` by default. That is enough for the common truthiness check:
+ *
+ * ```ts
+ * if (opts.myCustomOption) { ... }
+ * ```
+ *
+ * To get full types for the options your project registers, augment this interface once:
+ *
+ * ```ts
+ * declare module 'vue-metamorph' {
+ *   interface PluginOptions {
+ *     myCustomOption?: boolean;
+ *   }
+ * }
+ * ```
+ *
+ * @public
+ */
+export interface PluginOptions {
+  [key: string]: unknown;
+}
+
 export type ReportFunction = (node: AST.Node | postcss.AnyNode, message: string) => void;
 
 /**
@@ -70,8 +96,7 @@ export type ManualMigrationPluginContext = {
   /**
    * The parsed CLI options.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  opts: Record<string, any>;
+  opts: PluginOptions;
 };
 
 /**
@@ -122,8 +147,7 @@ export type CodemodPluginContext = {
   /**
    * The parsed CLI options.
    */
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  opts: Record<string, any>;
+  opts: PluginOptions;
 };
 
 /**

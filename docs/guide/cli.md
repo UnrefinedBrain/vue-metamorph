@@ -97,3 +97,35 @@ if (opts().myCustomOption) {
 }
 
 ```
+
+### Type your custom options
+
+Because the options you register aren't known ahead of time, every key on `opts` reads as
+`unknown`. That's enough to check whether an option was passed:
+
+```ts
+if (opts.myCustomOption) {
+  // do something
+}
+```
+
+To read an option's value, declare it once by augmenting the `PluginOptions` interface. Every
+`transform()` and `find()` function then sees the option with its real type:
+
+```ts
+declare module 'vue-metamorph' {
+  interface PluginOptions {
+    myCustomOption?: boolean;
+    someOtherOption?: string;
+  }
+}
+
+const myCodemod: CodemodPlugin = {
+  name: 'myCodemod',
+  type: 'codemod',
+  transform({ opts }) {
+    // opts.someOtherOption is string | undefined
+    return opts.someOtherOption?.length ?? 0;
+  }
+}
+```

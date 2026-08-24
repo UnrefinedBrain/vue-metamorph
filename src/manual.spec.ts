@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { sample, findManualMigrations } from './manual';
+import { vText } from './builders';
 
 describe('codeSample', () => {
   it('should point to values on a single line', () => {
@@ -311,8 +312,8 @@ console.log('')`,
                   },
                 })
                 .forEach(() => {
-                  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                  report({} as any, 'no console statements');
+                  // a built node, which carries no location, to exercise the fallback
+                  report(vText(''), 'no console statements');
                 });
             },
           },
@@ -423,9 +424,9 @@ console.log('')`,
               value: 'Hello',
             });
             if (text) {
-              // Set loc to null to exercise the range fallback path
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              (text as any).loc = null;
+              // Drop loc to exercise the range fallback path. `loc` is attached by the
+              // parser but omitted from the node types in ast.ts.
+              Object.assign(text, { loc: null });
               report(text, 'found text');
             }
           }

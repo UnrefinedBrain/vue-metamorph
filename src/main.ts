@@ -66,6 +66,7 @@ export type {
   VueProgram,
   CodemodPluginContext,
   ManualMigrationPluginContext,
+  PluginOptions,
 } from './types.js';
 
 export type { AST };
