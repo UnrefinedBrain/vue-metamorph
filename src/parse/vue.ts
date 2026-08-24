@@ -5,6 +5,7 @@ import type postcss from 'postcss';
 import { VueProgram } from '../types';
 import { findAll } from '../ast-helpers';
 import * as AST from '../ast';
+import { hasRange } from '../node-range';
 import { tsParser } from './typescript';
 import { getLangAttribute, isSupportedLang, parseCss } from './css';
 
@@ -77,8 +78,8 @@ export function parseVue(code: string): {
   });
 
   canHaveLeadingComment.forEach((node) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const adjacentNode = positionLookup.get((node as any).range[0] - 1);
+    // Built nodes have no range, and so have no comment sitting in front of them.
+    const adjacentNode = hasRange(node) ? positionLookup.get(node.range[0] - 1) : undefined;
     if (adjacentNode?.type === 'HtmlComment') {
       node.leadingComment = adjacentNode;
     } else {

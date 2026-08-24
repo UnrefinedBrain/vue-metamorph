@@ -1,7 +1,7 @@
 import postcss from 'postcss';
 import * as AST from './ast';
 import { parseTs, parseVue } from './parse';
-import { ManualMigrationPlugin, ReportFunction, VueProgram, utils } from './types';
+import { ManualMigrationPlugin, PluginOptions, ReportFunction, VueProgram, utils } from './types';
 import { getCssDialectForFilename, parseCss } from './parse/css';
 
 type SampleArgs = {
@@ -170,8 +170,7 @@ export function findManualMigrations(
   code: string,
   filename: string,
   plugins: ManualMigrationPlugin[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  opts: Record<string, any> = {},
+  opts: PluginOptions = {},
 ): ManualMigrationReport[] {
   const reports: ManualMigrationReport[] = [];
 

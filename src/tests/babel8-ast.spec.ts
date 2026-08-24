@@ -94,8 +94,7 @@ describe('@babel/parser 8 AST definitions', () => {
         const unknown = new Set<string>();
 
         eachNode(ast, (node) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          if (!(namedTypes as any)[node.type as string]) {
+          if (!(namedTypes as Record<string, unknown>)[node.type as string]) {
             unknown.add(node.type as string);
           }
         });
@@ -143,8 +142,7 @@ describe('@babel/parser 8 AST definitions', () => {
   });
 
   it('exposes builders for the node types Babel 8 introduced', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const b = namedTypes as any;
+    const b = namedTypes as Record<string, unknown>;
     for (const type of [
       'TSEnumBody',
       'TSInterfaceHeritage',

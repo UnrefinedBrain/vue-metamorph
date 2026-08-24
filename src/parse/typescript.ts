@@ -2,6 +2,7 @@ import { visit } from '../vendor/ast-types/main';
 import * as babelParser from '@babel/parser';
 import * as recast from '../vendor/recast/main';
 import { VueProgram } from '../types';
+import { hasBabelPosition, hasRange, type SourceRange } from '../node-range';
 
 const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
   strictMode: false,
@@ -29,8 +30,7 @@ const babelOptions = (isJsx: boolean): babelParser.ParserOptions => ({
     'typescript',
     'v8intrinsic',
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    ...(isJsx ? (['jsx'] as any[]) : []),
+    ...(isJsx ? (['jsx'] satisfies babelParser.ParserPlugin[]) : []),
   ],
 });
 
@@ -41,10 +41,9 @@ export const tsParser = (isJsx: boolean) => ({
 
     visit(res.program, {
       visitNode(path) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const node = path.node as any;
-        if (!node.range) {
-          node.range = [node.start, node.end];
+        const { node } = path;
+        if (!hasRange(node) && hasBabelPosition(node)) {
+          Object.assign(node, { range: [node.start, node.end] satisfies SourceRange });
         }
 
         this.traverse(path);

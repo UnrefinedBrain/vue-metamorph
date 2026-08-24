@@ -100,8 +100,41 @@ const vueExpressionChildFields: Record<string, readonly string[]> = {
   VGenericExpression: ['params'],
 };
 
-function childFieldNames(node: recast.types.ASTNode): readonly string[] {
-  return vueExpressionChildFields[node.type] ?? recast.types.getFieldNames(node);
+function childFieldNames(node: UnknownNode): readonly string[] {
+  const type = typeof node.type === 'string' ? node.type : undefined;
+  const vueChildFields = type === undefined ? undefined : vueExpressionChildFields[type];
+
+  return vueChildFields ?? recast.types.getFieldNames(node);
+}
+
+/**
+ * An AST node reached during traversal, before we know which kind it is.
+ */
+type UnknownNode = Record<string, unknown>;
+
+/**
+ * A `Literal` whose value is a string, which is the only kind of literal that needs escaping.
+ */
+type StringLiteralNode = UnknownNode & { value: string };
+
+/**
+ * A `TemplateElement`, whose `raw` text always needs escaping and whose `cooked` text needs it
+ * only when present.
+ */
+type TemplateElementNode = UnknownNode & {
+  value: { raw: string; cooked?: unknown };
+};
+
+function isStringLiteral(node: UnknownNode): node is StringLiteralNode {
+  return node.type === 'Literal' && typeof node.value === 'string';
+}
+
+function isTemplateElement(node: UnknownNode): node is TemplateElementNode {
+  if (node.type !== 'TemplateElement' || !node.value || typeof node.value !== 'object') {
+    return false;
+  }
+
+  return typeof (node.value as { raw?: unknown }).raw === 'string';
 }
 
 function escapeExpressionStrings(node: unknown, restore: (() => void)[]): void {
@@ -116,9 +149,9 @@ function escapeExpressionStrings(node: unknown, restore: (() => void)[]): void {
     return;
   }
 
-  const record = node as Record<string, any>;
+  const record = node as UnknownNode;
 
-  if (record.type === 'Literal' && typeof record.value === 'string') {
+  if (isStringLiteral(record)) {
     const original = record.value;
     restore.push(() => {
       record.value = original;
@@ -127,7 +160,7 @@ function escapeExpressionStrings(node: unknown, restore: (() => void)[]): void {
     return;
   }
 
-  if (record.type === 'TemplateElement' && record.value) {
+  if (isTemplateElement(record)) {
     const { raw, cooked } = record.value;
     restore.push(() => {
       record.value.raw = raw;
@@ -140,7 +173,7 @@ function escapeExpressionStrings(node: unknown, restore: (() => void)[]): void {
     return;
   }
 
-  for (const key of childFieldNames(record as recast.types.ASTNode)) {
+  for (const key of childFieldNames(record)) {
     escapeExpressionStrings(record[key], restore);
   }
 }

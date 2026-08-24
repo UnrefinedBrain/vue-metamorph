@@ -5,8 +5,7 @@ import chalk from 'chalk';
 import type { CreateVueMetamorphCliOptions } from './cli';
 
 export const createDefaultCliProgressHandler = (console: {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  log: (...args: any[]) => void;
+  log: (...args: unknown[]) => void;
 }) => {
   const bar = new cliProgress.SingleBar(
     {
