@@ -150,7 +150,7 @@ describe('findAll', () => {
       expect(decl).not.toBeNull();
 
       const idents = findAll(decl!, { type: 'Identifier' });
-      const names = idents.map((n) => (n as { name: string }).name);
+      const names = idents.map((n) => n.name);
       expect(names).toContain('a');
       expect(names).toContain('b');
       expect(names).toContain('obj');
