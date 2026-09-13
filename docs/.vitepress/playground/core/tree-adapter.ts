@@ -79,16 +79,18 @@ export class TreeAdapter {
       return null;
     }
 
-    const cacheable = typeof node === 'object';
-    if (cacheable && this.ranges.has(node as object)) {
-      return this.ranges.get(node as object) ?? null;
+    if (typeof node === 'object') {
+      const cached = this.ranges.get(node);
+      if (cached !== undefined) {
+        return cached;
+      }
     }
 
     const raw = this.options.nodeToRange(node);
     const range = raw && this.options.mapRange ? this.options.mapRange(raw) : raw;
 
-    if (cacheable) {
-      this.ranges.set(node as object, range);
+    if (typeof node === 'object') {
+      this.ranges.set(node, range);
     }
 
     return range;

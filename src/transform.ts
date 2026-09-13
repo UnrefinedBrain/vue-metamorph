@@ -4,11 +4,11 @@ import * as recast from './vendor/recast/main';
 import type postcss from 'postcss';
 import deepDiff from './vendor/deep-diff/index.js';
 import * as AST from './ast';
-import { utils, type CodemodPlugin, type VueProgram } from './types';
+import { utils, type CodemodPlugin, type PluginOptions, type VueProgram } from './types';
+import { getRange, hasRange, type SourceRange } from './node-range';
 import { setParents, vText } from './builders';
 import { stringify, withPrintContext, type PrintContext } from './stringify';
 import { parseTs, parseVue } from './parse';
-import { VDocumentFragment } from './ast';
 import {
   getCssDialectForFilename,
   getLangAttribute,
@@ -59,11 +59,10 @@ export type TransformResult = {
   stats: [codemodName: string, transformCount: number][];
 };
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-type RenderableNode = { type: string; range: [number, number] } & Record<string, any>;
+type TraversedNode = { type: string } & Record<string, unknown>;
 
-function isNode(value: unknown): value is RenderableNode {
-  return !!value && typeof value === 'object' && 'type' in value;
+function isNode(value: unknown): value is TraversedNode {
+  return !!value && typeof value === 'object' && 'type' in value && typeof value.type === 'string';
 }
 
 /**
@@ -74,7 +73,7 @@ function isNode(value: unknown): value is RenderableNode {
 function findRenderableNode(
   root: AST.Node,
   propertyPath: (string | number)[],
-): { path: (string | number)[]; node: RenderableNode } {
+): { path: (string | number)[]; range: SourceRange } {
   // Drop the trailing property name so that the path points at the owning node.
   let path = propertyPath.slice(0, -1);
   while (path.length > 0) {
@@ -84,14 +83,14 @@ function findRenderableNode(
       const parent = parentPath.length > 0 ? get(root, parentPath) : root;
       const blockedByParent = isNode(parent) && NON_RENDERABLE_AS_CHILD_OF.has(parent.type);
       if (!blockedByParent) {
-        return { path, node: value };
+        return { path, range: getRange(value, `the ${value.type} node at ${path.join('.')}`) };
       }
     }
     path = path.slice(0, -1);
   }
   return {
     path,
-    node: root as RenderableNode,
+    range: getRange(root, 'the template root'),
   };
 }
 
@@ -173,19 +172,20 @@ function createPrintContext(source: string, originalTemplate: AST.Node): PrintCo
  * carries it. Rewriting only the range would leave the original comment in place and print a
  * second copy of it, so the rewrite has to start at the outermost leading comment.
  */
-function printedStart(node: RenderableNode): number {
+function printedStart(node: AST.Node, start: number): number {
   let comment: AST.HtmlComment | null | undefined =
-    node.type === 'VElement' ? node.startTag?.leadingComment : node.leadingComment;
-  let start = node.range[0];
+    node.type === 'VElement'
+      ? node.startTag.leadingComment
+      : 'leadingComment' in node
+        ? node.leadingComment
+        : undefined;
 
   while (comment) {
-    const range = comment.range;
-
-    if (!Array.isArray(range) || range[0] < 0 || range[0] >= start) {
+    if (!hasRange(comment) || comment.range[0] < 0 || comment.range[0] >= start) {
       break;
     }
 
-    start = range[0];
+    start = comment.range[0];
     comment = comment.leadingComment;
   }
 
@@ -195,8 +195,7 @@ function printedStart(node: RenderableNode): number {
 function runCodemods(
   codemods: CodemodPlugin[],
   filename: string,
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  opts: Record<string, any>,
+  opts: PluginOptions,
   asts: {
     scriptASTs: VueProgram[];
     sfcAST: AST.VDocumentFragment | null;
@@ -213,23 +212,22 @@ function transformVueFile(
   code: string,
   filename: string,
   codemods: CodemodPlugin[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  opts: Record<string, any>,
+  opts: PluginOptions,
 ): TransformResult {
   const ms = new MagicString(code);
   const {
     scriptASTs,
-    sfcAST,
     styleASTs,
     scriptASTMap,
     styleASTMap,
     originalScripts,
     originalStyles,
     neededExtraTemplate,
+    sfcTemplate,
   } = parseVue(code);
   const originalScriptCount = scriptASTMap.size;
   const originalStyleCount = styleASTMap.size;
-  const templateAst = sfcAST.templateBody?.parent as unknown as VDocumentFragment;
+  const templateAst = sfcTemplate;
   const originalTemplate = cloneDeep(templateAst);
 
   const stats = runCodemods(codemods, filename, opts, {
@@ -250,8 +248,8 @@ function transformVueFile(
   const reprintScriptBlock = (node: AST.VElement) => {
     if (node.name !== 'script' || node.parent !== templateAst) return;
 
-    let scriptAst = scriptASTMap.get(node as never);
-    if (!scriptAst && !originalScripts.has(node as never) && nextExtraScript < scriptASTs.length) {
+    let scriptAst = scriptASTMap.get(node);
+    if (!scriptAst && !originalScripts.has(node) && nextExtraScript < scriptASTs.length) {
       scriptAst = scriptASTs[nextExtraScript++];
     }
     if (!scriptAst) return;
@@ -278,8 +276,8 @@ function transformVueFile(
       return;
     }
 
-    let styleAst = styleASTMap.get(node as never);
-    if (!styleAst && !originalStyles.has(node as never) && nextExtraStyle < styleASTs.length) {
+    let styleAst = styleASTMap.get(node);
+    if (!styleAst && !originalStyles.has(node) && nextExtraStyle < styleASTs.length) {
       styleAst = styleASTs[nextExtraStyle++];
     }
     if (!styleAst) return;
@@ -292,7 +290,7 @@ function transformVueFile(
     node.children.push(vText(`${newCode.startsWith('\n') ? '' : '\n'}${newCode}`));
   };
 
-  AST.traverseNodes(templateAst as never, {
+  AST.traverseNodes(templateAst, {
     enterNode(node) {
       if (node.type === 'VElement') {
         reprintScriptBlock(node);
@@ -329,9 +327,7 @@ function transformVueFile(
         (el) => el.type !== 'VElement' || el.name !== 'template',
       );
     }
-    // The 'range' property is present at runtime, but the types leave it out for DX.
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const [start, end] = (originalTemplate as any).range;
+    const [start, end] = getRange(originalTemplate, 'the template root');
     ms.update(
       start,
       end,
@@ -347,10 +343,13 @@ function transformVueFile(
     end: number;
   };
 
-  const changedNodes: ChangedNode[] = normalized.map(({ path, node: originalNode }) => ({
+  const changedNodes: ChangedNode[] = normalized.map(({ path, range }) => ({
     path,
-    start: printedStart(originalNode),
-    end: originalNode.range[1],
+    start: printedStart(
+      path.length === 0 ? originalTemplate : get(originalTemplate, path),
+      range[0],
+    ),
+    end: range[1],
     node: path.length === 0 ? templateAst : get(templateAst, path),
   }));
 
@@ -392,8 +391,7 @@ function transformTypescriptFile(
   code: string,
   filename: string,
   codemods: CodemodPlugin[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  opts: Record<string, any>,
+  opts: PluginOptions,
 ): TransformResult {
   const ast = parseTs(code, /\.[jt]sx$/.test(filename));
   const stats = runCodemods(codemods, filename, opts, {
@@ -412,8 +410,7 @@ function transformCssFile(
   code: string,
   filename: string,
   codemods: CodemodPlugin[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  opts: Record<string, any>,
+  opts: PluginOptions,
 ): TransformResult {
   const dialect = getCssDialectForFilename(filename);
 
@@ -485,8 +482,7 @@ export function transform(
   code: string,
   filename: string,
   plugins: CodemodPlugin[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  opts: Record<string, any> = {},
+  opts: PluginOptions = {},
 ) {
   if (filename.endsWith('.vue')) {
     return transformVueFile(code, filename, plugins, opts);

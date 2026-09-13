@@ -15,6 +15,7 @@ import {
   ignoreKeysFilter,
   locationInformationFilter,
 } from './tree-adapter';
+import { getNumberProperty, getProperty, getStringProperty } from './object-access';
 
 /** Never walked: `parent` makes the tree infinite, the rest is only noise. */
 const ESTREE_IGNORED = new Set(['parent', 'tokens']);
@@ -42,7 +43,7 @@ function* walkProperties(node: unknown, ignored: Set<string>): Generator<TreePro
     if (ignored.has(key)) {
       continue;
     }
-    yield { key, value: (node as Record<string, unknown>)[key], computed: false };
+    yield { key, value: getProperty(node, key), computed: false };
   }
 }
 
@@ -61,36 +62,31 @@ export function estreeAdapter(mapRange?: (range: Range) => Range | null): TreeAd
     mapRange,
 
     openByDefault(node, key) {
-      const type = (node as { type?: string } | null)?.type;
+      const type = getStringProperty(node, 'type');
       return (
         (!!type && OPEN_BY_DEFAULT_NODES.has(type)) || (!!key && OPEN_BY_DEFAULT_KEYS.has(key))
       );
     },
 
     nodeToRange(node) {
-      if (!node || typeof node !== 'object') {
-        return null;
+      const range = getProperty(node, 'range');
+
+      if (Array.isArray(range) && typeof range[0] === 'number' && typeof range[1] === 'number') {
+        return [range[0], range[1]];
       }
 
-      const candidate = node as { range?: unknown; start?: unknown; end?: unknown };
+      const start = getNumberProperty(node, 'start');
+      const end = getNumberProperty(node, 'end');
 
-      if (
-        Array.isArray(candidate.range) &&
-        typeof candidate.range[0] === 'number' &&
-        typeof candidate.range[1] === 'number'
-      ) {
-        return [candidate.range[0], candidate.range[1]];
-      }
-
-      if (typeof candidate.start === 'number' && typeof candidate.end === 'number') {
-        return [candidate.start, candidate.end];
+      if (start !== undefined && end !== undefined) {
+        return [start, end];
       }
 
       return null;
     },
 
     nodeToName(node) {
-      return (node as { type?: string } | null)?.type;
+      return getStringProperty(node, 'type');
     },
 
     walkNode(node) {
@@ -98,9 +94,6 @@ export function estreeAdapter(mapRange?: (range: Range) => Range | null): TreeAd
     },
   };
 }
-
-type PostcssPosition = { offset?: number; line?: number; column?: number };
-type PostcssSource = { start?: PostcssPosition; end?: PostcssPosition };
 
 /**
  * PostCSS roots, as handed to codemods for every `<style>` block and every
@@ -122,15 +115,19 @@ export function postcssAdapter(mapRange?: (range: Range) => Range | null): TreeA
     },
 
     nodeToRange(node) {
-      const source = (node as { source?: PostcssSource } | null)?.source;
-      if (typeof source?.start?.offset !== 'number' || typeof source.end?.offset !== 'number') {
+      const source = getProperty(node, 'source');
+      const start = getNumberProperty(getProperty(source, 'start'), 'offset');
+      const end = getNumberProperty(getProperty(source, 'end'), 'offset');
+
+      if (start === undefined || end === undefined) {
         return null;
       }
-      return [source.start.offset, source.end.offset];
+
+      return [start, end];
     },
 
     nodeToName(node) {
-      return (node as { type?: string } | null)?.type;
+      return getStringProperty(node, 'type');
     },
 
     walkNode(node) {

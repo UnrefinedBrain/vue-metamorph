@@ -1,6 +1,6 @@
 import { namedTypes } from './vendor/ast-types/main';
 import { ExpressionKind, PatternKind, StatementKind } from './vendor/ast-types/gen/kinds';
-import { AST } from 'vue-eslint-parser';
+import { traverseWithParser } from './plugin-ast';
 
 // Adapted from https://github.com/vuejs/vue-eslint-parser/blob/master/src/ast/nodes.ts
 
@@ -75,6 +75,14 @@ export type Namespace =
  */
 export type Node =
   | Exclude<namedTypes.ASTNode & HasParent, namedTypes.Program | namedTypes.File>
+  | TemplateNode;
+
+/**
+ * Vue template nodes, including directive expressions and document fragments.
+ * Excludes JavaScript and TypeScript nodes nested inside template expressions.
+ * @public
+ */
+export type TemplateNode =
   | VNode
   | VForExpression
   | VOnExpression
@@ -186,6 +194,15 @@ export const TEMPLATE_NODE_TYPES: ReadonlySet<string> = new Set([
   'VStartTag',
   'VText',
 ]);
+
+/**
+ * Reports whether a node belongs to the Vue template AST rather than a script AST.
+ *
+ * @public
+ */
+export function isTemplateNode(node: { type: string }): node is TemplateNode {
+  return TEMPLATE_NODE_TYPES.has(node.type);
+}
 
 /**
  * Text nodes.
@@ -350,8 +367,7 @@ export const traverseNodes = (
 ) => {
   const noop = () => {};
 
-  // eslint-disable-next-line @typescript-eslint/ban-types
-  (AST.traverseNodes as Function)(node, {
+  traverseWithParser(node, {
     enterNode: visitor.enterNode ?? noop,
     leaveNode: visitor.leaveNode ?? noop,
   });

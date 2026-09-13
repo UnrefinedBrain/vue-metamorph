@@ -12,6 +12,13 @@ type Matcher<T> = T extends { type: string }
     } & { type: T['type'] }
   : T;
 
+function matchesNode<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
+  node: AST.Node | namedTypes.Node,
+  matcher: M,
+): node is AST.Node & { type: M['type'] } {
+  return isMatch(node, matcher);
+}
+
 /**
  * Finds the first node in an AST that matches a partial node, using deep partial matching.
  * This function works with both script ASTs from ESTree and template ASTs from
@@ -43,12 +50,12 @@ export function findFirst<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
   ast: AST.Node | namedTypes.ASTNode,
   matcher: M,
 ): (AST.Node & { type: M['type'] }) | null {
-  let matchingNode: AST.Node | namedTypes.Node | null = null;
+  let matchingNode: (AST.Node & { type: M['type'] }) | null = null;
 
-  if (AST.TEMPLATE_NODE_TYPES.has(ast.type)) {
-    AST.traverseNodes(ast as AST.Node, {
+  if (AST.isTemplateNode(ast)) {
+    AST.traverseNodes(ast, {
       enterNode(node) {
-        if (!matchingNode && isMatch(node, matcher)) {
+        if (!matchingNode && matchesNode(node, matcher)) {
           matchingNode = node;
         }
       },
@@ -59,7 +66,7 @@ export function findFirst<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
   } else {
     visit(ast, {
       visitNode(path) {
-        if (!matchingNode && isMatch(path.node, matcher)) {
+        if (!matchingNode && matchesNode(path.node, matcher)) {
           matchingNode = path.node;
           return this.abort();
         }
@@ -103,12 +110,12 @@ export function findAll<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
   ast: AST.Node | namedTypes.ASTNode,
   matcher: M,
 ): (AST.Node & { type: M['type'] })[] {
-  const matchingNodes: (AST.Node | namedTypes.Node)[] = [];
+  const matchingNodes: (AST.Node & { type: M['type'] })[] = [];
 
-  if (AST.TEMPLATE_NODE_TYPES.has(ast.type)) {
-    AST.traverseNodes(ast as AST.Node, {
+  if (AST.isTemplateNode(ast)) {
+    AST.traverseNodes(ast, {
       enterNode(node) {
-        if (isMatch(node, matcher)) {
+        if (matchesNode(node, matcher)) {
           matchingNodes.push(node);
         }
       },
@@ -116,7 +123,7 @@ export function findAll<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
   } else {
     visit(ast, {
       visitNode(path) {
-        if (isMatch(path.node, matcher)) {
+        if (matchesNode(path.node, matcher)) {
           matchingNodes.push(path.node);
         }
 
@@ -125,7 +132,7 @@ export function findAll<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
     });
   }
 
-  return matchingNodes as never;
+  return matchingNodes;
 }
 
 /**

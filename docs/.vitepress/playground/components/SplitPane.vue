@@ -35,14 +35,18 @@ function onPointerMove(event: PointerEvent) {
 
 function onPointerUp(event: PointerEvent) {
   dragging.value = false;
-  (event.target as HTMLElement).releasePointerCapture(event.pointerId);
+  if (event.target instanceof Element) {
+    event.target.releasePointerCapture(event.pointerId);
+  }
   window.removeEventListener('pointermove', onPointerMove);
   window.removeEventListener('pointerup', onPointerUp);
 }
 
 function onPointerDown(event: PointerEvent) {
   dragging.value = true;
-  (event.target as HTMLElement).setPointerCapture(event.pointerId);
+  if (event.target instanceof Element) {
+    event.target.setPointerCapture(event.pointerId);
+  }
   window.addEventListener('pointermove', onPointerMove);
   window.addEventListener('pointerup', onPointerUp);
 }

@@ -1,4 +1,3 @@
-import { namedTypes as n } from '../vendor/ast-types/main';
 import { test, expect } from 'vitest';
 import { CodemodPlugin, AST, transform } from '../main';
 
@@ -24,8 +23,14 @@ export const vueRequireVForKeyCodemod: CodemodPlugin = {
         if (directive.value?.expression?.type === 'VForExpression') {
           const vForExpression = directive.value?.expression;
 
-          if (vForExpression.left.length > 1) {
-            indexIdentifier = vForExpression.left[1] as n.Identifier;
+          const existingIndex = vForExpression.left[1];
+
+          if (existingIndex) {
+            if (existingIndex.type !== 'Identifier') {
+              throw new Error('Expected the v-for index to be an identifier.');
+            }
+
+            indexIdentifier = existingIndex;
           } else {
             indexIdentifier = builders.identifier('index');
             vForExpression.left.push(indexIdentifier);
@@ -60,8 +65,12 @@ export const vueRequireVForKeyCodemod: CodemodPlugin = {
       traverseTemplateAST(sfcAST, {
         enterNode(node) {
           if (node.type === 'VIdentifier' && node.name === 'for') {
-            const directive = (node.parent as AST.VDirectiveKey).parent;
-            const hostElement = node.parent.parent.parent.parent as AST.VElement;
+            if (node.parent.type !== 'VDirectiveKey') {
+              return;
+            }
+
+            const directive = node.parent.parent;
+            const hostElement = node.parent.parent.parent.parent;
 
             const isReservedTag =
               hostElement.rawName === 'template' || hostElement.rawName === 'slot';
@@ -70,7 +79,7 @@ export const vueRequireVForKeyCodemod: CodemodPlugin = {
               hostElement.children
                 .filter((e) => e.type === 'VElement')
                 .forEach((childHostElement, index) => {
-                  fix(childHostElement as AST.VElement, directive, String(index));
+                  fix(childHostElement, directive, String(index));
                 });
             } else {
               fix(hostElement, directive);
