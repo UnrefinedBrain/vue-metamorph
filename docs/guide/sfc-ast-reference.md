@@ -7,7 +7,8 @@ produces.
 
 ### VDocumentFragment
 
-The root of the template AST. The `sfcAST` parameter points to this node.
+The root of the entire SFC. The `sfcAST` parameter points to this node. Its children
+include top-level `<template>`, `<script>`, and `<style>` elements.
 
 ```vue-html
 <template>
@@ -33,7 +34,7 @@ An HTML element or a Vue component.
 | Property | Type | Description |
 | --- | --- | --- |
 | `type` | `'VElement'` | |
-| `name` | `string` | Lowercased for HTML elements, original case for components |
+| `name` | `string` | Normalized by the parser; HTML-namespace tags, including components, are lowercase |
 | `rawName` | `string` | The tag name as written in the source |
 | `namespace` | `Namespace` | Usually `NS.HTML` |
 | `startTag` | `VStartTag` | |
@@ -125,8 +126,8 @@ The following table lists the shorthands and their `name` values:
 
 ### VExpressionContainer
 
-Wraps a JavaScript expression. These nodes appear in two places: directive values
-(`v-if="expr"`) and text interpolation (`{{ expr }}`).
+Wraps a JavaScript expression in a directive value (`v-if="expr"`), text interpolation
+(`{{ expr }}`), or dynamic directive argument (`:[key]="value"`).
 
 ```vue-html
 <div v-if="count > 0">{{ message }}</div>
@@ -269,7 +270,7 @@ The following examples show common `findAll` patterns:
 
 ```ts
 // All <MyComponent> elements
-astHelpers.findAll(sfcAST, { type: 'VElement', name: 'MyComponent' });
+astHelpers.findAll(sfcAST, { type: 'VElement', rawName: 'MyComponent' });
 
 // All v-if directives
 astHelpers.findAll(sfcAST, {

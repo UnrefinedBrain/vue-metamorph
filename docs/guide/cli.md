@@ -52,90 +52,78 @@ run();
 
 ## Add custom CLI options
 
-To attach extra options to your vue-metamorph CLI, use the `additionalCliOptions` property. For
-more information about the `.option()` and `.requiredOption()` functions, see the
-[Commander.js options documentation](https://github.com/tj/commander.js?tab=readme-ov-file#options).
+Register options with `additionalCliOptions`. vue-metamorph passes the parsed values
+through `opts` to every plugin's `transform()` or `find()` function.
 
-vue-metamorph passes the parsed options to the `transform()` function of each CodemodPlugin and
-the `find()` function of each ManualMigrationPlugin, as the `opts` parameter.
+This example adds a flag to enable string replacement and an option for the replacement
+value. It counts only literals whose values change:
 
-```ts
+```ts twoslash
+import { createVueMetamorphCli, type CodemodPlugin } from 'vue-metamorph';
 
-const myCodemod: CodemodPlugin = {
-  name: 'myCodemod',
+const replaceStrings: CodemodPlugin = {
+  name: 'replace-strings',
   type: 'codemod',
-  transform({ opts }) {
-    if (opts.myCustomOption) {
-      // do something
-    } else {
-      // do something else
+  transform({ opts, scriptASTs, utils: { astHelpers } }) {
+    if (!opts.replaceStrings || typeof opts.replacement !== 'string') {
+      return 0;
     }
-  }
-}
+    let count = 0;
+    for (const script of scriptASTs) {
+      for (const literal of astHelpers.findAll(script, { type: 'Literal' })) {
+        if (typeof literal.value === 'string'
+          && literal.value !== opts.replacement) {
+          literal.value = opts.replacement;
+          count++;
+        }
+      }
+    }
+    return count;
+  },
+};
 
-const {
-  run,
-  abort,
-  opts,
-} = createVueMetamorphCli({
-  plugins: [
-    myCodemod,
-    // ...
-  ],
-  additionalCliOptions: (program) => {
-    // call program.option() or program.requiredOption() to add new options
+const { run } = createVueMetamorphCli({
+  plugins: [replaceStrings],
+  additionalCliOptions(program) {
     program
-      .option('--my-custom-option')
-      .option('--some-other-option <value>');
-  }
+      .option('--replace-strings', 'Replace string literals')
+      .option('--replacement <value>', 'Text to use for string literals');
+  },
 });
 
-// to read the options outside of a codemod or manual migration, call opts()
-if (opts().myCustomOption) {
-  console.error('do not use this option');
-  process.exit(1);
-}
-
+run();
 ```
+
+After building the CLI, apply the plugin to a sample file:
+
+```bash
+node dist/cli.js --files 'sample.js' \
+    --replace-strings --replacement 'Hello, world!'
+```
+
+To read options outside a plugin, use the `opts()` method returned by
+`createVueMetamorphCli()`. For option registration details, see the
+[Commander.js options documentation](https://github.com/tj/commander.js?tab=readme-ov-file#options).
 
 ### Type your custom options
 
-Because the options you register aren't known ahead of time, every key on `opts` reads as
-`unknown`. That's enough to check whether an option is set:
-
-```ts
-if (opts.myCustomOption) {
-  // do something
-}
-```
-
-To give an option a declared type, augment the `PluginOptions` interface. Every
-`transform()` and `find()` function then uses that declaration. You can also narrow an
-undeclared option with a check such as `typeof opts.someOtherOption === 'string'`.
-
-Match each declaration to its Commander registration. A flag such as `--my-custom-option`
-produces a boolean. The `<value>` argument in `--some-other-option <value>` produces a string.
-Both options are optional, so their properties can be `undefined`. Module augmentation
-doesn't validate or convert values at runtime.
+Undeclared properties on `opts` have type `unknown`. Narrow them with a runtime check,
+as the example does for `replacement`, or declare their types through module augmentation.
 
 Import from `vue-metamorph` before the declaration so that TypeScript augments the module:
 
-```ts
-import type { CodemodPlugin } from 'vue-metamorph';
+```ts twoslash
+import 'vue-metamorph';
 
 declare module 'vue-metamorph' {
   interface PluginOptions {
-    myCustomOption?: boolean;
-    someOtherOption?: string;
+    replaceStrings?: boolean;
+    replacement?: string;
   }
 }
-
-const myCodemod: CodemodPlugin = {
-  name: 'myCodemod',
-  type: 'codemod',
-  transform({ opts }) {
-    // The value is a string when --some-other-option is supplied.
-    return opts.someOtherOption?.length ?? 0;
-  }
-};
 ```
+
+These declarations apply to `opts` in every plugin's `transform()` and `find()` function.
+Match the types to the Commander registrations: `--replace-strings` produces a boolean,
+and `--replacement <value>` produces a string. Both properties can be `undefined` because
+the options are optional. Module augmentation doesn't validate or convert runtime values.
