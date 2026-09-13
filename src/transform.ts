@@ -1,5 +1,5 @@
 import MagicString from 'magic-string';
-import { cloneDeep, get, uniqWith, isEqual } from 'lodash-es';
+import { cloneDeep, get } from 'lodash-es';
 import * as recast from './vendor/recast/main';
 import type postcss from 'postcss';
 import deepDiff from './vendor/deep-diff/index.js';
@@ -7,12 +7,7 @@ import * as AST from './ast';
 import { utils, type CodemodPlugin, type PluginOptions, type VueProgram } from './types';
 import { getRange, hasRange, type SourceRange } from './node-range';
 import { setParents, vText } from './builders';
-import {
-  stringify,
-  stringifyTemplateReplacement,
-  withPrintContext,
-  type PrintContext,
-} from './stringify';
+import { stringifyTemplateReplacement, type PrintContext } from './stringify';
 import { parseTs, parseVue } from './parse';
 import {
   getCssDialectForFilename,
@@ -144,7 +139,7 @@ function nodeKey(node: AST.Node): string | null {
 function indexOriginalNodes(root: AST.Node): Map<string, AST.Node> {
   const index = new Map<string, AST.Node>();
 
-  AST.traverseNodes(root as never, {
+  AST.traverseNodes(root, {
     enterNode(node) {
       const key = nodeKey(node);
 
@@ -233,183 +228,182 @@ function runCodemods(
   ]);
 }
 
-function transformVueFile(
-  code: string,
-  filename: string,
-  codemods: CodemodPlugin[],
-  opts: PluginOptions,
-): TransformResult {
-  const ms = new MagicString(code);
+/** Copies each script AST's printed source into its SFC element. */
+function reprintScriptBlock(node: AST.VElement, script: VueProgram): void {
+  const newCode = recast
+    .print(script, recastOptions)
+    .code.replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
+  const text = `${newCode.startsWith('\n') ? '' : '\n'}${newCode}\n`;
+  if (node.children[0]?.type === 'VText') {
+    node.children[0].value = text;
+  } else {
+    node.children.unshift(vText(text));
+  }
+}
+
+function reprintStyleBlock(node: AST.VElement, style: postcss.Root): void {
+  const lang = getLangAttribute(node);
+  const syntax = syntaxMap[lang];
+  if (!syntax) {
+    return;
+  }
+  const newCode = style
+    .toString(syntax.stringify)
+    .replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
+  node.children.length = 0;
+  node.children.push(vText(`${newCode.startsWith('\n') ? '' : '\n'}${newCode}`));
+}
+
+/**
+ * Updates the SFC text nodes from the script and style ASTs after plugins run.
+ * Parsed elements retain their AST association by object identity. For new elements, plugins
+ * append ASTs to the corresponding array in the order those elements appear in the SFC.
+ * Original empty or unsupported blocks don't consume an appended AST.
+ */
+function synchronizeBlocks(parsed: ReturnType<typeof parseVue>): void {
   const {
+    sfcTemplate,
     scriptASTs,
     styleASTs,
     scriptASTMap,
     styleASTMap,
     originalScripts,
     originalStyles,
-    neededExtraTemplate,
-    sfcTemplate,
-  } = parseVue(code);
-  const originalScriptCount = scriptASTMap.size;
-  const originalStyleCount = styleASTMap.size;
-  const templateAst = sfcTemplate;
-  const originalTemplate = cloneDeep(templateAst);
+  } = parsed;
+  let nextExtraScript = scriptASTMap.size;
+  let nextExtraStyle = styleASTMap.size;
 
-  const stats = runCodemods(codemods, filename, opts, {
-    scriptASTs,
-    sfcAST: templateAst ?? null,
-    styleASTs,
-  });
-
-  if (!templateAst || !originalTemplate) {
-    return { code: ms.toString(), stats };
-  }
-
-  setParents(templateAst);
-
-  let nextExtraScript = originalScriptCount;
-  let nextExtraStyle = originalStyleCount;
-
-  const reprintScriptBlock = (node: AST.VElement) => {
-    if (node.name !== 'script' || node.parent !== templateAst) return;
-
-    let scriptAst = scriptASTMap.get(node);
-    if (!scriptAst && !originalScripts.has(node) && nextExtraScript < scriptASTs.length) {
-      scriptAst = scriptASTs[nextExtraScript++];
+  for (const node of sfcTemplate.children) {
+    if (node.type !== 'VElement') {
+      continue;
     }
-    if (!scriptAst) return;
-
-    const newCode = recast
-      .print(scriptAst, recastOptions)
-      .code.replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
-
-    const text = `${newCode.startsWith('\n') ? '' : '\n'}${newCode}\n`;
-    if (node.children[0]?.type === 'VText') {
-      node.children[0].value = text;
-    } else {
-      node.children.unshift(vText(text));
-    }
-  };
-
-  const reprintStyleBlock = (node: AST.VElement) => {
-    if (
-      node.name !== 'style' ||
-      node.parent !== templateAst ||
-      !isSupportedLang(getLangAttribute(node)) ||
-      node.children[0]?.type !== 'VText'
-    ) {
-      return;
-    }
-
-    let styleAst = styleASTMap.get(node);
-    if (!styleAst && !originalStyles.has(node) && nextExtraStyle < styleASTs.length) {
-      styleAst = styleASTs[nextExtraStyle++];
-    }
-    if (!styleAst) return;
-
-    const newCode = styleAst
-      .toString(syntaxMap[getLangAttribute(node)]!.stringify)
-      .replace(/\/\* METAMORPH_START \*\/(\r?\n)*/g, '\n');
-
-    node.children.length = 0;
-    node.children.push(vText(`${newCode.startsWith('\n') ? '' : '\n'}${newCode}`));
-  };
-
-  AST.traverseNodes(templateAst, {
-    enterNode(node) {
-      if (node.type === 'VElement') {
-        reprintScriptBlock(node);
-        reprintStyleBlock(node);
+    if (node.name === 'script') {
+      let script = scriptASTMap.get(node);
+      if (!script && !originalScripts.has(node) && nextExtraScript < scriptASTs.length) {
+        script = scriptASTs[nextExtraScript++];
       }
-    },
-    leaveNode() {
-      // empty
-    },
-  });
+      if (script) {
+        reprintScriptBlock(node, script);
+      }
+    } else if (
+      node.name === 'style' &&
+      isSupportedLang(getLangAttribute(node)) &&
+      node.children[0]?.type === 'VText'
+    ) {
+      let style = styleASTMap.get(node);
+      if (!style && !originalStyles.has(node) && nextExtraStyle < styleASTs.length) {
+        style = styleASTs[nextExtraStyle++];
+      }
+      if (style) {
+        reprintStyleBlock(node, style);
+      }
+    }
+  }
+}
 
-  const diff = deepDiff(originalTemplate, templateAst, ignoreProperty);
+interface SourceReplacement {
+  node: AST.Node;
+  start: number;
+  end: number;
+}
 
+interface ChangedNode extends SourceReplacement {
+  path: Array<string | number>;
+}
+
+function isAncestorPath(
+  ancestor: Array<string | number>,
+  descendant: Array<string | number>,
+): boolean {
+  return (
+    ancestor.length <= descendant.length &&
+    ancestor.every((segment, index) => segment === descendant[index])
+  );
+}
+
+/** Keeps each outermost replacement, including its descendants' edits. */
+function selectOutermostChanges(changes: ChangedNode[]): ChangedNode[] {
+  const selected: ChangedNode[] = [];
+  for (const change of [...changes].sort((a, b) => a.path.length - b.path.length)) {
+    if (!selected.some((ancestor) => isAncestorPath(ancestor.path, change.path))) {
+      selected.push(change);
+    }
+  }
+  return selected;
+}
+
+/**
+ * Selects source ranges to replace, using the original tree for positions. When replacing
+ * the whole document, removes any placeholder template that the parser added.
+ */
+function planTemplateReplacements(
+  original: AST.VDocumentFragment,
+  updated: AST.VDocumentFragment,
+  neededExtraTemplate: boolean,
+): SourceReplacement[] {
+  const diff = deepDiff(original, updated, ignoreProperty);
   if (!diff) {
-    return { code: ms.toString(), stats };
+    return [];
   }
 
-  const normalized = diff.map((p) => ({
-    diff: p,
-    ...findRenderableNode(originalTemplate, [...(p.path ?? [])]),
+  const changes = diff.map((change) => ({
+    kind: change.kind,
+    ...findRenderableNode(original, [...(change.path ?? [])]),
   }));
 
-  // Adding or removing something near the root of the template changes the children list of
-  // the root, so reprint the whole template rather than splicing individual nodes.
-  const rootNodeChanged = normalized.some(
-    ({ path, diff: p }) => path.length <= 3 && p.kind !== 'E',
-  );
-
-  const printContext = createPrintContext(code, originalTemplate);
-
-  if (rootNodeChanged) {
+  // The document has path [], and its direct children have ['children', index].
+  // A nested child starts at path length 4. Structural edits before that depth can
+  // change the SFC's block list, so replace the document as a whole.
+  const changesBlockStructure = changes.some(({ path, kind }) => path.length < 4 && kind !== 'E');
+  if (changesBlockStructure) {
     if (neededExtraTemplate) {
-      templateAst.children = templateAst.children.filter(
-        (el) => el.type !== 'VElement' || el.name !== 'template',
+      updated.children = updated.children.filter(
+        (node) => node.type !== 'VElement' || node.name !== 'template',
       );
     }
-    const [start, end] = getRange(originalTemplate, 'the template root');
-    ms.update(
-      start,
-      end,
-      withPrintContext(printContext, () => stringify(templateAst)),
-    );
-    return { code: ms.toString(), stats };
+    const [start, end] = getRange(original, 'the template root');
+    return [{ node: updated, start, end }];
   }
 
-  type ChangedNode = {
-    path: (string | number)[];
-    node: AST.Node;
-    start: number;
-    end: number;
-  };
-
-  const changedNodes: ChangedNode[] = normalized.map(({ path, range }) => ({
+  const changedNodes: ChangedNode[] = changes.map(({ path, range }) => ({
     path,
-    start: printedStart(
-      path.length === 0 ? originalTemplate : get(originalTemplate, path),
-      range[0],
-    ),
+    start: printedStart(path.length === 0 ? original : get(original, path), range[0]),
     end: range[1],
-    node: path.length === 0 ? templateAst : get(templateAst, path),
+    node: path.length === 0 ? updated : get(updated, path),
   }));
+  return selectOutermostChanges(changedNodes);
+}
 
-  /* Collapse the diff results. Consider two changed paths:
-    ['children', 1, 'children', 2]
-    ['children', 1]
+function transformVueFile(
+  code: string,
+  filename: string,
+  codemods: CodemodPlugin[],
+  opts: PluginOptions,
+): TransformResult {
+  const parsed = parseVue(code);
+  const originalTemplate = cloneDeep(parsed.sfcTemplate);
+  const stats = runCodemods(codemods, filename, opts, {
+    scriptASTs: parsed.scriptASTs,
+    sfcAST: parsed.sfcTemplate,
+    styleASTs: parsed.styleASTs,
+  });
 
-    The deeper node needs no separate handling, because one of its ancestors changed and the
-    changes to the deeper node get printed along with that ancestor.
-
-    Sort ascending by path length first. uniqWith keeps the first occurrence and drops later
-    matches, so the shorter ancestor path has to land in the array before any of its
-    descendants.
-  */
-  const collapsedChanges = uniqWith(
-    [...changedNodes].sort((a, b) => a.path.length - b.path.length),
-    (a, b) => {
-      if (a.path.length === b.path.length) {
-        return isEqual(a.path, b.path);
-      }
-      const lesser = a.path.length < b.path.length ? a : b;
-      const greater = lesser === a ? b : a;
-      return isEqual(lesser.path, greater.path.slice(0, lesser.path.length));
-    },
-  ).sort((a, b) => b.path.length - a.path.length);
-
-  for (const { start, end, node } of collapsedChanges) {
-    ms.update(
-      start,
-      end,
-      withPrintContext(printContext, () => stringifyTemplateReplacement(node)),
-    );
+  setParents(parsed.sfcTemplate);
+  synchronizeBlocks(parsed);
+  const replacements = planTemplateReplacements(
+    originalTemplate,
+    parsed.sfcTemplate,
+    parsed.neededExtraTemplate,
+  );
+  if (replacements.length === 0) {
+    return { code, stats };
   }
-
-  return { code: ms.toString(), stats };
+  const printContext = createPrintContext(code, originalTemplate);
+  const source = new MagicString(code);
+  for (const { start, end, node } of replacements) {
+    source.update(start, end, stringifyTemplateReplacement(node, printContext));
+  }
+  return { code: source.toString(), stats };
 }
 
 function transformTypescriptFile(

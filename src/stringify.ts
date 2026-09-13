@@ -29,7 +29,7 @@ export const voidElements: Record<string, true> = {
  * Everything the printer needs in order to reuse the formatting of the file it parsed.
  * @public
  */
-export type PrintContext = {
+export interface PrintContext {
   /**
    * The source code that the AST was parsed from.
    */
@@ -39,27 +39,6 @@ export type PrintContext = {
    * Returns whether a node and everything under it is unchanged since the parse.
    */
   isClean: (node: AST.Node) => boolean;
-};
-
-let printContext: PrintContext | null = null;
-
-/**
- * Runs `print` with a print context, so that the stringify functions copy the original source text
- * for the nodes that no codemod touched. Without a context they print every node from scratch.
- *
- * @param context - The source code and the cleanliness test to print against.
- * @param print - The function that does the printing.
- * @returns Whatever `print` returns.
- * @public
- */
-export function withPrintContext<T>(context: PrintContext, print: () => T): T {
-  const previous = printContext;
-  printContext = context;
-  try {
-    return print();
-  } finally {
-    printContext = previous;
-  }
 }
 
 // The other node types either have ranges that don't line up with what the printer emits, or get
@@ -98,9 +77,7 @@ function hasLeadingComment(node: AST.Node): boolean {
  * itself. The text is reusable only when a context is set, the node type prints as the exact span
  * that its range covers, the range fits inside the source, and no codemod touched the node.
  */
-function originalSource(node: AST.Node): string | null {
-  const context = printContext;
-
+function originalSource(node: AST.Node, context?: PrintContext): string | null {
   if (!context || !SOURCE_REUSABLE_TYPES.has(node.type) || hasLeadingComment(node)) {
     return null;
   }
@@ -273,23 +250,37 @@ function escapeExpressionStrings(node: unknown, restore: (() => void)[]): void {
   }
 }
 
-function stringifyExpressionAttributeValue(node: AST.VExpressionContainer): string {
-  const restore: (() => void)[] = [];
-  escapeExpressionStrings(node.expression, restore);
-
+/**
+ * Temporarily escapes string values for an HTML attribute, then restores the AST even if
+ * escaping or printing throws. Recast needs the escaped values while it prints JavaScript;
+ * escaping the resulting JavaScript text would also change its operators and delimiters.
+ */
+function withEscapedExpressionStrings<T>(node: AST.VExpressionContainer, print: () => T): T {
+  const restore: Array<() => void> = [];
   try {
-    return stringifyVExpressionContainer(node);
+    escapeExpressionStrings(node.expression, restore);
+    return print();
   } finally {
-    restore.forEach((fn) => fn());
+    // Restore in reverse order in case multiple paths reach the same object.
+    for (const restoreValue of restore.reverse()) {
+      restoreValue();
+    }
   }
+}
+
+function stringifyExpressionAttributeValue(node: AST.VExpressionContainer): string {
+  return withEscapedExpressionStrings(node, () => stringifyVExpressionContainer(node));
 }
 
 export function stringifyVLiteral(node: AST.VLiteral): string {
   return `"${escapeAttributeValue(node.value)}"`;
 }
 
-export function stringifyVAttribute(node: AST.VAttribute | AST.VDirective): string {
-  const original = originalSource(node);
+export function stringifyVAttribute(
+  node: AST.VAttribute | AST.VDirective,
+  context?: PrintContext,
+): string {
+  const original = originalSource(node, context);
 
   if (original !== null) {
     return original;
@@ -303,7 +294,7 @@ export function stringifyVAttribute(node: AST.VAttribute | AST.VDirective): stri
     } else if (node.value.type === 'VExpressionContainer') {
       str += `="${stringifyExpressionAttributeValue(node.value)}"`;
     } else {
-      str += `="${escapeAttributeValue(stringify(node.value))}"`;
+      str += `="${escapeAttributeValue(stringify(node.value, context))}"`;
     }
   }
 
@@ -324,8 +315,11 @@ function isWhitespace(text: string): boolean {
  * When a codemod removes an attribute, the gap in front of the next attribute covers the removed
  * text, so the separator collapses to a single space instead of reprinting what was removed.
  */
-function stringifyVStartTagFromSource(node: AST.VStartTag, isVoidElement: boolean): string | null {
-  const context = printContext;
+function stringifyVStartTagFromSource(
+  node: AST.VStartTag,
+  isVoidElement: boolean,
+  context?: PrintContext,
+): string | null {
   const tagRange = rangeOf(node);
   const element = node.parent;
 
@@ -382,7 +376,7 @@ function stringifyVStartTagFromSource(node: AST.VStartTag, isVoidElement: boolea
       str += ' ';
     }
 
-    str += stringifyVAttribute(attribute);
+    str += stringifyVAttribute(attribute, context);
   }
 
   // The whitespace in front of the closing delimiter belongs to the closing form that the source
@@ -398,8 +392,12 @@ function stringifyVStartTagFromSource(node: AST.VStartTag, isVoidElement: boolea
   return str;
 }
 
-export function stringifyVStartTag(node: AST.VStartTag, isVoidElement = false): string {
-  const fromSource = stringifyVStartTagFromSource(node, isVoidElement);
+export function stringifyVStartTag(
+  node: AST.VStartTag,
+  isVoidElement = false,
+  context?: PrintContext,
+): string {
+  const fromSource = stringifyVStartTagFromSource(node, isVoidElement, context);
 
   if (fromSource !== null) {
     return fromSource;
@@ -408,7 +406,7 @@ export function stringifyVStartTag(node: AST.VStartTag, isVoidElement = false): 
   let str = '';
 
   for (const attribute of node.attributes) {
-    str += ` ${stringifyVAttribute(attribute)}`;
+    str += ` ${stringifyVAttribute(attribute, context)}`;
   }
 
   if (node.selfClosing && !isVoidElement) {
@@ -422,10 +420,10 @@ export function stringifyVEndTag(node: AST.VEndTag): string {
   return stringifyHtmlComment(node.leadingComment);
 }
 
-export function stringifyVElement(node: AST.VElement): string {
+export function stringifyVElement(node: AST.VElement, context?: PrintContext): string {
   let str = `${stringifyHtmlComment(node.startTag.leadingComment)}<${node.rawName}`;
 
-  str += stringifyVStartTag(node.startTag, voidElements[node.rawName] ?? false);
+  str += stringifyVStartTag(node.startTag, voidElements[node.rawName] ?? false, context);
   str += '>';
 
   if (!node.startTag.selfClosing && !voidElements[node.rawName]) {
@@ -434,7 +432,7 @@ export function stringifyVElement(node: AST.VElement): string {
         str += stringifyHtmlComment(child.leadingComment);
         str += '{{ ';
       }
-      str += stringify(child);
+      str += stringify(child, context);
 
       if (child.type === 'VExpressionContainer') {
         str += ' }}';
@@ -450,9 +448,9 @@ export function stringifyVElement(node: AST.VElement): string {
 }
 
 /** Prints a complete source replacement, including an expression container's delimiters. */
-export function stringifyTemplateReplacement(node: AST.Node): string {
+export function stringifyTemplateReplacement(node: AST.Node, context?: PrintContext): string {
   if (node.type !== 'VExpressionContainer') {
-    return stringify(node);
+    return stringify(node, context);
   }
 
   if (node.parent.type === 'VAttribute') {
@@ -532,8 +530,11 @@ export function stringifyVText(node: AST.VText): string {
   return stringifyHtmlComment(node.leadingComment) + node.value;
 }
 
-export function stringifyVDocumentFragment(node: AST.VDocumentFragment): string {
-  return node.children.map(stringify).join('');
+export function stringifyVDocumentFragment(
+  node: AST.VDocumentFragment,
+  context?: PrintContext,
+): string {
+  return node.children.map((child) => stringify(child, context)).join('');
 }
 
 export function stringifyVGenericExpression(node: AST.VGenericExpression): string {
@@ -559,8 +560,8 @@ export function stringifyHtmlComment(node: AST.HtmlComment | null) {
   return `${leadingComments}<!--${node.value}-->`;
 }
 
-export function stringify(node: AST.Node): string {
-  const original = originalSource(node);
+export function stringify(node: AST.Node, context?: PrintContext): string {
+  const original = originalSource(node, context);
 
   if (original !== null) {
     return original;
@@ -568,11 +569,11 @@ export function stringify(node: AST.Node): string {
 
   switch (node.type) {
     case 'VAttribute':
-      return stringifyVAttribute(node);
+      return stringifyVAttribute(node, context);
     case 'VDirectiveKey':
       return stringifyVDirectiveKey(node);
     case 'VElement':
-      return stringifyVElement(node);
+      return stringifyVElement(node, context);
     case 'VEndTag':
       return stringifyVEndTag(node);
     case 'VExpressionContainer':
@@ -582,7 +583,7 @@ export function stringify(node: AST.Node): string {
     case 'VLiteral':
       return stringifyVLiteral(node);
     case 'VStartTag':
-      return stringifyVStartTag(node);
+      return stringifyVStartTag(node, false, context);
     case 'VText':
       return stringifyVText(node);
     case 'VForExpression':
@@ -594,7 +595,7 @@ export function stringify(node: AST.Node): string {
     case 'VFilterSequenceExpression':
       return stringifyVFilterSequenceExpression(node);
     case 'VDocumentFragment':
-      return stringifyVDocumentFragment(node);
+      return stringifyVDocumentFragment(node, context);
     case 'VGenericExpression':
       return stringifyVGenericExpression(node);
     default:
