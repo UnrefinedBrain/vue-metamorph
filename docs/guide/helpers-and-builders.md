@@ -82,8 +82,9 @@ Returns the `ImportDeclaration` node, or `null` if there's no match.
 
 ### `createNamedImport`
 
-Adds a named import to a script AST. If an import declaration for the module already exists, this
-function adds the new specifier to that declaration. It doesn't create duplicate imports.
+Adds a named import to a script AST. It reuses a declaration that has no namespace
+specifiers, or creates a separate declaration if needed. Repeated calls with the same
+exported name and local alias don't add another binding.
 
 ```ts
 const { astHelpers } = utils;
@@ -97,8 +98,9 @@ astHelpers.createNamedImport(scriptAST, 'lodash-es', 'map', 'lodashMap');
 
 ### `createDefaultImport`
 
-Adds a default import to a script AST. This function follows the same merging and deduplication
-logic as `createNamedImport`.
+Adds a default import to a script AST. It reuses the first declaration for the module
+and skips the addition if that declaration already has the same default binding.
+It throws an error if that declaration has a different default binding.
 
 ```ts
 const { astHelpers } = utils;
@@ -109,8 +111,9 @@ astHelpers.createDefaultImport(scriptAST, 'vue', 'Vue');
 
 ### `createNamespaceImport`
 
-Adds a namespace import to a script AST. This function follows the same merging and deduplication
-logic as `createNamedImport`.
+Adds a namespace import to a script AST. If the first declaration for the module has
+named imports, it creates a separate declaration. If that declaration already has a
+namespace binding, it skips an identical binding or throws an error for a different name.
 
 ```ts
 const { astHelpers } = utils;
@@ -122,7 +125,8 @@ astHelpers.createNamespaceImport(scriptAST, 'lodash-es', '_');
 ### `findVueComponentOptions`
 
 Finds every Options API object expression in a script. This function detects
-`defineComponent()`, `Vue.extend()`, `Vue.component()`, `Vue.mixin()`, and `new Vue()`. When
+`defineComponent(options)`, `Vue.extend(options)`, `Vue.component(name, options)`,
+`Vue.mixin(options)`, and `new Vue(options)`. When
 `isSfc` is `true`, it also detects the default export.
 
 ```ts
@@ -142,18 +146,17 @@ for (const scriptAST of scriptASTs) {
 The `utils.builders` object includes functions that create new template AST nodes. Use them when
 your codemod needs to insert new elements, attributes, or directives into the `<template>`.
 
-::: tip
-
-After you build new nodes and insert them into the AST, call `builders.setParents()` on the root
-of the new subtree. Builder functions leave `parent` references unset, and `setParents()` fills
-them in.
+Builder functions leave `parent` references unset. After inserting nodes, call
+`builders.setParents(sfcAST)` if your plugin needs to read parent references.
+vue-metamorph also sets parent references before printing.
 
 ```ts
-const newElement = builders.vElement('div', builders.vStartTag([], false), []);
-builders.setParents(sfcAST); // fix parent references
+if (sfcAST) {
+  const newElement = builders.vElement('div', builders.vStartTag([], false), []);
+  sfcAST.children.push(newElement);
+  builders.setParents(sfcAST);
+}
 ```
-
-:::
 
 ### `vElement`
 

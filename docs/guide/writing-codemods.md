@@ -1,116 +1,147 @@
 # Write a codemod
 
-## Basics
+A codemod plugin changes source code by modifying an abstract syntax tree (AST).
+vue-metamorph parses the source, passes the ASTs to your plugin, and prints the result.
+The CLI runner writes that result to disk when a plugin reports changes.
 
-A vue-metamorph codemod is a function that you define. vue-metamorph passes several ASTs to your
-function — `scriptASTs`, `sfcAST`, and `styleASTs` — and your function traverses and mutates
-those ASTs by changing properties or by adding and removing nodes. vue-metamorph then detects
-your changes and applies them to your source code file.
+## Write a script codemod
 
-In a JavaScript or TypeScript file, `sfcAST` is always `null`.
+This plugin changes string literals to `Hello, world!`. Return the number of values
+that you changed, or `0` when the source already has the desired values:
 
-## A first codemod
+```ts twoslash
+import { transform, type CodemodPlugin } from 'vue-metamorph';
 
-The following codemod changes every string literal to `Hello, world!`:
+const changeStringLiterals: CodemodPlugin = {
+  type: 'codemod',
+  name: 'change-string-literals',
+  transform({ scriptASTs, utils: { traverseScriptAST } }) {
+    let count = 0;
+    for (const script of scriptASTs) {
+      traverseScriptAST(script, {
+        visitLiteral(path) {
+          if (typeof path.node.value === 'string'
+            && path.node.value !== 'Hello, world!') {
+            path.node.value = 'Hello, world!';
+            count++;
+          }
+          this.traverse(path);
+        },
+      });
+    }
+    return count;
+  },
+};
+
+const result = transform(
+  "const message = 'Goodbye';",
+  'example.js',
+  [changeStringLiterals],
+);
+console.log(result.code);
+```
+
+The output is:
+
+```js
+const message = 'Hello, world!';
+```
+
+The `transform()` library function returns code without writing a file. To run a
+plugin against files on disk, register it with the
+[CLI runner](./cli.md#api).
+
+The `scriptASTs` array contains the module AST for a JavaScript or TypeScript file.
+For a Vue file, it contains the ASTs of nonempty `<script>` blocks.
+`traverseScriptAST()` visits script nodes. In each visitor, call `this.traverse(path)`
+to continue into child nodes.
+
+## Write a template codemod
+
+For a Vue file, `sfcAST` is the root of the entire single-file component (SFC).
+It includes the `<template>`, `<script>`, and `<style>` elements. For other file types,
+`sfcAST` is `null`.
+
+Use `traverseTemplateAST()` to visit template nodes. This example removes `v-if`
+directives. Save it in a file named `remove-v-if.ts` to use it in the test later in this guide:
 
 ```ts twoslash
 import type { CodemodPlugin } from 'vue-metamorph';
 
-const changeStringLiterals: CodemodPlugin = {
+export const removeVIf: CodemodPlugin = {
   type: 'codemod',
-  name: 'change string literals to hello, world',
-
-  transform({ scriptASTs, sfcAST, styleASTs, filename, utils: { traverseScriptAST, traverseTemplateAST } }) {
-    // codemod plugins self-report the number of transforms they made
-    // this count is used to print stats in CLI output, and to decide whether
-    // the file needs to be rewritten (see the "Return value" section)
-    let transformCount = 0;
-
-    // scriptASTs is an array of Program ASTs
-    // in a js/ts file, this array has one item
-    // in a vue file, this array has one item for each <script> block
-    for (const scriptAST of scriptASTs) {
-      // traverseScriptAST is an alias for the ast-types 'visit' function
-      // see: https://github.com/benjamn/ast-types#ast-traversal
-      traverseScriptAST(scriptAST, {
-        visitLiteral(path) {
-          if (typeof path.node.value === 'string') {
-            // mutate the node
-            path.node.value = 'Hello, world!';
-            transformCount++;
-          }
-
-          return this.traverse(path);
+  name: 'remove-v-if',
+  transform({ sfcAST, utils: { traverseTemplateAST } }) {
+    if (!sfcAST) {
+      return 0;
+    }
+    let count = 0;
+    traverseTemplateAST(sfcAST, {
+      enterNode(node) {
+        if (node.type !== 'VElement') {
+          return;
         }
-      });
-    }
-
-    if (sfcAST) {
-      // traverseTemplateAST is an alias for the vue-eslint-parser 'AST.traverseNodes' function
-      // see: https://github.com/vuejs/vue-eslint-parser/blob/master/src/ast/traverse.ts#L118
-      traverseTemplateAST(sfcAST, {
-        enterNode(node) {
-          if (node.type === 'Literal' && typeof node.value === 'string') {
-            // mutate the node
-            node.value = 'Hello, world!';
-            transformCount++;
-          }
-        },
-        leaveNode() {
-
-        },
-      });
-    }
-
-    return transformCount;
-  }
-}
-
+        const attributes = node.startTag.attributes;
+        node.startTag.attributes = attributes.filter((attribute) =>
+          !attribute.directive || attribute.key.name.name !== 'if',
+        );
+        count += attributes.length - node.startTag.attributes.length;
+      },
+    });
+    return count;
+  },
+};
 ```
 
-::: tip
+For example, this plugin changes `<div v-if="visible">Hello</div>` to
+`<div>Hello</div>`. For node shapes and matching examples, see the
+[SFC AST node reference](./sfc-ast-reference.md).
 
-A codemod can use the `filename` parameter to choose which files to operate on. For example, to
-transform only the files that end in `.spec.js` or `.spec.ts`:
+## Choose files by name
 
-```ts
-const codemod = {
-  transform({ filename }) {
-    if (!/\.spec\.[jt]s/g.test(filename)) {
-      return;
+Use `filename` when a plugin applies to only some of the files selected by the CLI.
+This example replaces string literals only in files ending in `.spec.js` or `.spec.ts`:
+
+```ts twoslash
+import type { CodemodPlugin } from 'vue-metamorph';
+
+const updateTestStrings: CodemodPlugin = {
+  type: 'codemod',
+  name: 'update-test-strings',
+  transform({ filename, scriptASTs, utils: { astHelpers } }) {
+    if (!/\.spec\.[jt]s$/.test(filename)) {
+      return 0;
     }
-
-    // ...
-  }
-}
+    let count = 0;
+    for (const script of scriptASTs) {
+      for (const literal of astHelpers.findAll(script, { type: 'Literal' })) {
+        if (literal.value === 'Goodbye') {
+          literal.value = 'Hello, world!';
+          count++;
+        }
+      }
+    }
+    return count;
+  },
+};
 ```
-
-:::
 
 ## Return value
 
-The `transform()` function of a codemod must return the number of mutations that it made to the
-AST. The CLI runner uses this value for two purposes:
+Return the number of AST mutations that your plugin made. The CLI adds these counts
+to its statistics and writes a file if at least one codemod reports a positive count.
+If every codemod returns `0`, the CLI leaves the file on disk untouched.
 
-1. Aggregating the per-plugin stats that it prints at the end of a run.
-2. Deciding whether to write the file back to disk. If every codemod returns `0` for a given
-   file, the CLI leaves the file on disk untouched.
+A positive count causes the CLI to write the combined output of all codemods for
+that file. Each plugin must therefore report its own mutations accurately.
 
-The return value matters because of how the underlying printer,
-[recast](https://github.com/benjamn/recast), works. Recast preserves the original formatting for
-AST nodes that it knows are untouched, but it can still make small, harmless formatting changes
-to the rest of the file when it reprints, such as normalizing quote styles or inserting trailing
-newlines. Gating the write on the reported count keeps the CLI from touching files that don't
-need to change.
-
-So if your codemod mutates the AST, it must return a non-zero count. Otherwise, the CLI discards
-those mutations. If your codemod only inspects the AST without mutating it, returning `0` is
-correct and leaves the file alone.
+This rule avoids rewriting files solely because the printer changed formatting,
+such as a trailing newline. It applies to CLI writes; the `transform()` library
+function returns the printed code regardless of the reported counts.
 
 ## HTML comments
 
-Some `<template>` node types — `VExpressionContainer`, `VText`, `VStartTag`, `VEndTag`, and
-`HtmlComment` — have a `leadingComment` property that holds an `HtmlComment` node. vue-metamorph
+The `VExpressionContainer`, `VText`, `VStartTag`, `VEndTag`, and `HtmlComment` node types have a `leadingComment` property that holds an `HtmlComment` node. vue-metamorph
 prints that comment directly before the node it's attached to.
 
 The `leadingComment` property of a `VExpressionContainer` node is printed only when the
@@ -118,16 +149,11 @@ The `leadingComment` property of a `VExpressionContainer` node is printed only w
 
 ## Code formatting
 
-vue-metamorph reuses the original source text for the parts of a file that your codemod didn't
-change. In a `<template>`, an element that your codemod leaves alone keeps its source text
-exactly, and an element that your codemod does change keeps the original text of its untouched
-attributes, along with the whitespace that separated them. So a change to one attribute leaves
-the line breaks and the quote style of the rest of the tag alone.
+vue-metamorph reuses source text for unchanged nodes when their source ranges allow it.
+For template attributes, it also preserves the whitespace between untouched attributes.
 
-The parts that vue-metamorph does print, such as a node that your codemod built, come out
-syntactically correct rather than well-formatted. We recommend that you run a code formatter such
-as ESLint, Prettier, Biome, oxfmt, etc. afterwards to bring those parts in line with your project's code style
-conventions.
+New or changed nodes can have different spacing or quotes from the surrounding code.
+Run your project's formatter after applying a codemod to make the output consistent.
 
 ## CSS
 
@@ -177,16 +203,16 @@ so that you get an accurate representation of the AST that you'll work with.
 
 ## Testing
 
-We recommend that you write automated tests as you develop a codemod. You usually know what you
-want the output to look like for a given input, and codemods are pure functions, so they're
-straightforward to test. Each time you run into an edge case in your codebase, add a test case
-for it.
+Test each codemod with representative input and expected output. Add a regression test
+whenever you find an edge case. You can test transformations without reading or writing files.
 
 For example, for a codemod that removes every `v-if` directive, define the input and the expected
 output, then assert that the transformation produces the expected output:
 
 ```ts
+import { expect, it } from 'vitest';
 import { transform } from 'vue-metamorph';
+import { removeVIf } from './remove-v-if';
 
 it('removes all v-if directives', () => {
   const source = `
@@ -205,6 +231,6 @@ it('removes all v-if directives', () => {
 </template>
 `;
 
-  expect(transform(source, 'file.vue', [myCodemod]).code).toBe(expected);
+  expect(transform(source, 'file.vue', [removeVIf]).code).toBe(expected);
 });
 ```
