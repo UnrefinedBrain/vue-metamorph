@@ -312,7 +312,7 @@ console.log('')`,
                   },
                 })
                 .forEach(() => {
-                  // a built node, which carries no location, to exercise the fallback
+                  // A built node carries no location, which is the fallback under test.
                   report(vText(''), 'no console statements');
                 });
             },
@@ -424,8 +424,7 @@ console.log('')`,
               value: 'Hello',
             });
             if (text) {
-              // Drop loc to exercise the range fallback path. `loc` is attached by the
-              // parser but omitted from the node types in ast.ts.
+              // Drop `loc` to exercise the range fallback path.
               Object.assign(text, { loc: null });
               report(text, 'found text');
             }

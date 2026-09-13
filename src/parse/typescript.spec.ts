@@ -1,11 +1,13 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, expectTypeOf, it } from 'vitest';
 import { parseTs } from '.';
 import { findFirst } from '../ast-helpers';
+import type { VueProgram } from '../types';
 
 describe('parseTs', () => {
   it('should always set the isScriptSetup property to false', () => {
     const ast = parseTs('const a = 1 + 1', false);
 
+    expectTypeOf(ast).toEqualTypeOf<VueProgram>();
     expect(ast.isScriptSetup).toBe(false);
   });
 

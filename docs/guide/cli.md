@@ -86,7 +86,7 @@ const {
     // call program.option() or program.requiredOption() to add new options
     program
       .option('--my-custom-option')
-      .option('--some-other-option');
+      .option('--some-other-option <value>');
   }
 });
 
@@ -101,7 +101,7 @@ if (opts().myCustomOption) {
 ### Type your custom options
 
 Because the options you register aren't known ahead of time, every key on `opts` reads as
-`unknown`. That's enough to check whether an option was passed:
+`unknown`. That's enough to check whether an option is set:
 
 ```ts
 if (opts.myCustomOption) {
@@ -109,10 +109,20 @@ if (opts.myCustomOption) {
 }
 ```
 
-To read an option's value, declare it once by augmenting the `PluginOptions` interface. Every
-`transform()` and `find()` function then sees the option with its real type:
+To give an option a declared type, augment the `PluginOptions` interface. Every
+`transform()` and `find()` function then uses that declaration. You can also narrow an
+undeclared option with a check such as `typeof opts.someOtherOption === 'string'`.
+
+Match each declaration to its Commander registration. A flag such as `--my-custom-option`
+produces a boolean. The `<value>` argument in `--some-other-option <value>` produces a string.
+Both options are optional, so their properties can be `undefined`. Module augmentation
+doesn't validate or convert values at runtime.
+
+Import from `vue-metamorph` before the declaration so that TypeScript augments the module:
 
 ```ts
+import type { CodemodPlugin } from 'vue-metamorph';
+
 declare module 'vue-metamorph' {
   interface PluginOptions {
     myCustomOption?: boolean;
@@ -124,8 +134,8 @@ const myCodemod: CodemodPlugin = {
   name: 'myCodemod',
   type: 'codemod',
   transform({ opts }) {
-    // opts.someOtherOption is string | undefined
+    // The value is a string when --some-other-option is supplied.
     return opts.someOtherOption?.length ?? 0;
   }
-}
+};
 ```

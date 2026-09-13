@@ -9,7 +9,6 @@ import { getRange, type SourceRange } from './node-range';
 import { setParents, vText } from './builders';
 import { stringify } from './stringify';
 import { parseTs, parseVue } from './parse';
-import { VDocumentFragment } from './ast';
 import {
   getCssDialectForFilename,
   getLangAttribute,
@@ -60,15 +59,10 @@ export type TransformResult = {
   stats: [codemodName: string, transformCount: number][];
 };
 
-/**
- * A value reached by walking a diff property path, once it is known to be a node.
- */
 type TraversedNode = { type: string } & Record<string, unknown>;
 
 function isNode(value: unknown): value is TraversedNode {
-  return (
-    !!value && typeof value === 'object' && 'type' in value && typeof value.type === 'string'
-  );
+  return !!value && typeof value === 'object' && 'type' in value && typeof value.type === 'string';
 }
 
 /**
@@ -125,17 +119,17 @@ function transformVueFile(
   const ms = new MagicString(code);
   const {
     scriptASTs,
-    sfcAST,
     styleASTs,
     scriptASTMap,
     styleASTMap,
     originalScripts,
     originalStyles,
     neededExtraTemplate,
+    sfcTemplate,
   } = parseVue(code);
   const originalScriptCount = scriptASTMap.size;
   const originalStyleCount = styleASTMap.size;
-  const templateAst = sfcAST.templateBody?.parent as unknown as VDocumentFragment;
+  const templateAst = sfcTemplate;
   const originalTemplate = cloneDeep(templateAst);
 
   const stats = runCodemods(codemods, filename, opts, {
@@ -156,8 +150,8 @@ function transformVueFile(
   const reprintScriptBlock = (node: AST.VElement) => {
     if (node.name !== 'script' || node.parent !== templateAst) return;
 
-    let scriptAst = scriptASTMap.get(node as never);
-    if (!scriptAst && !originalScripts.has(node as never) && nextExtraScript < scriptASTs.length) {
+    let scriptAst = scriptASTMap.get(node);
+    if (!scriptAst && !originalScripts.has(node) && nextExtraScript < scriptASTs.length) {
       scriptAst = scriptASTs[nextExtraScript++];
     }
     if (!scriptAst) return;
@@ -184,8 +178,8 @@ function transformVueFile(
       return;
     }
 
-    let styleAst = styleASTMap.get(node as never);
-    if (!styleAst && !originalStyles.has(node as never) && nextExtraStyle < styleASTs.length) {
+    let styleAst = styleASTMap.get(node);
+    if (!styleAst && !originalStyles.has(node) && nextExtraStyle < styleASTs.length) {
       styleAst = styleASTs[nextExtraStyle++];
     }
     if (!styleAst) return;
@@ -198,7 +192,7 @@ function transformVueFile(
     node.children.push(vText(`${newCode.startsWith('\n') ? '' : '\n'}${newCode}`));
   };
 
-  AST.traverseNodes(templateAst as never, {
+  AST.traverseNodes(templateAst, {
     enterNode(node) {
       if (node.type === 'VElement') {
         reprintScriptBlock(node);

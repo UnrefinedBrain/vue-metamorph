@@ -106,27 +106,35 @@ describe('parseVue', () => {
   <!-- before VEndTag --></div>
 </template>
 `);
+    // Search from the `template` element, not the document fragment. The fragment's first
+    // `VText` node is the newline in front of it.
+    const template = findFirst(ast.sfcTemplate, { type: 'VElement', name: 'template' });
+
+    if (!template) {
+      throw new Error('Expected the SFC to have a <template> element.');
+    }
+
     expect(
-      findFirst(ast.sfcAST.templateBody as never, {
+      findFirst(template, {
         type: 'VText',
       })?.leadingComment?.value,
     ).toBe(' before VText ');
 
     expect(
-      findFirst(ast.sfcAST.templateBody as never, {
+      findFirst(template, {
         type: 'VElement',
         name: 'div',
       })?.startTag.leadingComment?.value,
     ).toBe(' before VStartTag ');
 
     expect(
-      findFirst(ast.sfcAST.templateBody as never, {
+      findFirst(template, {
         type: 'VExpressionContainer',
       })?.leadingComment?.value,
     ).toBe(' before VExpressionContainer ');
 
     expect(
-      findFirst(ast.sfcAST.templateBody as never, {
+      findFirst(template, {
         type: 'VElement',
         name: 'div',
       })?.endTag?.leadingComment?.value,

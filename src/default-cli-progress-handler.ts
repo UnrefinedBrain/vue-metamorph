@@ -4,9 +4,7 @@ import table from 'table';
 import chalk from 'chalk';
 import type { CreateVueMetamorphCliOptions } from './cli';
 
-export const createDefaultCliProgressHandler = (console: {
-  log: (...args: unknown[]) => void;
-}) => {
+export const createDefaultCliProgressHandler = (console: { log: (...args: unknown[]) => void }) => {
   const bar = new cliProgress.SingleBar(
     {
       format: '{bar} | {percentage}% | Processed {value} of {total} files. Errors: {errors}',

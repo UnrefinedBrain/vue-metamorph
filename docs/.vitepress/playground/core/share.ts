@@ -3,6 +3,8 @@
  * else - the reason most people reach for an AST viewer in a bug report.
  */
 
+import { getStringProperty } from './object-access';
+
 export type SharedState = {
   type: string;
   code: string;
@@ -34,16 +36,17 @@ export function readSharedState(): SharedState | null {
   }
 
   try {
-    const parsed = JSON.parse(
-      fromBase64Url(hash.slice(HASH_PREFIX.length)),
-    ) as Partial<SharedState>;
-    if (typeof parsed.code !== 'string') {
+    const parsed: unknown = JSON.parse(fromBase64Url(hash.slice(HASH_PREFIX.length)));
+    const code = getStringProperty(parsed, 'code');
+
+    if (code === undefined) {
       return null;
     }
+
     return {
-      type: typeof parsed.type === 'string' ? parsed.type : 'vue',
-      code: parsed.code,
-      codemod: typeof parsed.codemod === 'string' ? parsed.codemod : '',
+      type: getStringProperty(parsed, 'type') ?? 'vue',
+      code,
+      codemod: getStringProperty(parsed, 'codemod') ?? '',
     };
   } catch {
     return null;

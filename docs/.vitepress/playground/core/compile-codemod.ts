@@ -76,10 +76,21 @@ const LOOP_TYPES = new Set([
   'ForOfStatement',
 ]);
 
+type LoopStatement =
+  | namedTypes.WhileStatement
+  | namedTypes.DoWhileStatement
+  | namedTypes.ForStatement
+  | namedTypes.ForInStatement
+  | namedTypes.ForOfStatement;
+
+function isLoop(node: namedTypes.Statement): node is LoopStatement {
+  return LOOP_TYPES.has(node.type);
+}
+
 type AnyNode = Record<string, unknown> & { type: string };
 
 const isNode = (value: unknown): value is AnyNode =>
-  !!value && typeof value === 'object' && typeof (value as AnyNode).type === 'string';
+  !!value && typeof value === 'object' && 'type' in value && typeof value.type === 'string';
 
 /**
  * Walks the tree, replacing each node with whatever `replace` returns.
@@ -171,10 +182,7 @@ function importToBinding(node: namedTypes.ImportDeclaration): namedTypes.Variabl
 
   if (namespace) {
     return b.variableDeclaration('const', [
-      b.variableDeclarator(
-        b.identifier(namespace.local!.name as string),
-        b.identifier(MODULE_ARGUMENT),
-      ),
+      b.variableDeclarator(b.identifier(namespace.local!.name), b.identifier(MODULE_ARGUMENT)),
     ]);
   }
 
@@ -183,8 +191,8 @@ function importToBinding(node: namedTypes.ImportDeclaration): namedTypes.Variabl
       throw new Error('vue-metamorph has no default export, use a named import');
     }
 
-    const imported = b.identifier(specifier.imported.name as string);
-    const local = b.identifier((specifier.local ?? specifier.imported).name as string);
+    const imported = b.identifier(specifier.imported.name);
+    const local = b.identifier((specifier.local ?? specifier.imported).name);
     const property = b.property('init', imported, local);
     property.shorthand = imported.name === local.name;
     return property;
@@ -216,17 +224,17 @@ function rewriteModuleSyntax(program: namedTypes.Program): void {
           (declaration.type === 'FunctionDeclaration' || declaration.type === 'ClassDeclaration') &&
           declaration.id
         ) {
-          body.push(declaration as unknown as namedTypes.Statement);
-          exported = b.identifier(declaration.id.name as string);
+          body.push(declaration);
+          exported = b.identifier(declaration.id.name);
         } else {
-          exported = declaration as namedTypes.Expression;
+          exported = declaration;
         }
         break;
       }
 
       case 'ExportNamedDeclaration':
         if (statement.declaration) {
-          body.push(statement.declaration as unknown as namedTypes.Statement);
+          body.push(statement.declaration);
         }
         break;
 
@@ -255,20 +263,19 @@ function protectFromLoops(program: namedTypes.Program): void {
     visitStatement(path) {
       const node = path.node;
 
-      if (!LOOP_TYPES.has(node.type)) {
+      if (!isLoop(node)) {
         this.traverse(path);
         return;
       }
 
-      const loop = node as unknown as { body: namedTypes.Statement };
       const guard = b.expressionStatement(
         b.callExpression(b.identifier(GUARD_ARGUMENT), [b.literal(node.loc?.start.line ?? 0)]),
       );
 
-      if (loop.body.type === 'BlockStatement') {
-        (loop.body as namedTypes.BlockStatement).body.unshift(guard);
+      if (node.body.type === 'BlockStatement') {
+        node.body.body.unshift(guard);
       } else {
-        loop.body = b.blockStatement([guard, loop.body]);
+        node.body = b.blockStatement([guard, node.body]);
       }
 
       this.traverse(path);

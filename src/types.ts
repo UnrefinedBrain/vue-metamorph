@@ -30,18 +30,21 @@ export type VueProgram = namedTypes.Program & {
 };
 
 /**
- * The parsed CLI options that are passed through to plugins.
+ * The parsed CLI options that vue-metamorph passes to each plugin.
  *
- * Options registered with `addCliOption` are not known ahead of time, so every key reads as
- * `unknown` by default. That is enough for the common truthiness check:
+ * Options registered through `additionalCliOptions` aren't known ahead of time, so every key
+ * reads as `unknown`. That's enough to check whether an option is set:
  *
  * ```ts
  * if (opts.myCustomOption) { ... }
  * ```
  *
- * To get full types for the options your project registers, augment this interface once:
+ * To give an option a declared type, augment this interface once. Match the declaration to
+ * the option's Commander registration. Augmentation doesn't validate or convert values.
  *
  * ```ts
+ * import 'vue-metamorph';
+ *
  * declare module 'vue-metamorph' {
  *   interface PluginOptions {
  *     myCustomOption?: boolean;
@@ -52,7 +55,7 @@ export type VueProgram = namedTypes.Program & {
  * @public
  */
 export interface PluginOptions {
-  [key: string]: unknown;
+  [optionName: string]: unknown;
 }
 
 export type ReportFunction = (node: AST.Node | postcss.AnyNode, message: string) => void;

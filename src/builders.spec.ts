@@ -19,6 +19,7 @@ import {
   htmlComment,
 } from './builders';
 import { builders } from './vendor/ast-types/main';
+import { getProperty } from './object-access';
 
 describe('builders', () => {
   describe('vIdentifier', () => {
@@ -191,7 +192,7 @@ describe('builders', () => {
       const node = vExpressionContainer(expr);
       expect(node.type).toBe('VExpressionContainer');
       expect(node.expression).toBe(expr);
-      expect((node as unknown as { references: unknown[] }).references).toEqual([]);
+      expect(getProperty(node, 'references')).toEqual([]);
       expect(node.leadingComment).toBeNull();
     });
 

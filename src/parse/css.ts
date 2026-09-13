@@ -3,7 +3,6 @@ import postcssLess from 'postcss-less';
 import postcssSass from 'postcss-sass';
 import postcssScss from 'postcss-scss';
 import postcssStyl from 'postcss-styl';
-import * as AST from '../ast';
 
 export const syntaxMap: Record<string, typeof postcssScss> = {
   css: postcss,
@@ -14,10 +13,33 @@ export const syntaxMap: Record<string, typeof postcssScss> = {
 };
 
 export const isSupportedLang = (str: string) => !!syntaxMap[str];
-export const getLangAttribute = (el: AST.VElement) =>
-  el.startTag.attributes.find(
-    (attr): attr is AST.VAttribute => !attr.directive && attr.key.rawName === 'lang',
-  )?.value?.value ?? 'css';
+
+/**
+ * Describes the element structurally rather than as `AST.VElement`, so that it also accepts a
+ * vue-eslint-parser element, which is a separate but identically shaped type.
+ */
+interface ElementWithAttributes {
+  startTag: {
+    attributes: ReadonlyArray<
+      | { directive: true }
+      | {
+          directive: false;
+          key: { rawName: string };
+          value: { value: string } | null;
+        }
+    >;
+  };
+}
+
+export const getLangAttribute = (el: ElementWithAttributes) => {
+  for (const attr of el.startTag.attributes) {
+    if (!attr.directive && attr.key.rawName === 'lang') {
+      return attr.value?.value ?? 'css';
+    }
+  }
+
+  return 'css';
+};
 
 export const getCssDialectForFilename = (filename: string) => {
   switch (true) {
