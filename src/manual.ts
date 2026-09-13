@@ -1,7 +1,7 @@
 import postcss from 'postcss';
 import * as AST from './ast';
 import { parseTs, parseVue } from './parse';
-import { ManualMigrationPlugin, ReportFunction, VueProgram, utils } from './types';
+import { ManualMigrationPlugin, PluginOptions, ReportFunction, VueProgram, utils } from './types';
 import { getCssDialectForFilename, parseCss } from './parse/css';
 
 type SampleArgs = {
@@ -170,8 +170,7 @@ export function findManualMigrations(
   code: string,
   filename: string,
   plugins: ManualMigrationPlugin[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  opts: Record<string, any> = {},
+  opts: PluginOptions = {},
 ): ManualMigrationReport[] {
   const reports: ManualMigrationReport[] = [];
 
@@ -180,9 +179,9 @@ export function findManualMigrations(
   let styles: postcss.Root[] = [];
 
   if (filename.endsWith('.vue')) {
-    const { scriptASTs: scriptAsts, sfcAST: vueAst, styleASTs } = parseVue(code);
+    const { scriptASTs: scriptAsts, sfcTemplate, styleASTs } = parseVue(code);
     scripts = scriptAsts;
-    template = vueAst.templateBody!.parent as unknown as AST.VDocumentFragment;
+    template = sfcTemplate;
     styles = styleASTs;
   } else if (getCssDialectForFilename(filename)) {
     styles = [parseCss(code, getCssDialectForFilename(filename)!)];

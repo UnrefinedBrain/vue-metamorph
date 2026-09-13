@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import ts from 'typescript';
+import { getProperty } from './core/object-access';
 
 /**
  * Collects the `.d.ts` files the codemod editor needs to type check against,
@@ -64,16 +65,16 @@ function manifestFor(packageRoot: string): string | null {
     return null;
   }
 
-  const parsed = JSON.parse(readFileSync(manifest, 'utf8')) as Record<string, unknown>;
+  const parsed: unknown = JSON.parse(readFileSync(manifest, 'utf8'));
 
   return JSON.stringify({
-    name: parsed.name,
-    version: parsed.version,
-    types: parsed.types ?? parsed.typings,
-    main: parsed.main,
-    module: parsed.module,
-    exports: parsed.exports,
-    typesVersions: parsed.typesVersions,
+    name: getProperty(parsed, 'name'),
+    version: getProperty(parsed, 'version'),
+    types: getProperty(parsed, 'types') ?? getProperty(parsed, 'typings'),
+    main: getProperty(parsed, 'main'),
+    module: getProperty(parsed, 'module'),
+    exports: getProperty(parsed, 'exports'),
+    typesVersions: getProperty(parsed, 'typesVersions'),
   });
 }
 

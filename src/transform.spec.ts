@@ -630,26 +630,29 @@ export default {};
           );
 
           scriptASTs.push(
-            builders.program([
-              builders.variableDeclaration('const', [
-                builders.variableDeclarator(
-                  builders.objectPattern([
-                    (() => {
-                      const prop = builders.property(
-                        'init',
-                        builders.identifier('t'),
-                        builders.identifier('t'),
-                      );
+            Object.assign(
+              builders.program([
+                builders.variableDeclaration('const', [
+                  builders.variableDeclarator(
+                    builders.objectPattern([
+                      (() => {
+                        const prop = builders.property(
+                          'init',
+                          builders.identifier('t'),
+                          builders.identifier('t'),
+                        );
 
-                      prop.shorthand = true;
+                        prop.shorthand = true;
 
-                      return prop;
-                    })(),
-                  ]),
-                  builders.callExpression(builders.identifier('useI18n'), []),
-                ),
+                        return prop;
+                      })(),
+                    ]),
+                    builders.callExpression(builders.identifier('useI18n'), []),
+                  ),
+                ]),
               ]),
-            ]) as never,
+              { isScriptSetup: false },
+            ),
           );
 
           transformCount++;
@@ -687,11 +690,14 @@ export default {};
           builders.vElement('script', builders.vStartTag([], false), []),
         );
         scriptASTs.push(
-          builders.program([
-            builders.expressionStatement(
-              builders.binaryExpression('+', builders.identifier('a'), builders.identifier('b')),
-            ),
-          ]) as never,
+          Object.assign(
+            builders.program([
+              builders.expressionStatement(
+                builders.binaryExpression('+', builders.identifier('a'), builders.identifier('b')),
+              ),
+            ]),
+            { isScriptSetup: false },
+          ),
         );
         return 1;
       },

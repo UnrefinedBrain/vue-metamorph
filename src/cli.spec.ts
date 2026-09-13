@@ -3,6 +3,7 @@ import { promises as fs } from 'fs';
 import { tmpdir } from 'os';
 import path from 'path';
 import type { CodemodPlugin, ManualMigrationPlugin } from './types';
+import type { ProgressCallback } from './cli';
 
 vi.mock('./default-cli-progress-handler', () => ({
   createDefaultCliProgressHandler: vi.fn(() => vi.fn()),
@@ -31,17 +32,15 @@ const writeFile = async (rel: string, contents: string) => {
 
 const argv = (...args: string[]) => ['node', 'cli', ...args];
 
-const lastProgressCall = (onProgress: ReturnType<typeof vi.fn>) =>
-  onProgress.mock.calls.at(-1)![0] as {
-    totalFiles: number;
-    filesProcessed: number;
-    filesRemaining: number;
-    aborted: boolean;
-    done: boolean;
-    stats: Record<string, number>;
-    errors: { filename: string; error: Error }[];
-    manualMigrations: { file: string; pluginName: string }[];
-  };
+const lastProgressCall = (onProgress: ReturnType<typeof vi.fn<ProgressCallback>>) => {
+  const call = onProgress.mock.calls.at(-1);
+
+  if (!call) {
+    throw new Error('Expected onProgress to have been called.');
+  }
+
+  return call[0];
+};
 
 describe('createVueMetamorphCli', () => {
   describe('file globbing', () => {
@@ -62,7 +61,7 @@ describe('createVueMetamorphCli', () => {
         },
       };
 
-      const onProgress = vi.fn();
+      const onProgress = vi.fn<ProgressCallback>();
       const { run } = createVueMetamorphCli({ plugins: [plugin], silent: true, onProgress });
       await run(argv('--files', `${tmpDir}/**/*`));
 
@@ -193,7 +192,7 @@ describe('createVueMetamorphCli', () => {
         },
       };
 
-      const onProgress = vi.fn();
+      const onProgress = vi.fn<ProgressCallback>();
       const { run } = createVueMetamorphCli({
         plugins: [codemod, manual],
         silent: true,
@@ -252,7 +251,7 @@ describe('createVueMetamorphCli', () => {
         },
       };
 
-      const onProgress = vi.fn();
+      const onProgress = vi.fn<ProgressCallback>();
       const { run } = createVueMetamorphCli({ plugins: [plugin], silent: true, onProgress });
       await run(argv('--files', `${tmpDir}/**/*`));
 
@@ -283,7 +282,7 @@ describe('createVueMetamorphCli', () => {
         },
       };
 
-      const onProgress = vi.fn();
+      const onProgress = vi.fn<ProgressCallback>();
       const cli = createVueMetamorphCli({ plugins: [plugin], silent: true, onProgress });
       abortFn = cli.abort;
       await cli.run(argv('--files', `${tmpDir}/**/*`));
@@ -310,7 +309,7 @@ describe('createVueMetamorphCli', () => {
         },
       };
 
-      const onProgress = vi.fn();
+      const onProgress = vi.fn<ProgressCallback>();
       const cli = createVueMetamorphCli({ plugins: [plugin], silent: true, onProgress });
       abortFn = cli.abort;
 
@@ -330,7 +329,7 @@ describe('createVueMetamorphCli', () => {
       await writeFile('a.ts', 'const x = 1;');
       await writeFile('b.ts', 'const y = 2;');
 
-      const onProgress = vi.fn();
+      const onProgress = vi.fn<ProgressCallback>();
       const plugin: CodemodPlugin = { type: 'codemod', name: 'noop', transform: () => 0 };
       const { run } = createVueMetamorphCli({ plugins: [plugin], silent: true, onProgress });
       await run(argv('--files', `${tmpDir}/**/*`));
@@ -348,7 +347,7 @@ describe('createVueMetamorphCli', () => {
       await writeFile('b.ts', 'const y = 2;');
       await writeFile('c.ts', 'const z = 3;');
 
-      const onProgress = vi.fn();
+      const onProgress = vi.fn<ProgressCallback>();
       const plugin: CodemodPlugin = { type: 'codemod', name: 'noop', transform: () => 0 };
       const { run } = createVueMetamorphCli({ plugins: [plugin], silent: true, onProgress });
       await run(argv('--files', `${tmpDir}/**/*`));
@@ -380,7 +379,7 @@ describe('createVueMetamorphCli', () => {
         },
       };
 
-      const onProgress = vi.fn();
+      const onProgress = vi.fn<ProgressCallback>();
       const { run } = createVueMetamorphCli({ plugins: [plugin], silent: true, onProgress });
       await run(argv('--files', `${tmpDir}/**/*`));
 
@@ -398,7 +397,7 @@ describe('createVueMetamorphCli', () => {
         transform: () => 3,
       };
 
-      const onProgress = vi.fn();
+      const onProgress = vi.fn<ProgressCallback>();
       const { run } = createVueMetamorphCli({ plugins: [plugin], silent: true, onProgress });
       await run(argv('--files', `${tmpDir}/**/*`));
 
@@ -413,7 +412,7 @@ describe('createVueMetamorphCli', () => {
       const defaultHandler = vi.fn();
       vi.mocked(createDefaultCliProgressHandler).mockReturnValue(defaultHandler);
 
-      const onProgress = vi.fn();
+      const onProgress = vi.fn<ProgressCallback>();
       const plugin: CodemodPlugin = { type: 'codemod', name: 'noop', transform: () => 0 };
       const { run } = createVueMetamorphCli({ plugins: [plugin], silent: true, onProgress });
       await run(argv('--files', `${tmpDir}/**/*`));

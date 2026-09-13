@@ -1,11 +1,11 @@
-import { vi, it, beforeEach, expect, type Mocked } from 'vitest';
+import { vi, it, beforeEach, expect } from 'vitest';
 import cliProgress from 'cli-progress';
 import { createDefaultCliProgressHandler } from './default-cli-progress-handler';
 
 vi.mock('cli-progress');
 const cliProgressMock = vi.mocked(cliProgress, true);
 
-let bar: Mocked<cliProgress.SingleBar>;
+let bar: cliProgress.SingleBar;
 let handler: ReturnType<typeof createDefaultCliProgressHandler>;
 
 const consoleMock = {
@@ -15,16 +15,16 @@ const consoleMock = {
 beforeEach(() => {
   vi.resetAllMocks();
 
-  bar = {
-    start: vi.fn(),
-    stop: vi.fn(),
-    update: vi.fn(),
-  } as never;
-  cliProgressMock.SingleBar.mockImplementation(function () {
-    return bar as never;
-  });
-
   handler = createDefaultCliProgressHandler(consoleMock);
+
+  // The module is auto-mocked, so the bar the handler constructed is already a set of spies.
+  const [instance] = cliProgressMock.SingleBar.mock.instances;
+
+  if (!instance) {
+    throw new Error('Expected the handler to have constructed a progress bar.');
+  }
+
+  bar = instance;
 });
 
 const startProgress = () => {

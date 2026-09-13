@@ -1,11 +1,12 @@
 import * as vueParser from 'vue-eslint-parser';
-import * as recast from '../vendor/recast/main';
 import htmlParser from 'node-html-parser';
 import type postcss from 'postcss';
 import { VueProgram } from '../types';
 import { findAll } from '../ast-helpers';
 import * as AST from '../ast';
-import { tsParser } from './typescript';
+import { getLoc, getRange, hasRange } from '../node-range';
+import { toPluginAST } from '../plugin-ast';
+import { parseTs, tsParser } from './typescript';
 import { getLangAttribute, isSupportedLang, parseCss } from './css';
 
 /**
@@ -18,10 +19,11 @@ export function parseVue(code: string): {
   sfcAST: vueParser.AST.ESLintProgram;
   scriptASTs: VueProgram[];
   styleASTs: postcss.Root[];
-  scriptASTMap: Map<vueParser.AST.VElement, VueProgram>;
-  styleASTMap: Map<vueParser.AST.VElement, postcss.Root>;
-  originalScripts: Set<vueParser.AST.VElement>;
-  originalStyles: Set<vueParser.AST.VElement>;
+  sfcTemplate: AST.VDocumentFragment;
+  scriptASTMap: Map<AST.VElement, VueProgram>;
+  styleASTMap: Map<AST.VElement, postcss.Root>;
+  originalScripts: Set<AST.VElement>;
+  originalStyles: Set<AST.VElement>;
 } {
   const extraTemplate = '\n<template></template>';
   let neededExtraTemplate = false;
@@ -46,23 +48,24 @@ export function parseVue(code: string): {
     }),
   );
 
-  const canHaveLeadingComment: AST.HasLeadingComment[] = [...comments];
-  const positionLookup = new Map<number, AST.Node | AST.HtmlComment>();
+  const documentFragment = sfcAST.templateBody?.parent;
 
-  vueParser.AST.traverseNodes(sfcAST.templateBody!.parent as vueParser.AST.VDocumentFragment, {
+  if (documentFragment?.type !== 'VDocumentFragment') {
+    throw new Error('Expected the parsed SFC to have a VDocumentFragment at its root.');
+  }
+
+  // Comments go in the list too, because a comment can follow another comment.
+  const canHaveLeadingComment: (AST.HtmlComment | vueParser.AST.Node)[] = [...comments];
+
+  vueParser.AST.traverseNodes(documentFragment, {
     enterNode(node) {
-      const prev = positionLookup.get(node.range[0] - 1);
-      if (prev?.type === 'HtmlComment') {
-        (node as unknown as AST.HasLeadingComment).leadingComment = prev;
-      }
-
       if (
         node.type === 'VText' ||
         node.type === 'VExpressionContainer' ||
         node.type === 'VEndTag' ||
         node.type === 'VStartTag'
       ) {
-        canHaveLeadingComment.push(node as never);
+        canHaveLeadingComment.push(node);
       }
     },
 
@@ -71,40 +74,40 @@ export function parseVue(code: string): {
     },
   });
 
+  const positionLookup = new Map<number, AST.HtmlComment>();
+
   comments.forEach((comment) => {
     const [, end] = comment.range;
     positionLookup.set(end - 1, comment);
   });
 
   canHaveLeadingComment.forEach((node) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const adjacentNode = positionLookup.get((node as any).range[0] - 1);
-    if (adjacentNode?.type === 'HtmlComment') {
-      node.leadingComment = adjacentNode;
-    } else {
-      node.leadingComment = null;
-    }
+    // Built nodes have no range, and so have no comment sitting in front of them.
+    const adjacentNode = hasRange(node) ? positionLookup.get(node.range[0] - 1) : undefined;
+
+    Object.assign(node, { leadingComment: adjacentNode ?? null });
   });
 
-  const scripts = findAll(sfcAST.templateBody!.parent as unknown as AST.VDocumentFragment, {
+  const sfcTemplate = toPluginAST(documentFragment);
+
+  const scripts = findAll(sfcTemplate, {
     type: 'VElement',
     name: 'script',
-  }) as unknown as vueParser.AST.VElement[];
+  });
 
-  const styles = findAll(sfcAST.templateBody!.parent as unknown as AST.VDocumentFragment, {
+  const styles = findAll(sfcTemplate, {
     type: 'VElement',
     name: 'style',
-  }) as unknown as vueParser.AST.VElement[];
+  });
 
-  const scriptASTMap = new Map<vueParser.AST.VElement, VueProgram>();
+  const scriptASTMap = new Map<AST.VElement, VueProgram>();
   const scriptASTs: VueProgram[] = [];
   for (const el of scripts) {
     if (el.children.length === 0) continue;
 
     // Offset the source locations so that they line up with the original file.
-    const blankLines = '\n'.repeat(el.loc.start.line - 1);
-    const start = el.children[0]?.range[0];
-    const end = el.children[0]?.range[1];
+    const blankLines = '\n'.repeat(getLoc(el, 'a <script> element').start.line - 1);
+    const [start, end] = getRange(el.children[0], 'the contents of a <script> element');
 
     const isJsx = el.startTag.attributes.some(
       (attr) =>
@@ -114,9 +117,7 @@ export function parseVue(code: string): {
         ['jsx', 'tsx'].includes(attr.value.value),
     );
 
-    const ast = recast.parse(`/* METAMORPH_START */${blankLines}${code.slice(start, end)}`, {
-      parser: tsParser(isJsx),
-    }).program as VueProgram;
+    const ast = parseTs(`/* METAMORPH_START */${blankLines}${code.slice(start, end)}`, isJsx);
 
     ast.isScriptSetup = el.startTag.attributes.some(
       (attr) => !attr.directive && attr.key.rawName === 'setup',
@@ -126,17 +127,17 @@ export function parseVue(code: string): {
     scriptASTMap.set(el, ast);
   }
 
-  const styleASTMap = new Map<vueParser.AST.VElement, postcss.Root>();
+  const styleASTMap = new Map<AST.VElement, postcss.Root>();
   const styleASTs: postcss.Root[] = [];
   for (const el of styles) {
-    if (el.children.length === 0 || !isSupportedLang(getLangAttribute(el as never))) continue;
+    if (el.children.length === 0 || !isSupportedLang(getLangAttribute(el))) continue;
 
     // Offset the source locations so that they line up with the original file.
-    const blankLines = '\n'.repeat(el.loc.start.line - 1);
-    const start = el.children[0]?.range[0];
-    const end = el.children.at(-1)!.range[1];
+    const blankLines = '\n'.repeat(getLoc(el, 'a <style> element').start.line - 1);
+    const [start] = getRange(el.children[0], 'the contents of a <style> element');
+    const [, end] = getRange(el.children.at(-1), 'the contents of a <style> element');
 
-    const lang = getLangAttribute(el as never);
+    const lang = getLangAttribute(el);
 
     const ast = parseCss(`/* METAMORPH_START */${blankLines}${code.slice(start, end)}`, lang);
     styleASTs.push(ast);
@@ -151,6 +152,7 @@ export function parseVue(code: string): {
   return {
     neededExtraTemplate,
     sfcAST,
+    sfcTemplate,
     scriptASTs,
     styleASTs,
     scriptASTMap,

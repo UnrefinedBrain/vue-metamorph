@@ -2,6 +2,7 @@
 
 import * as recast from './vendor/recast/main';
 import * as AST from './ast';
+import { getProperty, getStringProperty } from './object-access';
 
 // The void elements, as listed in the HTML markup specification:
 // https://www.w3.org/TR/2011/WD-html-markup-20110113/syntax.html#syntax-elements
@@ -100,8 +101,48 @@ const vueExpressionChildFields: Record<string, readonly string[]> = {
   VGenericExpression: ['params'],
 };
 
-function childFieldNames(node: recast.types.ASTNode): readonly string[] {
-  return vueExpressionChildFields[node.type] ?? recast.types.getFieldNames(node);
+function nodeType(node: object): string | undefined {
+  return getStringProperty(node, 'type');
+}
+
+function childFieldNames(node: object): readonly string[] {
+  const type = nodeType(node);
+  const vueChildFields = type === undefined ? undefined : vueExpressionChildFields[type];
+
+  return vueChildFields ?? recast.types.getFieldNames(node);
+}
+
+/**
+ * A `Literal` node whose value is a string, the only kind of literal that needs escaping.
+ */
+interface StringLiteralNode {
+  value: string;
+}
+
+/**
+ * A `TemplateElement` node. Its `raw` text always needs escaping, and its `cooked` text needs
+ * escaping when the node has one.
+ */
+interface TemplateElementNode {
+  value: { raw: string; cooked?: unknown };
+}
+
+function isStringLiteral(node: object): node is StringLiteralNode {
+  if (nodeType(node) !== 'Literal' || !('value' in node)) {
+    return false;
+  }
+
+  return typeof node.value === 'string';
+}
+
+function isTemplateElement(node: object): node is TemplateElementNode {
+  if (nodeType(node) !== 'TemplateElement' || !('value' in node)) {
+    return false;
+  }
+
+  const { value } = node;
+
+  return !!value && typeof value === 'object' && 'raw' in value && typeof value.raw === 'string';
 }
 
 function escapeExpressionStrings(node: unknown, restore: (() => void)[]): void {
@@ -116,32 +157,30 @@ function escapeExpressionStrings(node: unknown, restore: (() => void)[]): void {
     return;
   }
 
-  const record = node as Record<string, any>;
-
-  if (record.type === 'Literal' && typeof record.value === 'string') {
-    const original = record.value;
+  if (isStringLiteral(node)) {
+    const original = node.value;
     restore.push(() => {
-      record.value = original;
+      node.value = original;
     });
-    record.value = escapeAttributeValue(original);
+    node.value = escapeAttributeValue(original);
     return;
   }
 
-  if (record.type === 'TemplateElement' && record.value) {
-    const { raw, cooked } = record.value;
+  if (isTemplateElement(node)) {
+    const { raw, cooked } = node.value;
     restore.push(() => {
-      record.value.raw = raw;
-      record.value.cooked = cooked;
+      node.value.raw = raw;
+      node.value.cooked = cooked;
     });
-    record.value.raw = escapeAttributeValue(raw);
+    node.value.raw = escapeAttributeValue(raw);
     if (typeof cooked === 'string') {
-      record.value.cooked = escapeAttributeValue(cooked);
+      node.value.cooked = escapeAttributeValue(cooked);
     }
     return;
   }
 
-  for (const key of childFieldNames(record as recast.types.ASTNode)) {
-    escapeExpressionStrings(record[key], restore);
+  for (const key of childFieldNames(node)) {
+    escapeExpressionStrings(getProperty(node, key), restore);
   }
 }
 

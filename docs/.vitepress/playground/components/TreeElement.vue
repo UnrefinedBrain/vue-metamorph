@@ -75,13 +75,19 @@ onBeforeUnmount(() => {
 
 const isObjectLike = computed(() => !!props.value && typeof props.value === 'object');
 
-const isArrayLike = computed(
-  () => isObjectLike.value && typeof (props.value as { length?: unknown }).length === 'number',
-);
+const length = computed(() => {
+  const { value } = props;
 
-const arrayLength = computed(() =>
-  isArrayLike.value ? (props.value as { length: number }).length : 0,
-);
+  if (!value || typeof value !== 'object' || !('length' in value)) {
+    return null;
+  }
+
+  return typeof value.length === 'number' ? value.length : null;
+});
+
+const isArrayLike = computed(() => length.value !== null);
+
+const arrayLength = computed(() => length.value ?? 0);
 
 const properties = computed<TreeProperty[]>(() =>
   isObjectLike.value ? Array.from(props.adapter.walkNode(props.value)) : [],

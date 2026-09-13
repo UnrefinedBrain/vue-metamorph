@@ -4,6 +4,51 @@ import { compileCodemod } from './compile-codemod';
 import { runTransform } from './run-transform';
 import { SOURCE_TYPES, findSourceType } from './source-types';
 import { SAMPLE_CODEMOD, sampleFor } from './samples';
+import { getNumberProperty, getProperty, getStringProperty } from './object-access';
+
+function offsetsOf(node: unknown): [number, number] {
+  const start = getNumberProperty(node, 'start');
+  const end = getNumberProperty(node, 'end');
+
+  if (start === undefined || end === undefined) {
+    throw new Error('Expected the node to carry start and end offsets.');
+  }
+
+  return [start, end];
+}
+
+/** PostCSS keeps offsets on `source`, not on the node. */
+function sourceOffsetsOf(node: unknown): [number, number] {
+  const source = getProperty(node, 'source');
+  const start = getNumberProperty(getProperty(source, 'start'), 'offset');
+  const end = getNumberProperty(getProperty(source, 'end'), 'offset');
+
+  if (start === undefined || end === undefined) {
+    throw new Error('Expected the node to carry source offsets.');
+  }
+
+  return [start, end];
+}
+
+function childrenOf(node: unknown, key: string): unknown[] {
+  const children = getProperty(node, key);
+
+  if (!Array.isArray(children)) {
+    throw new Error(`Expected the node to have a ${key} array.`);
+  }
+
+  return children;
+}
+
+function callTransform(plugin: unknown, context?: unknown): unknown {
+  const transform = getProperty(plugin, 'transform');
+
+  if (typeof transform !== 'function') {
+    throw new Error('Expected the compiled codemod to have a transform function.');
+  }
+
+  return transform(context);
+}
 
 const VUE = `<template>
   <div class="greeting">{{ label }}</div>
@@ -48,33 +93,24 @@ describe('parseSource', () => {
   it('maps script ranges back onto the block in the SFC', () => {
     const { panels } = parseSource(VUE, vueType);
     const script = panels.find((panel) => panel.id === 'script-0')!;
-    const statement = (script.ast as { body: { start: number; end: number }[] }).body[0]!;
+    const statement = childrenOf(script.ast, 'body')[0];
 
-    expect(sliceAt('script-0', [statement.start, statement.end])).toBe(
-      "const label: string = 'hello';",
-    );
+    expect(sliceAt('script-0', offsetsOf(statement))).toBe("const label: string = 'hello';");
   });
 
   it('maps style ranges back onto the block in the SFC', () => {
     const { panels } = parseSource(VUE, vueType);
-    const root = panels.find((panel) => panel.id === 'style-0')!.ast as {
-      nodes: {
-        source: { start: { offset: number }; end: { offset: number } };
-        nodes?: unknown[];
-      }[];
-    };
+    const root = panels.find((panel) => panel.id === 'style-0')!.ast;
 
     // nodes[0] is the marker comment vue-metamorph prepends to keep offsets
     // lined up; the rule itself is next.
-    const rule = root.nodes[1]!;
-    const nested = (rule.nodes as typeof root.nodes)[0]!;
+    const rule = childrenOf(root, 'nodes')[1];
+    const nested = childrenOf(rule, 'nodes')[0];
 
-    expect(sliceAt('style-0', [rule.source.start.offset, rule.source.end.offset])).toBe(
+    expect(sliceAt('style-0', sourceOffsetsOf(rule))).toBe(
       '.greeting {\n  .label {\n    color: red;\n  }\n}',
     );
-    expect(sliceAt('style-0', [nested.source.start.offset, nested.source.end.offset])).toBe(
-      '.label {\n    color: red;\n  }',
-    );
+    expect(sliceAt('style-0', sourceOffsetsOf(nested))).toBe('.label {\n    color: red;\n  }');
   });
 
   it('reports recovered template syntax errors', () => {
@@ -116,10 +152,10 @@ describe('compileCodemod', () => {
       };
 
       export default plugin;
-    `) as { type: string; name: string; transform: (context: unknown) => number };
+    `);
 
-    expect(plugin.name).toBe('noop');
-    expect(plugin.transform({ scriptASTs: [1, 2] })).toBe(2);
+    expect(getStringProperty(plugin, 'name')).toBe('noop');
+    expect(callTransform(plugin, { scriptASTs: [1, 2] })).toBe(2);
   });
 
   it('refuses imports it cannot resolve', () => {
@@ -143,9 +179,9 @@ describe('compileCodemod', () => {
     try {
       const plugin = compileCodemod(
         "export default { type: 'codemod', name: 'loop', transform() { while (true) {} } };",
-      ) as { transform: () => number };
+      );
 
-      expect(() => plugin.transform()).toThrow(/Infinite loop detected/);
+      expect(() => callTransform(plugin)).toThrow(/Infinite loop detected/);
     } finally {
       vi.restoreAllMocks();
     }

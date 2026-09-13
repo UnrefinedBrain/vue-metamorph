@@ -11,6 +11,7 @@
 import { describe, expect, it } from 'vitest';
 import { getFieldNames, namedTypes, visit } from '../vendor/ast-types/main';
 import { parseTs } from '../parse/typescript';
+import { getProperty } from '../object-access';
 
 /** Fields that live on nodes but are positional or bookkeeping, not AST content. */
 const NON_FIELD_KEYS = new Set([
@@ -70,19 +71,22 @@ const sources = {
     'const a = { b: 1 } satisfies Record<string, number>;\nconst c = d as unknown as E;\na!.b;',
 } as const;
 
+function isTypedNode(value: object): value is object & { type: string } {
+  return 'type' in value && typeof value.type === 'string';
+}
+
 /** Walks every node in the tree, including ones ast-types would not traverse. */
-function eachNode(node: unknown, fn: (node: Record<string, unknown>) => void): void {
+function eachNode(node: unknown, fn: (node: object & { type: string }) => void): void {
   if (!node || typeof node !== 'object') return;
   if (Array.isArray(node)) {
     node.forEach((child) => eachNode(child, fn));
     return;
   }
-  const record = node as Record<string, unknown>;
-  if (typeof record.type !== 'string') return;
-  fn(record);
-  for (const key of Object.keys(record)) {
+  if (!isTypedNode(node)) return;
+  fn(node);
+  for (const key of Object.keys(node)) {
     if (key === 'loc' || key === 'tokens' || key === 'comments') continue;
-    eachNode(record[key], fn);
+    eachNode(getProperty(node, key), fn);
   }
 }
 
@@ -94,9 +98,8 @@ describe('@babel/parser 8 AST definitions', () => {
         const unknown = new Set<string>();
 
         eachNode(ast, (node) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          if (!(namedTypes as any)[node.type as string]) {
-            unknown.add(node.type as string);
+          if (!getProperty(namedTypes, node.type)) {
+            unknown.add(node.type);
           }
         });
 
@@ -115,7 +118,7 @@ describe('@babel/parser 8 AST definitions', () => {
           const declared = new Set(getFieldNames(node));
           for (const key of Object.keys(node)) {
             if (NON_FIELD_KEYS.has(key) || declared.has(key)) continue;
-            undeclared.add(`${node.type as string}.${key}`);
+            undeclared.add(`${node.type}.${key}`);
           }
         });
 
@@ -143,8 +146,6 @@ describe('@babel/parser 8 AST definitions', () => {
   });
 
   it('exposes builders for the node types Babel 8 introduced', () => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const b = namedTypes as any;
     for (const type of [
       'TSEnumBody',
       'TSInterfaceHeritage',
@@ -153,7 +154,7 @@ describe('@babel/parser 8 AST definitions', () => {
       'TSAbstractMethodDefinition',
       'TSAbstractPropertyDefinition',
     ]) {
-      expect(b[type], type).toBeTruthy();
+      expect(getProperty(namedTypes, type), type).toBeTruthy();
     }
   });
 });

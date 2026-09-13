@@ -149,9 +149,9 @@ const context: PlaygroundContext = {
 
     // AST Explorer publishes the selected node for poking at in the console.
     if (node) {
-      (window as unknown as { $node: unknown }).$node = node;
+      window.$node = node;
     } else {
-      delete (window as unknown as { $node?: unknown }).$node;
+      delete window.$node;
     }
   },
 
