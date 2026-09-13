@@ -449,6 +449,24 @@ export function stringifyVElement(node: AST.VElement): string {
   return str;
 }
 
+/** Prints a complete source replacement, including an expression container's delimiters. */
+export function stringifyTemplateReplacement(node: AST.Node): string {
+  if (node.type !== 'VExpressionContainer') {
+    return stringify(node);
+  }
+
+  if (node.parent.type === 'VAttribute') {
+    return `"${stringifyExpressionAttributeValue(node)}"`;
+  }
+  if (node.parent.type === 'VDirectiveKey') {
+    return `[${stringifyVExpressionContainer(node)}]`;
+  }
+  if (node.parent.type === 'VElement' && node.parent.name === 'style') {
+    return `v-bind(${stringifyVExpressionContainer(node)})`;
+  }
+  return `${stringifyHtmlComment(node.leadingComment)}{{ ${stringifyVExpressionContainer(node)} }}`;
+}
+
 export function stringifyVExpressionContainer(node: AST.VExpressionContainer): string {
   if (!node.expression) {
     return '';

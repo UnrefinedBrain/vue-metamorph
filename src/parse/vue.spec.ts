@@ -1,8 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import { parseVue } from '.';
 import { findFirst } from '../ast-helpers';
+import { getLoc, getRange } from '../node-range';
 
 describe('parseVue', () => {
+  it.each([
+    ['item in items', 1, 35],
+    ['(item, i) in items', 1, 40],
+    ['item of items', 1, 35],
+    ['item in\nitems', 2, 5],
+  ])('keeps the closing quote outside the v-for expression: %s', (expression, line, column) => {
+    const code = `<template><div v-for="${expression}"></div></template>`;
+    const ast = parseVue(code);
+    const node = findFirst(ast.sfcTemplate, { type: 'VForExpression' });
+
+    expect(code.slice(...getRange(node, 'the v-for expression'))).toBe(expression);
+    expect(getLoc(node, 'the v-for expression')).toEqual({
+      start: { line: 1, column: 22 },
+      end: { line, column },
+    });
+  });
+
   it('should set isScriptSetup to true for <script setup>', () => {
     const ast = parseVue('<script setup>\nconst a = 1 + 1;\n</script>');
 

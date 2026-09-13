@@ -184,6 +184,146 @@ const stringLiteralPlugin: CodemodPlugin = {
 };
 
 describe('transform', () => {
+  describe('expression container printing', () => {
+    it.each([
+      [
+        '<template><div   v-if = "visible"  ></div></template>',
+        '<template><div   v-if = "replacement"  ></div></template>',
+      ],
+      [
+        "<template><div   v-if = 'visible'  ></div></template>",
+        '<template><div   v-if = "replacement"  ></div></template>',
+      ],
+      [
+        '<template><div   v-if=visible  ></div></template>',
+        '<template><div   v-if="replacement"  ></div></template>',
+      ],
+      [
+        '<template><div  ><!-- keep -->{{ visible }}</div></template>',
+        '<template><div  ><!-- keep -->{{ replacement }}</div></template>',
+      ],
+      [
+        '<template><div  :[visible] = "value" ></div></template>',
+        '<template><div  :[replacement] = "value" ></div></template>',
+      ],
+      [
+        '<template></template><style lang="unknown">a { color: v-bind(visible) }</style>',
+        '<template></template><style lang="unknown">a { color: v-bind(replacement) }</style>',
+      ],
+      [
+        '<template><div  :visible  ></div></template>',
+        '<template><div  :visible="replacement"  ></div></template>',
+      ],
+      [
+        '<template><div  v-bind:visible  ></div></template>',
+        '<template><div  v-bind:visible="replacement"  ></div></template>',
+      ],
+    ])('replaces a container without reprinting its surroundings: %s', (input, expected) => {
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'replace-container',
+        transform({ sfcAST, utils: { astHelpers, builders } }) {
+          const container = astHelpers.findFirst(sfcAST!, { type: 'VExpressionContainer' });
+          container!.expression = builders.identifier('replacement');
+          return 1;
+        },
+      };
+      expect(transform(input, 'file.vue', [plugin]).code).toBe(expected);
+    });
+
+    it('combines edits to a v-for expression without reprinting the attribute or tag', () => {
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'update-loop',
+        transform({ sfcAST, utils: { astHelpers, builders } }) {
+          const expression = astHelpers.findFirst(sfcAST!, { type: 'VForExpression' });
+          expression!.left.push(builders.identifier('index'));
+          expression!.right = builders.identifier('otherItems');
+          return 1;
+        },
+      };
+      expect(
+        transform(
+          `<template><div  v-for = "item in items" :key='item' ></div></template>`,
+          'file.vue',
+          [plugin],
+        ).code,
+      ).toBe(
+        `<template><div  v-for = "(item, index) in otherItems" :key='item' ></div></template>`,
+      );
+    });
+
+    it('preserves operator precedence when replacing a nested expression', () => {
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'replace-factor',
+        transform({ sfcAST, utils: { astHelpers, builders } }) {
+          const expression = astHelpers.findFirst(sfcAST!, { type: 'BinaryExpression' });
+          expression!.right = builders.binaryExpression(
+            '+',
+            builders.identifier('b'),
+            builders.identifier('c'),
+          );
+          return 1;
+        },
+      };
+      expect(
+        transform('<template><div>{{ a * b }}</div></template>', 'file.vue', [plugin]).code,
+      ).toBe('<template><div>{{ a * (b + c) }}</div></template>');
+    });
+
+    it.each([
+      [
+        '<template><div v-if="visible"></div></template>',
+        '<template><div v-if=""></div></template>',
+      ],
+      ['<template><div>{{ visible }}</div></template>', '<template><div>{{  }}</div></template>'],
+    ])('preserves delimiters when clearing an expression in %s', (input, expected) => {
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'clear-expression',
+        transform({ sfcAST, utils: { astHelpers } }) {
+          const container = astHelpers.findFirst(sfcAST!, { type: 'VExpressionContainer' });
+          container!.expression = null;
+          return 1;
+        },
+      };
+
+      expect(transform(input, 'file.vue', [plugin]).code).toBe(expected);
+    });
+
+    it.each([
+      [
+        '<template><div :title="message"></div></template>',
+        `<template><div :title="'say &quot;hi&quot;'"></div></template>`,
+      ],
+      [
+        "<template><div :title='message'></div></template>",
+        `<template><div :title="'say &quot;hi&quot;'"></div></template>`,
+      ],
+      [
+        '<template><div :title=message></div></template>',
+        `<template><div :title="'say &quot;hi&quot;'"></div></template>`,
+      ],
+      [
+        '<template><div>{{ message }}</div></template>',
+        `<template><div>{{ 'say "hi"' }}</div></template>`,
+      ],
+    ])('escapes replacement strings according to their context: %s', (input, expected) => {
+      const plugin: CodemodPlugin = {
+        type: 'codemod',
+        name: 'replace-expression',
+        transform({ sfcAST, utils: { astHelpers, builders } }) {
+          const container = astHelpers.findFirst(sfcAST!, { type: 'VExpressionContainer' });
+          container!.expression = builders.literal('say "hi"');
+          return 1;
+        },
+      };
+
+      expect(transform(input, 'file.vue', [plugin]).code).toBe(expected);
+    });
+  });
+
   it('should work with the test file', () => {
     const res = transform(example, 'file.vue', [stringLiteralPlugin]);
     const res2 = transform(example2, 'file2.vue', [stringLiteralPlugin]);

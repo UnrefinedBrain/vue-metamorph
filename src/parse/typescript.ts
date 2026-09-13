@@ -54,8 +54,9 @@ export const tsParser = (isJsx: boolean) => ({
       tok.range = [tok.start, tok.end];
     });
 
+    // vue-eslint-parser expects no EOF token when removing its expression wrapper tokens.
     // @ts-expect-error Needed by vue-eslint-parser
-    res.program.tokens = res.tokens;
+    res.program.tokens = res.tokens?.filter((tok) => tok.type !== babelParser.tokTypes.eof);
 
     // @ts-expect-error Needed by vue-eslint-parser
     res.program.comments = res.comments;

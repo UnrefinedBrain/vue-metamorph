@@ -7,7 +7,12 @@ import * as AST from './ast';
 import { utils, type CodemodPlugin, type PluginOptions, type VueProgram } from './types';
 import { getRange, hasRange, type SourceRange } from './node-range';
 import { setParents, vText } from './builders';
-import { stringify, withPrintContext, type PrintContext } from './stringify';
+import {
+  stringify,
+  stringifyTemplateReplacement,
+  withPrintContext,
+  type PrintContext,
+} from './stringify';
 import { parseTs, parseVue } from './parse';
 import {
   getCssDialectForFilename,
@@ -34,12 +39,10 @@ const ignoreProperties: Record<string, true> = {
 
 const NON_RENDERABLE_TYPES = new Set<string>([
   'VStartTag', // VStartTag is rendered as part of VElement, not by itself
-  'VExpressionContainer', // VExpressionContainer has wrong locations from vue-eslint-parser sometimes
 ]);
 
 const NON_RENDERABLE_AS_CHILD_OF = new Set<string>([
   'VDirectiveKey', // range includes the 'v-' prefix
-  'VExpressionContainer', // VExpressionContainer has wrong locations from vue-eslint-parser, so all of its children could as well
 ]);
 
 /**
@@ -76,6 +79,28 @@ function findRenderableNode(
 ): { path: (string | number)[]; range: SourceRange } {
   // Drop the trailing property name so that the path points at the owning node.
   let path = propertyPath.slice(0, -1);
+  // Print an expression in its full context for precedence, delimiters, and HTML escaping.
+  // This also groups multiple edits to the same expression into a single replacement.
+  for (let length = path.length; length > 0; length--) {
+    const containerPath = path.slice(0, length);
+    const container = get(root, containerPath);
+    if (isNode(container) && container.type === 'VExpressionContainer') {
+      const range = getRange(container, 'the expression container');
+      const parentPath = containerPath.slice(0, -1);
+      const parent = get(root, parentPath);
+      // Vue's :name shorthand gives its implicit value the name's source range.
+      // Replacing that value requires expanding the whole attribute to :name="value".
+      if (
+        isNode(parent) &&
+        parent.type === 'VAttribute' &&
+        hasRange(parent.key) &&
+        range[0] < parent.key.range[1]
+      ) {
+        return { path: parentPath, range: getRange(parent, 'the shorthand binding') };
+      }
+      return { path: containerPath, range };
+    }
+  }
   while (path.length > 0) {
     const value = get(root, path);
     if (isNode(value) && !NON_RENDERABLE_TYPES.has(value.type)) {
@@ -380,7 +405,7 @@ function transformVueFile(
     ms.update(
       start,
       end,
-      withPrintContext(printContext, () => stringify(node)),
+      withPrintContext(printContext, () => stringifyTemplateReplacement(node)),
     );
   }
 
