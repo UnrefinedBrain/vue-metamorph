@@ -5,9 +5,9 @@ import type postcss from 'postcss';
 import deepDiff from './vendor/deep-diff/index.js';
 import * as AST from './ast';
 import { utils, type CodemodPlugin, type PluginOptions, type VueProgram } from './types';
-import { getRange, type SourceRange } from './node-range';
+import { getRange, hasRange, type SourceRange } from './node-range';
 import { setParents, vText } from './builders';
-import { stringify } from './stringify';
+import { stringify, withPrintContext, type PrintContext } from './stringify';
 import { parseTs, parseVue } from './parse';
 import {
   getCssDialectForFilename,
@@ -92,6 +92,104 @@ function findRenderableNode(
     path,
     range: getRange(root, 'the template root'),
   };
+}
+
+const ignoreProperty = (_: unknown, name: string) => !!ignoreProperties[name];
+
+function nodeKey(node: AST.Node): string | null {
+  const range = (node as { range?: unknown }).range;
+
+  if (!Array.isArray(range) || range.length !== 2) {
+    return null;
+  }
+
+  const [start, end] = range as [number, number];
+
+  if (!Number.isInteger(start) || !Number.isInteger(end) || start < 0 || end < start) {
+    return null;
+  }
+
+  return `${node.type}:${start}:${end}`;
+}
+
+/**
+ * Indexes every node of the template as it was parsed, keyed by node type and source range. The
+ * printer looks a node up here to decide whether it can reuse the original source text.
+ */
+function indexOriginalNodes(root: AST.Node): Map<string, AST.Node> {
+  const index = new Map<string, AST.Node>();
+
+  AST.traverseNodes(root as never, {
+    enterNode(node) {
+      const key = nodeKey(node);
+
+      // On a key collision, keep the first node. The comparison against it then fails for
+      // everything else that shares the key, which prints those nodes from scratch.
+      if (key && !index.has(key)) {
+        index.set(key, node);
+      }
+    },
+    leaveNode() {
+      // empty
+    },
+  });
+
+  return index;
+}
+
+/**
+ * Builds the print context for a template. A node counts as clean when the original template has
+ * a node of the same type and range, and the two are deeply equal apart from the properties that
+ * carry no printable information.
+ */
+function createPrintContext(source: string, originalTemplate: AST.Node): PrintContext {
+  const index = indexOriginalNodes(originalTemplate);
+  const cache = new WeakMap<object, boolean>();
+
+  return {
+    source,
+    isClean(node) {
+      const cached = cache.get(node);
+
+      if (cached !== undefined) {
+        return cached;
+      }
+
+      const key = nodeKey(node);
+      const original = key ? index.get(key) : undefined;
+      const clean = !!original && !deepDiff(original, node, ignoreProperty);
+
+      cache.set(node, clean);
+
+      return clean;
+    },
+  };
+}
+
+/**
+ * Returns the offset that a node starts printing at. The printer emits the leading comment chain
+ * of a node before the node itself, but a leading comment sits outside the range of the node that
+ * carries it. Rewriting only the range would leave the original comment in place and print a
+ * second copy of it, so the rewrite has to start at the outermost leading comment.
+ */
+function printedStart(node: AST.Node, start: number): number {
+  let comment: AST.HtmlComment | null | undefined =
+    node.type === 'VElement'
+      ? node.startTag.leadingComment
+      : 'leadingComment' in node
+        ? node.leadingComment
+        : undefined;
+
+  while (comment) {
+    if (!hasRange(comment) || comment.range[0] < 0 || comment.range[0] >= start) {
+      break;
+    }
+
+    start = comment.range[0];
+    comment = comment.leadingComment;
+  }
+
+  return start;
 }
 
 function runCodemods(
@@ -204,7 +302,7 @@ function transformVueFile(
     },
   });
 
-  const diff = deepDiff(originalTemplate, templateAst, (_, name) => !!ignoreProperties[name]);
+  const diff = deepDiff(originalTemplate, templateAst, ignoreProperty);
 
   if (!diff) {
     return { code: ms.toString(), stats };
@@ -215,12 +313,13 @@ function transformVueFile(
     ...findRenderableNode(originalTemplate, [...(p.path ?? [])]),
   }));
 
-  // Adding or removing something near the root of the template means the root's
-  // children list has changed, so we re-print the whole template rather than
-  // trying to splice individual nodes.
+  // Adding or removing something near the root of the template changes the children list of
+  // the root, so reprint the whole template rather than splicing individual nodes.
   const rootNodeChanged = normalized.some(
     ({ path, diff: p }) => path.length <= 3 && p.kind !== 'E',
   );
+
+  const printContext = createPrintContext(code, originalTemplate);
 
   if (rootNodeChanged) {
     if (neededExtraTemplate) {
@@ -229,7 +328,11 @@ function transformVueFile(
       );
     }
     const [start, end] = getRange(originalTemplate, 'the template root');
-    ms.update(start, end, stringify(templateAst));
+    ms.update(
+      start,
+      end,
+      withPrintContext(printContext, () => stringify(templateAst)),
+    );
     return { code: ms.toString(), stats };
   }
 
@@ -242,21 +345,24 @@ function transformVueFile(
 
   const changedNodes: ChangedNode[] = normalized.map(({ path, range }) => ({
     path,
-    start: range[0],
+    start: printedStart(
+      path.length === 0 ? originalTemplate : get(originalTemplate, path),
+      range[0],
+    ),
     end: range[1],
     node: path.length === 0 ? templateAst : get(templateAst, path),
   }));
 
-  /* Collapse the diff results. If two changed paths are
+  /* Collapse the diff results. Consider two changed paths:
     ['children', 1, 'children', 2]
     ['children', 1]
 
-    We don't need to worry about the deeper changed node since one of its ancestors
-    has changed and the deeper node's changes will be printed anyways.
+    The deeper node needs no separate handling, because one of its ancestors changed and the
+    changes to the deeper node get printed along with that ancestor.
 
-    Sort ascending by path length first: uniqWith keeps the first occurrence
-    and drops later matches, so the shorter (ancestor) path needs to land in
-    the array before any of its descendants.
+    Sort ascending by path length first. uniqWith keeps the first occurrence and drops later
+    matches, so the shorter ancestor path has to land in the array before any of its
+    descendants.
   */
   const collapsedChanges = uniqWith(
     [...changedNodes].sort((a, b) => a.path.length - b.path.length),
@@ -271,7 +377,11 @@ function transformVueFile(
   ).sort((a, b) => b.path.length - a.path.length);
 
   for (const { start, end, node } of collapsedChanges) {
-    ms.update(start, end, stringify(node));
+    ms.update(
+      start,
+      end,
+      withPrintContext(printContext, () => stringify(node)),
+    );
   }
 
   return { code: ms.toString(), stats };

@@ -118,9 +118,16 @@ The `leadingComment` property of a `VExpressionContainer` node is printed only w
 
 ## Code formatting
 
-vue-metamorph aims to print syntactically correct code, not well-formatted code. We recommend
-that you run a code formatter such as ESLint or Prettier afterwards to bring the output in line
-with your project's code style conventions.
+vue-metamorph reuses the original source text for the parts of a file that your codemod didn't
+change. In a `<template>`, an element that your codemod leaves alone keeps its source text
+exactly, and an element that your codemod does change keeps the original text of its untouched
+attributes, along with the whitespace that separated them. So a change to one attribute leaves
+the line breaks and the quote style of the rest of the tag alone.
+
+The parts that vue-metamorph does print, such as a node that your codemod built, come out
+syntactically correct rather than well-formatted. We recommend that you run a code formatter such
+as ESLint, Prettier, Biome, oxfmt, etc. afterwards to bring those parts in line with your project's code style
+conventions.
 
 ## CSS
 
