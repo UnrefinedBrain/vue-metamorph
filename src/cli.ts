@@ -183,31 +183,29 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
     );
     const manualMigrationReports: ManualMigrationReport[] = [];
 
-    const errors: {
-      filename: string;
-      error: Error;
-    }[] = [];
-
+    const errors: ErrorReport[] = [];
     let filesProcessed = 0;
+
+    function reportProgress(state: 'processing' | 'aborted' | 'done'): void {
+      const progressArgs: Parameters<ProgressCallback>[0] = {
+        stats,
+        aborted: state === 'aborted',
+        done: state === 'done',
+        filesProcessed,
+        filesRemaining: files.length - filesProcessed,
+        totalFiles: files.length,
+        errors,
+        manualMigrations: manualMigrationReports,
+      };
+      if (!options.silent) {
+        defaultCliProgressHandler(progressArgs);
+      }
+      options.onProgress?.(progressArgs);
+    }
 
     for (const file of files) {
       if (aborted) {
-        const progressArgs = {
-          stats,
-          aborted: true,
-          done: false,
-          filesProcessed,
-          filesRemaining: files.length - filesProcessed,
-          totalFiles: files.length,
-          errors,
-          manualMigrations: manualMigrationReports,
-        };
-
-        if (!options.silent) {
-          defaultCliProgressHandler(progressArgs);
-        }
-        options.onProgress?.(progressArgs);
-
+        reportProgress('aborted');
         return;
       }
 
@@ -247,36 +245,10 @@ export function createVueMetamorphCli(options: CreateVueMetamorphCliOptions) {
 
       filesProcessed++;
 
-      const progressArgs = {
-        stats,
-        aborted: false,
-        done: false,
-        filesProcessed,
-        filesRemaining: files.length - filesProcessed,
-        totalFiles: files.length,
-        errors,
-        manualMigrations: manualMigrationReports,
-      };
-      if (!options.silent) {
-        defaultCliProgressHandler(progressArgs);
-      }
-      options.onProgress?.(progressArgs);
+      reportProgress('processing');
     }
 
-    const progressArgs = {
-      stats,
-      aborted: false,
-      done: true,
-      filesProcessed,
-      filesRemaining: files.length - filesProcessed,
-      totalFiles: files.length,
-      errors,
-      manualMigrations: manualMigrationReports,
-    };
-    if (!options.silent) {
-      defaultCliProgressHandler(progressArgs);
-    }
-    options.onProgress?.(progressArgs);
+    reportProgress('done');
   };
 
   const abort = () => {

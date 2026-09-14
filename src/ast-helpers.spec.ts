@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import * as astHelpers from './ast-helpers';
 import { transform } from './transform';
-import { CodemodPlugin } from './types';
+import { parseTs } from './parse';
+import type { CodemodPlugin } from './types';
 
 describe('createDefaultImport', () => {
   const codemod: CodemodPlugin = {
@@ -294,5 +295,35 @@ describe('createNamedImport without localName', () => {
       const a = 1 + 1;
       "
     `);
+  });
+});
+
+describe('named imports alongside namespace imports', () => {
+  it.each([
+    "import * as Vue from 'vue';",
+    "import VueDefault, * as Vue from 'vue';",
+    "import * as Vue from 'vue';\nimport { ref } from 'vue';",
+    "import * as Vue from 'vue';\nimport VueDefault from 'vue';\nimport { ref } from 'vue';",
+  ])('adds a named binding once and preserves valid syntax: %s', (source) => {
+    const codemod: CodemodPlugin = {
+      type: 'codemod',
+      name: 'add-ref',
+      transform({ scriptASTs }) {
+        for (const script of scriptASTs) {
+          astHelpers.createNamedImport(script, 'vue', 'ref');
+          astHelpers.createNamedImport(script, 'vue', 'ref');
+        }
+        return 1;
+      },
+    };
+    const output = transform(source, 'file.ts', [codemod]).code;
+    const parsed = parseTs(output, false);
+    expect(astHelpers.findAll(parsed, { type: 'ImportNamespaceSpecifier' })).toHaveLength(1);
+    expect(
+      astHelpers.findAll(parsed, {
+        type: 'ImportSpecifier',
+        imported: { type: 'Identifier', name: 'ref' },
+      }),
+    ).toHaveLength(1);
   });
 });

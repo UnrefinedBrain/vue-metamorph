@@ -216,7 +216,7 @@ describe('findVueComponentOptions', () => {
   });
 
   it('should find Vue.component calls', () => {
-    const ast = parseTs("Vue.component({ name: 'Baz' });", false);
+    const ast = parseTs("Vue.component('baz', { name: 'Baz' });", false);
     const results = findVueComponentOptions(ast, false);
     expect(results).toHaveLength(1);
   });
@@ -267,5 +267,22 @@ describe('findVueComponentOptions', () => {
     const ast = parseTs('Vue.use({ install() {} });', false);
     const results = findVueComponentOptions(ast, false);
     expect(results).toHaveLength(0);
+  });
+});
+
+describe('Vue.component registration', () => {
+  it('finds the second argument of a component registration', () => {
+    const script = parseTs("Vue.component('my-component', { props: ['title'] });", false);
+    const options = findVueComponentOptions(script, false);
+    expect(options).toHaveLength(1);
+    expect(options[0]).toBe(findFirst(script, { type: 'ObjectExpression' }));
+  });
+
+  it('ignores component lookups and registrations without an options object', () => {
+    const script = parseTs(
+      "Vue.component('my-component'); Vue.component('other', Component);",
+      false,
+    );
+    expect(findVueComponentOptions(script, false)).toEqual([]);
   });
 });

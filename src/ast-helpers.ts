@@ -87,7 +87,7 @@ export function findFirst<M extends Matcher<namedTypes.ASTNode | AST.Node>>(
  * @example
  * ```ts
  * // Find all <MyComponent> elements in the template
- * const els = findAll(sfcAST, { type: 'VElement', name: 'MyComponent' });
+ * const els = findAll(sfcAST, { type: 'VElement', rawName: 'MyComponent' });
  *
  * // Find all v-if directives
  * const vIfs = findAll(sfcAST, {
@@ -166,8 +166,8 @@ export function findImportDeclaration(
 
 /**
  * Adds a named import to a script AST. If an import declaration for the module already exists,
- * this function merges the new specifier into that declaration. It doesn't create duplicate
- * imports.
+ * this function merges the new specifier into a declaration without namespace specifiers.
+ * If none exists, it creates a separate declaration. It doesn't repeat the same named binding.
  *
  * @example
  * ```ts
@@ -190,43 +190,42 @@ export function createNamedImport(
   importName: string,
   localName = importName,
 ) {
-  const decl = findImportDeclaration(ast, moduleSpecifier);
+  // Namespace and named specifiers must be in separate declarations. Search all imports
+  // so that an earlier namespace import doesn't hide a compatible declaration after it.
+  const declarations = findAll(ast, {
+    type: 'ImportDeclaration',
+    source: { type: 'Literal', value: moduleSpecifier },
+  });
+  const compatibleDeclarations = declarations.filter(
+    (candidate) =>
+      !candidate.specifiers?.some((specifier) => specifier.type === 'ImportNamespaceSpecifier'),
+  );
+  const alreadyImported = compatibleDeclarations.some((declaration) =>
+    declaration.specifiers?.some((specifier) => {
+      if (specifier.type !== 'ImportSpecifier' || specifier.imported.type !== 'Identifier') {
+        return false;
+      }
+      // An alias is the local binding; `{ ref as myRef }` doesn't provide a `ref` binding.
+      const effectiveLocalName = specifier.local?.name ?? specifier.imported.name;
+      return specifier.imported.name === importName && effectiveLocalName === localName;
+    }),
+  );
+  if (alreadyImported) {
+    return;
+  }
+
   const newSpecifier = builders.importSpecifier(
     builders.identifier(importName),
     importName !== localName ? builders.identifier(localName) : null,
   );
-
-  if (!decl) {
-    // case 1: no existing import for this module
+  const declaration = compatibleDeclarations[0];
+  if (!declaration) {
     ast.body.unshift(builders.importDeclaration([newSpecifier], builders.literal(moduleSpecifier)));
-  } else if (decl && !decl.specifiers) {
-    // case 2: existing import, but with no specifiers
-    decl.specifiers = [newSpecifier];
-  } else if (decl && decl.specifiers) {
-    let found = false;
-    for (const specifier of decl.specifiers!) {
-      if (specifier.type !== 'ImportSpecifier') {
-        continue;
-      }
-
-      if (specifier.imported.type !== 'Identifier') {
-        continue;
-      }
-
-      // The effective local binding name of an existing specifier is its alias if the
-      // specifier has one, and otherwise the imported name itself. Comparing against this name
-      // avoids matching `{ ref as myRef }` when the caller asked for an unaliased `ref`
-      // binding.
-      const effectiveLocalName = specifier.local?.name ?? specifier.imported.name;
-      if (specifier.imported.name === importName && effectiveLocalName === localName) {
-        found = true;
-      }
-    }
-
-    if (!found) {
-      decl.specifiers.push(newSpecifier);
-    }
+    return;
   }
+
+  declaration.specifiers ??= [];
+  declaration.specifiers.push(newSpecifier);
 }
 
 /**
@@ -251,39 +250,29 @@ export function createDefaultImport(
   moduleSpecifier: string,
   importName: string,
 ) {
-  const decl = findImportDeclaration(ast, moduleSpecifier);
+  const declaration = findImportDeclaration(ast, moduleSpecifier);
   const newSpecifier = builders.importDefaultSpecifier(builders.identifier(importName));
 
-  if (!decl) {
-    // case 1: no existing import for this module
+  if (!declaration) {
     ast.body.unshift(builders.importDeclaration([newSpecifier], builders.literal(moduleSpecifier)));
-  } else if (decl && !decl.specifiers) {
-    // case 2: existing import, but with no specifiers
-    decl.specifiers = [newSpecifier];
-  } else if (decl && decl.specifiers) {
-    let existingDefaultName: string | null = null;
-    for (const specifier of decl.specifiers) {
-      if (specifier.type !== 'ImportDefaultSpecifier') {
-        continue;
-      }
+    return;
+  }
 
-      if (!specifier.local || specifier.local.type !== 'Identifier') {
-        continue;
-      }
+  const specifiers = (declaration.specifiers ??= []);
+  const existingDefault = specifiers.find(
+    (specifier) => specifier.type === 'ImportDefaultSpecifier',
+  );
+  const existingDefaultName = existingDefault?.local?.name;
 
-      existingDefaultName = specifier.local.name;
-    }
+  if (existingDefaultName === undefined) {
+    specifiers.push(newSpecifier);
+    return;
+  }
 
-    if (existingDefaultName === null) {
-      decl.specifiers.push(newSpecifier);
-    } else if (existingDefaultName !== importName) {
-      // An ESM ImportDeclaration can have at most one default specifier, and pushing a second
-      // one produces invalid JavaScript. Report the conflict so that the codemod author can
-      // resolve it explicitly.
-      throw new Error(
-        `Cannot add default import '${importName}' from '${moduleSpecifier}': a different default import '${existingDefaultName}' already exists.`,
-      );
-    }
+  if (existingDefaultName !== importName) {
+    throw new Error(
+      `Cannot add default import '${importName}' from '${moduleSpecifier}': a different default import '${existingDefaultName}' already exists.`,
+    );
   }
 }
 
@@ -408,17 +397,20 @@ export function findVueComponentOptions(
       }
 
       // Vue.extend({ ... })
-      // Vue.component({ ... })
+      // Vue.component('name', { ... })
       // Vue.mixin({ ... })
       if (
         path.node.callee.type === 'MemberExpression' &&
         path.node.callee.object.type === 'Identifier' &&
         path.node.callee.property.type === 'Identifier' &&
         path.node.callee.object.name === 'Vue' &&
-        ['extend', 'component', 'mixin'].includes(path.node.callee.property.name) &&
-        path.node.arguments[0]?.type === 'ObjectExpression'
+        ['extend', 'component', 'mixin'].includes(path.node.callee.property.name)
       ) {
-        objects.push(path.node.arguments[0]);
+        const method = path.node.callee.property.name;
+        const options = method === 'component' ? path.node.arguments[1] : path.node.arguments[0];
+        if (options?.type === 'ObjectExpression') {
+          objects.push(options);
+        }
       }
 
       this.traverse(path);
